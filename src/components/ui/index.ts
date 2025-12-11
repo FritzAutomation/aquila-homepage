@@ -11,3 +11,4 @@ export * from "./Skeleton";
 export { default as ScrollProgress } from "./ScrollProgress";
 export { default as BlurImage } from "./BlurImage";
 export { generateBlurPlaceholder } from "./BlurImage";
+export { default as DMMDemo } from "./DMMDemo";

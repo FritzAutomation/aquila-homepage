@@ -12,7 +12,7 @@ import {
   Check
 } from "lucide-react";
 import { Navigation, Footer } from "@/components/layout";
-import { PageHeader, Card, Button, SectionWrapper } from "@/components/ui";
+import { PageHeader, Card, Button, SectionWrapper, DMMDemo } from "@/components/ui";
 
 const features = [
   {
@@ -128,8 +128,35 @@ export default function DMMPage() {
           </div>
         </SectionWrapper>
 
-        {/* Features Grid */}
+        {/* Interactive Demo Section */}
         <SectionWrapper background="light">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-12"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
+              Experience the DMM Interface
+            </h2>
+            <p className="text-lg text-slate max-w-2xl mx-auto">
+              Try our interactive demo to see how the DMM System works. Click through the menus to explore the various modules.
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <DMMDemo />
+          </motion.div>
+        </SectionWrapper>
+
+        {/* Features Grid */}
+        <SectionWrapper>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
