@@ -115,10 +115,10 @@ export default function NotFound() {
               <Phone className="w-5 h-5 text-emerald" />
               <span>Need help? Call us at</span>
               <a
-                href="tel:+13307383441"
+                href="tel:+16088349213"
                 className="font-medium text-navy hover:text-emerald transition-colors"
               >
-                (330) 738-3441
+                (608) 834-9213
               </a>
             </div>
           </motion.div>

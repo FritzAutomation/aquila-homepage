@@ -270,11 +270,11 @@ export default function Navigation() {
                 {/* Contact Info */}
                 <div className="space-y-2 pt-2">
                   <a
-                    href="tel:+13307383441"
+                    href="tel:+16088349213"
                     className="flex items-center gap-3 text-sm text-slate hover:text-navy transition-colors"
                   >
                     <Phone className="w-4 h-4 text-emerald" />
-                    (330) 738-3441
+                    (608) 834-9213
                   </a>
                   <a
                     href="mailto:info@the-aquila-group.com"
