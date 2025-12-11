@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { MapPin, Phone, Mail, Clock, Send } from "lucide-react";
+import Image from "next/image";
 import { Navigation, Footer } from "@/components/layout";
 import { PageHeader, Card, Button, SectionWrapper } from "@/components/ui";
 import { useState } from "react";
@@ -39,18 +40,21 @@ const team = [
     title: "President",
     phone: "(608) 834-9213 x700",
     email: "s.orth@the-aquila-group.com",
+    image: "/images/orth.jpg",
   },
   {
     name: "David A. Wilmer",
     title: "VP – Manufacturing Integration",
     phone: "(804) 314-4621",
     email: "d.wilmer@the-aquila-group.com",
+    image: "/images/wilmer.jpg",
   },
   {
     name: "Jeremy L. Parrish",
     title: "Manager – Applications Engineering",
     phone: "(719) 641-8324",
     email: "j.parrish@the-aquila-group.com",
+    image: "/images/parrish.jpg",
   },
 ];
 
@@ -282,10 +286,14 @@ export default function ContactPage() {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
                 <Card className="h-full p-6">
-                  <div className="w-16 h-16 bg-navy/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-xl font-bold text-navy">
-                      {member.name.split(" ").map(n => n[0]).join("")}
-                    </span>
+                  <div className="w-20 h-20 rounded-full overflow-hidden mx-auto mb-4 border-4 border-emerald/20">
+                    <Image
+                      src={member.image}
+                      alt={member.name}
+                      width={80}
+                      height={80}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <div className="text-center">
                     <h3 className="text-lg font-bold text-navy">{member.name}</h3>
