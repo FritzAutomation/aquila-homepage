@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Calendar, ArrowLeft, ArrowRight } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { Navigation, Footer } from "@/components/layout";
 import { Button, SectionWrapper } from "@/components/ui";
@@ -95,21 +96,41 @@ export default function ArticlePage() {
 
               <div className="bg-light-gray rounded-2xl p-8 my-8">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-8 items-center justify-items-center">
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-navy">Eaton</div>
-                    <div className="text-sm text-slate">Electrical</div>
+                  <div className="flex items-center justify-center h-16">
+                    <Image
+                      src="/images/Eaton_idQDslYR77_1.png"
+                      alt="Eaton"
+                      width={120}
+                      height={60}
+                      className="max-h-12 w-auto object-contain grayscale hover:grayscale-0 transition-all"
+                    />
                   </div>
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-navy">Kohler</div>
-                    <div className="text-sm text-slate">Manufacturing</div>
+                  <div className="flex items-center justify-center h-16">
+                    <Image
+                      src="/images/KOHLER_idoXOAwHSc_1.png"
+                      alt="Kohler"
+                      width={120}
+                      height={60}
+                      className="max-h-12 w-auto object-contain grayscale hover:grayscale-0 transition-all"
+                    />
                   </div>
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-navy">Fiat</div>
-                    <div className="text-sm text-slate">Automotive</div>
+                  <div className="flex items-center justify-center h-16">
+                    <Image
+                      src="/images/FIAT_idGeGBWemT_1.png"
+                      alt="Fiat"
+                      width={120}
+                      height={60}
+                      className="max-h-12 w-auto object-contain grayscale hover:grayscale-0 transition-all"
+                    />
                   </div>
-                  <div className="text-center">
-                    <div className="text-xl font-bold text-navy">Siemens</div>
-                    <div className="text-sm text-slate">Industrial</div>
+                  <div className="flex items-center justify-center h-16">
+                    <Image
+                      src="/images/Siemens_id0if2F9r8_1.png"
+                      alt="Siemens"
+                      width={120}
+                      height={60}
+                      className="max-h-12 w-auto object-contain grayscale hover:grayscale-0 transition-all"
+                    />
                   </div>
                 </div>
               </div>
