@@ -3,6 +3,7 @@
 import { motion, useInView } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { Target, Users, Award, ArrowRight, Mail, Phone } from "lucide-react";
+import Image from "next/image";
 import { Navigation, Footer } from "@/components/layout";
 import { PageHeader, Card, Button, SectionWrapper } from "@/components/ui";
 
@@ -57,18 +58,21 @@ const team = [
     title: "President",
     phone: "(608) 834-9213 x700",
     email: "s.orth@the-aquila-group.com",
+    image: "/images/orth.jpg",
   },
   {
     name: "David A. Wilmer",
     title: "Vice President – Manufacturing Integration",
     phone: "(804) 314-4621",
     email: "d.wilmer@the-aquila-group.com",
+    image: "/images/wilmer.jpg",
   },
   {
     name: "Jeremy L. Parrish",
     title: "Manager – Applications Engineering",
     phone: "(719) 641-8324",
     email: "j.parrish@the-aquila-group.com",
+    image: "/images/parrish.jpg",
   },
 ];
 
@@ -213,10 +217,14 @@ export default function AboutPage() {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
                 <Card className="h-full p-6 text-center">
-                  <div className="w-20 h-20 bg-navy/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span className="text-2xl font-bold text-navy">
-                      {member.name.split(" ").map(n => n[0]).join("")}
-                    </span>
+                  <div className="w-24 h-24 rounded-full overflow-hidden mx-auto mb-4 border-4 border-emerald/20">
+                    <Image
+                      src={member.image}
+                      alt={member.name}
+                      width={96}
+                      height={96}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <h3 className="text-xl font-bold text-navy mb-1">{member.name}</h3>
                   <p className="text-slate mb-4">{member.title}</p>
