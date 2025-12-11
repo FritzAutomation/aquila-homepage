@@ -285,7 +285,7 @@ export default function Navigation() {
                   </a>
                   <div className="flex items-start gap-3 text-sm text-slate">
                     <MapPin className="w-4 h-4 text-emerald flex-shrink-0 mt-0.5" />
-                    <span>North Canton, OH</span>
+                    <span>Evans, GA</span>
                   </div>
                 </div>
               </div>

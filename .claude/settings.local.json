@@ -9,7 +9,12 @@
       "Bash(ls:*)",
       "Bash(taskkill:*)",
       "Bash(git init:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nInitial commit: The Aquila Group homepage\n\nComplete Next.js 16 website with:\n- Homepage with hero, social proof, products, features, testimonials, metrics, case studies, FAQ, and CTA sections\n- Product pages (DMM System, Green Light Monitoring, Custom Solutions)\n- Service pages (Training, Integration, Consulting, Support)\n- Case study pages (ASCO, Hillphoenix)\n- About, Contact, News, Privacy, Terms pages\n- Custom 404 page\n- Responsive navigation with mobile drawer\n- Cookie consent banner\n- Scroll progress indicator\n- Back to top button\n- SEO optimizations with JSON-LD structured data\n- Framer Motion animations throughout\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git remote add:*)",
+      "Bash(git branch:*)",
+      "Bash(git push:*)",
+      "Bash(git commit:*)"
     ]
   }
 }
