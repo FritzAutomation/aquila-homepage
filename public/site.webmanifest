@@ -1,0 +1,16 @@
+{
+  "name": "The Aquila Group",
+  "short_name": "Aquila",
+  "description": "Real-Time Manufacturing Intelligence - MES Solutions",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1E3A5F",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}
