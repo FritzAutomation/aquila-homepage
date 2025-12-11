@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Calendar, ArrowRight, Award } from "lucide-react";
+import Image from "next/image";
 import { Navigation, Footer } from "@/components/layout";
 import { PageHeader, Card, Button, SectionWrapper } from "@/components/ui";
 
@@ -44,6 +45,7 @@ const certifications = [
   {
     name: "Opto 22 IoT Certified Partner",
     description: "Certified expertise in Industrial Internet of Things solutions",
+    logo: "/images/OptoPartner_IoT_Certified_192x163.png",
   },
 ];
 
@@ -176,8 +178,14 @@ export default function NewsPage() {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
                 <Card className="p-6 flex items-center gap-6">
-                  <div className="w-16 h-16 bg-emerald/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Award className="w-8 h-8 text-emerald" />
+                  <div className="w-24 h-20 flex items-center justify-center flex-shrink-0">
+                    <Image
+                      src={cert.logo}
+                      alt={cert.name}
+                      width={192}
+                      height={163}
+                      className="w-auto h-full object-contain"
+                    />
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-navy mb-1">{cert.name}</h3>
