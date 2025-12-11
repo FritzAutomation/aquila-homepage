@@ -1,6 +1,7 @@
 "use client";
 
-import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity,
   Gauge,
@@ -13,6 +14,139 @@ import {
 } from "lucide-react";
 import { Navigation, Footer } from "@/components/layout";
 import { PageHeader, Card, Button, SectionWrapper } from "@/components/ui";
+
+// Live metrics component with realistic fluctuations
+function LiveMetricsPanel() {
+  const [metrics, setMetrics] = useState({
+    uptime: 94.2,
+    oee: 87.5,
+    activeMachines: 12,
+    totalMachines: 14,
+  });
+  const [lastUpdate, setLastUpdate] = useState(new Date());
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMetrics((prev) => ({
+        uptime: Math.min(99.9, Math.max(85, prev.uptime + (Math.random() - 0.48) * 0.8)),
+        oee: Math.min(99, Math.max(75, prev.oee + (Math.random() - 0.48) * 0.6)),
+        activeMachines: Math.random() > 0.92
+          ? Math.min(14, Math.max(10, prev.activeMachines + (Math.random() > 0.5 ? 1 : -1)))
+          : prev.activeMachines,
+        totalMachines: 14,
+      }));
+      setLastUpdate(new Date());
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="bg-navy text-white p-8 rounded-2xl relative overflow-hidden">
+      {/* Subtle scanning line effect */}
+      <motion.div
+        className="absolute inset-0 bg-gradient-to-b from-emerald/5 via-emerald/10 to-transparent"
+        initial={{ y: "-100%" }}
+        animate={{ y: "200%" }}
+        transition={{
+          duration: 3,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+        style={{ height: "50%" }}
+      />
+
+      <div className="relative z-10">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <div className="relative">
+              <div className="w-4 h-4 rounded-full bg-emerald" />
+              <motion.div
+                className="absolute inset-0 w-4 h-4 rounded-full bg-emerald"
+                animate={{ scale: [1, 1.8], opacity: [0.8, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              />
+            </div>
+            <span className="text-lg font-medium">Real-Time Status</span>
+          </div>
+          <motion.span
+            key={lastUpdate.getTime()}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-xs text-white/50"
+          >
+            Updated {lastUpdate.toLocaleTimeString()}
+          </motion.span>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex justify-between items-center py-3 border-b border-white/10">
+            <span className="text-white/80">Machine Uptime</span>
+            <div className="flex items-center gap-2">
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={metrics.uptime.toFixed(1)}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="font-bold text-emerald tabular-nums"
+                >
+                  {metrics.uptime.toFixed(1)}%
+                </motion.span>
+              </AnimatePresence>
+            </div>
+          </div>
+
+          <div className="flex justify-between items-center py-3 border-b border-white/10">
+            <span className="text-white/80">OEE Score</span>
+            <div className="flex items-center gap-2">
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={metrics.oee.toFixed(1)}
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="font-bold text-emerald tabular-nums"
+                >
+                  {metrics.oee.toFixed(1)}%
+                </motion.span>
+              </AnimatePresence>
+            </div>
+          </div>
+
+          <div className="flex justify-between items-center py-3">
+            <span className="text-white/80">Active Machines</span>
+            <div className="flex items-center gap-3">
+              <div className="flex gap-1">
+                {Array.from({ length: metrics.totalMachines }).map((_, i) => (
+                  <motion.div
+                    key={i}
+                    className={`w-2 h-4 rounded-sm ${
+                      i < metrics.activeMachines ? "bg-emerald" : "bg-white/20"
+                    }`}
+                    animate={i < metrics.activeMachines ? { opacity: [0.7, 1, 0.7] } : {}}
+                    transition={{ duration: 2, repeat: Infinity, delay: i * 0.1 }}
+                  />
+                ))}
+              </div>
+              <AnimatePresence mode="wait">
+                <motion.span
+                  key={metrics.activeMachines}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  className="font-bold tabular-nums"
+                >
+                  {metrics.activeMachines}/{metrics.totalMachines}
+                </motion.span>
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 const features = [
   {
@@ -126,26 +260,7 @@ export default function GreenLightPage() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.2 }}
             >
-              <div className="bg-navy text-white p-8 rounded-2xl">
-                <div className="flex items-center gap-4 mb-6">
-                  <div className="w-4 h-4 rounded-full bg-emerald animate-pulse" />
-                  <span className="text-lg font-medium">Real-Time Status</span>
-                </div>
-                <div className="space-y-4">
-                  <div className="flex justify-between items-center py-3 border-b border-white/10">
-                    <span className="text-white/80">Machine Uptime</span>
-                    <span className="font-bold text-emerald">94.2%</span>
-                  </div>
-                  <div className="flex justify-between items-center py-3 border-b border-white/10">
-                    <span className="text-white/80">OEE Score</span>
-                    <span className="font-bold text-emerald">87.5%</span>
-                  </div>
-                  <div className="flex justify-between items-center py-3">
-                    <span className="text-white/80">Active Machines</span>
-                    <span className="font-bold">12/14</span>
-                  </div>
-                </div>
-              </div>
+              <LiveMetricsPanel />
             </motion.div>
           </div>
         </SectionWrapper>
