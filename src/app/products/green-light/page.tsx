@@ -13,7 +13,7 @@ import {
   Check
 } from "lucide-react";
 import { Navigation, Footer } from "@/components/layout";
-import { PageHeader, Card, Button, SectionWrapper } from "@/components/ui";
+import { PageHeader, Card, Button, SectionWrapper, GreenLightDemo } from "@/components/ui";
 
 // Live metrics component with realistic fluctuations
 function LiveMetricsPanel() {
@@ -304,8 +304,35 @@ export default function GreenLightPage() {
           </div>
         </SectionWrapper>
 
-        {/* Features Grid */}
+        {/* Interactive Demo */}
         <SectionWrapper>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-8"
+          >
+            <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
+              See It In Action
+            </h2>
+            <p className="text-lg text-slate max-w-2xl mx-auto">
+              Watch how data flows from the machine through the Opto22 Groov device to your real-time dashboard
+            </p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <GreenLightDemo />
+          </motion.div>
+        </SectionWrapper>
+
+        {/* Features Grid */}
+        <SectionWrapper background="light">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -342,7 +369,7 @@ export default function GreenLightPage() {
         </SectionWrapper>
 
         {/* Benefits Section */}
-        <SectionWrapper background="light">
+        <SectionWrapper>
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
