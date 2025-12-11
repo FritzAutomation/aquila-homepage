@@ -14,6 +14,7 @@ const newsArticles = [
     excerpt:
       "ASCO Power Technologies, a U.S. power management manufacturer, achieved significant gains through new nesting software implementation, reducing programming time by 75% and increasing efficiency.",
     featured: true,
+    href: "/news/focus-on-cad-cam-packing-a-punch",
   },
   {
     title: "Automation News: Real-Time For Sheet Metal Machines!",
@@ -22,6 +23,7 @@ const newsArticles = [
     excerpt:
       "The Aquila Group partnered with Opto 22 to help manufacturing customers integrate OEE measurements into their Enterprise systems, enabling real-time data visibility for sheet metal machinery operations.",
     featured: false,
+    href: "/news/real-time-for-sheet-metal-machines",
   },
   {
     title: "Manufacturing Information, Instructions, and Performance Metrics in Real Time",
@@ -30,6 +32,7 @@ const newsArticles = [
     excerpt:
       "How The Aquila Group bridges IT and operational technology gaps for major manufacturers including Eaton Electrical, Kohler, Fiat, and Siemens.",
     featured: false,
+    href: "/news/manufacturing-information-real-time",
   },
   {
     title: "Case Study: Hillphoenix Inc. Increases Profits!",
@@ -38,6 +41,7 @@ const newsArticles = [
     excerpt:
       "Hillphoenix Inc. integrated JETCAM nesting solutions across multiple punch and laser work centers, partnering with NestONE Solutions to achieve measurable profitability improvements.",
     featured: false,
+    href: "/news/hillphoenix-case-study",
   },
 ];
 
@@ -92,7 +96,7 @@ export default function NewsPage() {
                       <Calendar className="w-4 h-4" />
                       {article.date}
                     </div>
-                    <Button href="#" variant="secondary">
+                    <Button href={article.href} variant="secondary">
                       Read Full Article
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
@@ -142,7 +146,7 @@ export default function NewsPage() {
                     </h3>
                     <p className="text-slate mb-4">{article.excerpt}</p>
                     <a
-                      href="#"
+                      href={article.href}
                       className="inline-flex items-center gap-2 text-navy font-medium hover:text-emerald transition-colors"
                     >
                       Read More
