@@ -102,7 +102,7 @@ export default function ArticlePage() {
                       alt="Eaton"
                       width={120}
                       height={60}
-                      className="max-h-12 w-auto object-contain grayscale hover:grayscale-0 transition-all"
+                      className="max-h-12 w-auto object-contain"
                     />
                   </div>
                   <div className="flex items-center justify-center h-16">
@@ -111,7 +111,7 @@ export default function ArticlePage() {
                       alt="Kohler"
                       width={120}
                       height={60}
-                      className="max-h-12 w-auto object-contain grayscale hover:grayscale-0 transition-all"
+                      className="max-h-12 w-auto object-contain"
                     />
                   </div>
                   <div className="flex items-center justify-center h-16">
@@ -120,7 +120,7 @@ export default function ArticlePage() {
                       alt="Fiat"
                       width={120}
                       height={60}
-                      className="max-h-12 w-auto object-contain grayscale hover:grayscale-0 transition-all"
+                      className="max-h-12 w-auto object-contain"
                     />
                   </div>
                   <div className="flex items-center justify-center h-16">
@@ -129,7 +129,7 @@ export default function ArticlePage() {
                       alt="Siemens"
                       width={120}
                       height={60}
-                      className="max-h-12 w-auto object-contain grayscale hover:grayscale-0 transition-all"
+                      className="max-h-12 w-auto object-contain"
                     />
                   </div>
                 </div>
