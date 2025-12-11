@@ -121,39 +121,35 @@ export default function DMMDemo() {
   };
 
   // Sidebar menu component
-  const SidebarMenu = ({ isMobile = false }: { isMobile?: boolean }) => (
+  const SidebarMenu = ({ isMobile = false, isTablet = false }: { isMobile?: boolean; isTablet?: boolean }) => (
     <div className={`bg-[#f5f5f5] ${isMobile ? "h-full" : "border-r border-[#ccc] shadow-lg"}`}>
-      {/* Refresh button */}
-      <div className="p-1 border-b border-[#ccc] flex justify-between items-center">
-        {isMobile && (
+      {/* Mobile close button */}
+      {isMobile && (
+        <div className="p-1 border-b border-[#ccc] flex justify-end">
           <button
             onClick={() => setMobileMenuOpen(false)}
             className="p-1 hover:bg-gray-200 rounded"
           >
             <X className="w-5 h-5 text-gray-600" />
           </button>
-        )}
-        <div className="flex-1"></div>
-        <button className="w-6 h-6 rounded-full bg-[#4CAF50] text-white text-xs flex items-center justify-center hover:bg-[#45a049]">
-          ↻
-        </button>
-      </div>
+        </div>
+      )}
 
       {/* Menu Items */}
-      <div className={`overflow-y-auto ${isMobile ? "max-h-[280px]" : "max-h-[440px]"}`}>
+      <div className={`overflow-y-auto ${isMobile ? "max-h-[280px]" : isTablet ? "max-h-[340px]" : "max-h-[440px]"}`}>
         {menuStructure.map((menu) => (
           <div key={menu.name}>
             {/* Menu Header */}
             <button
               onClick={() => toggleMenu(menu.name)}
-              className={`w-full px-2 py-1.5 flex items-center gap-2 text-left text-sm hover:bg-[#e8e8e8] transition-colors ${
+              className={`w-full px-2 py-1.5 flex items-center gap-2 text-left hover:bg-[#e8e8e8] transition-colors ${
                 expandedMenu === menu.name
                   ? "bg-[#d32f2f] text-white font-semibold"
                   : "text-gray-700"
-              }`}
+              } ${isTablet ? "text-xs" : "text-sm"}`}
             >
-              <menu.icon className="w-4 h-4" />
-              <span className="flex-1 text-xs">{menu.name}</span>
+              <menu.icon className={isTablet ? "w-3 h-3" : "w-4 h-4"} />
+              <span className={`flex-1 whitespace-nowrap ${isTablet ? "text-[10px]" : "text-xs"}`}>{menu.name}</span>
               {expandedMenu === menu.name ? (
                 <ChevronDown className="w-3 h-3" />
               ) : (
@@ -175,10 +171,10 @@ export default function DMMDemo() {
                     {menu.items.map((item) => (
                       <button
                         key={item.name}
-                        className="p-1.5 text-xs text-gray-600 hover:bg-[#e3f2fd] rounded flex flex-col items-center gap-0.5 transition-colors"
+                        className={`p-1.5 text-xs text-gray-600 hover:bg-[#e3f2fd] rounded flex flex-col items-center gap-0.5 transition-colors`}
                       >
-                        <span className="text-base">{item.icon}</span>
-                        <span className="text-center leading-tight text-[10px]">
+                        <span className={isTablet ? "text-xs" : "text-base"}>{item.icon}</span>
+                        <span className={`text-center leading-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full ${isTablet ? "text-[6px]" : "text-[10px]"}`}>
                           {item.name}
                         </span>
                       </button>
@@ -203,15 +199,15 @@ export default function DMMDemo() {
   );
 
   // Dashboard preview cards component
-  const DashboardPreviews = ({ small = false }: { small?: boolean }) => (
-    <div className={`relative ${small ? "h-24" : "h-48"} flex items-end justify-center gap-1 md:gap-2`}>
+  const DashboardPreviews = ({ small = false, tablet = false }: { small?: boolean; tablet?: boolean }) => (
+    <div className={`relative ${small ? "h-24" : tablet ? "h-36" : "h-48"} flex items-end justify-center gap-1 md:gap-2`}>
       {[0, 1, 2, 3, 4].map((i) => (
         <motion.div
           key={i}
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ delay: 0.2 + i * 0.1 }}
-          className={`bg-white rounded shadow-lg p-1 md:p-2 ${(i === 0 || i === 4) && small ? "hidden" : ""}`}
+          className={`bg-white rounded shadow-lg p-1 md:p-2 ${(i === 0 || i === 4) && (small || tablet) ? "hidden" : ""}`}
           style={{
             width: small
               ? (i === 2 ? "60px" : "45px")
@@ -445,6 +441,23 @@ export default function DMMDemo() {
               <div className="w-3 h-3 rounded-full bg-[#333]"></div>
             </div>
 
+            {/* Tablet status bar */}
+            <div className="bg-[#4a94c4] px-4 py-1.5 flex items-center justify-between text-white text-xs">
+              <span>9:41</span>
+              <span className="font-medium">
+                {isLoggedIn ? "DMM Mfg Execution System - Logged In" : "DMM - Manufacturing Execution System"}
+              </span>
+              <div className="flex items-center gap-2">
+                <div className="flex gap-0.5">
+                  <div className="w-1 h-2.5 bg-white rounded-sm"></div>
+                  <div className="w-1 h-3 bg-white rounded-sm"></div>
+                  <div className="w-1 h-3.5 bg-white rounded-sm"></div>
+                  <div className="w-1 h-4 bg-white/50 rounded-sm"></div>
+                </div>
+                <span>100%</span>
+              </div>
+            </div>
+
             {/* Tablet screen content */}
             <div className="relative" style={{ backgroundColor: "#5BA4D9" }}>
               <AnimatePresence mode="wait">
@@ -511,7 +524,7 @@ export default function DMMDemo() {
                         Real-Time Dashboards, OEE Metrics
                       </p>
 
-                      <DashboardPreviews />
+                      <DashboardPreviews tablet />
 
                       <p className="text-white/70 text-sm mt-6">
                         Copyright - The Aquila Group, Inc. 1996 - 2025
@@ -536,18 +549,18 @@ export default function DMMDemo() {
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
                       className="w-44"
                     >
-                      <SidebarMenu />
+                      <SidebarMenu isTablet />
                     </motion.div>
 
                     {/* Main content */}
-                    <div className="flex-1 p-6 flex flex-col items-center justify-center">
+                    <div className="flex-1 p-6 flex flex-col items-center justify-center -ml-10">
                       <h1 className="text-3xl font-bold text-white mb-2 drop-shadow-lg text-center">
                         Machine Monitoring
                       </h1>
                       <p className="text-base text-white/90 mb-6 text-center">
                         Real-Time Dashboards, OEE Metrics
                       </p>
-                      <DashboardPreviews />
+                      <DashboardPreviews tablet />
                     </div>
                   </motion.div>
                 )}
