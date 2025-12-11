@@ -37,9 +37,9 @@ const faqs = [
       "We serve manufacturers across a wide range of industries including sheet metal fabrication, automotive, aerospace, appliance manufacturing, HVAC, and more. Our solutions are flexible and can be customized to meet the specific needs of your industry and operation.",
   },
   {
-    question: "Is the system cloud-based or on-premise?",
+    question: "How is the system deployed?",
     answer:
-      "We offer both deployment options. You can choose a cloud-based solution for easier maintenance and remote access, or an on-premise installation if you have specific security or compliance requirements. Many customers choose a hybrid approach that combines the benefits of both.",
+      "The DMM System uses an on-premise client-server architecture. This gives you complete control over your data and security while ensuring fast, reliable performance on your shop floor. The system is installed on your local network and can be accessed from any workstation or terminal within your facility.",
   },
   {
     question: "How do I get started?",
