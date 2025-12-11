@@ -79,6 +79,54 @@ export const metadata: Metadata = {
   },
 };
 
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "The Aquila Group",
+  url: "https://www.the-aquila-group.com",
+  logo: "https://www.the-aquila-group.com/images/Aquila-Logo-DS_WA-2012.png",
+  description:
+    "Partners in Success since 1996. MES solutions for manufacturers including DMM System, Green Light Monitoring, and custom integrations.",
+  foundingDate: "1996",
+  address: {
+    "@type": "PostalAddress",
+    streetAddress: "P.O. Box 1700",
+    addressLocality: "Evans",
+    addressRegion: "GA",
+    postalCode: "30809",
+    addressCountry: "US",
+  },
+  contactPoint: {
+    "@type": "ContactPoint",
+    telephone: "+1-608-834-9213",
+    contactType: "sales",
+    email: "sales@the-aquila-group.com",
+    availableLanguage: "English",
+  },
+  sameAs: [
+    "https://www.linkedin.com/company/the-aquila-group",
+  ],
+  offers: {
+    "@type": "AggregateOffer",
+    itemOffered: [
+      {
+        "@type": "SoftwareApplication",
+        name: "DMM System",
+        applicationCategory: "BusinessApplication",
+        operatingSystem: "Windows",
+        description: "Complete MES solution for shop floor control and real-time production tracking",
+      },
+      {
+        "@type": "SoftwareApplication",
+        name: "Green Light Monitoring",
+        applicationCategory: "BusinessApplication",
+        operatingSystem: "Windows",
+        description: "Real-time OEE tracking and machine monitoring dashboards",
+      },
+    ],
+  },
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -89,6 +137,10 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link rel="manifest" href="/site.webmanifest" />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
       </head>
       <body className={`${inter.variable} font-sans antialiased`}>
         <ScrollProgress />

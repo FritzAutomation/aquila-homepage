@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown,
@@ -101,6 +101,50 @@ export default function DMMDemo() {
   const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Focus trap for mobile menu
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const menuEl = mobileMenuRef.current;
+    if (!menuEl) return;
+
+    const focusableElements = menuEl.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    // Focus first element when menu opens
+    firstElement?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileMenuOpen(false);
+        menuButtonRef.current?.focus();
+        return;
+      }
+
+      if (e.key !== "Tab") return;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [mobileMenuOpen]);
 
   const handleLogin = () => {
     setIsLoggingIn(true);
@@ -122,13 +166,17 @@ export default function DMMDemo() {
 
   // Sidebar menu component
   const SidebarMenu = ({ isMobile = false, isTablet = false }: { isMobile?: boolean; isTablet?: boolean }) => (
-    <div className={`bg-[#f5f5f5] ${isMobile ? "h-full" : "border-r border-[#ccc] shadow-lg"}`}>
+    <nav
+      className={`bg-[#f5f5f5] ${isMobile ? "h-full" : "border-r border-[#ccc] shadow-lg"}`}
+      aria-label="DMM System Navigation"
+    >
       {/* Mobile close button */}
       {isMobile && (
         <div className="p-1 border-b border-[#ccc] flex justify-end">
           <button
             onClick={() => setMobileMenuOpen(false)}
-            className="p-1 hover:bg-gray-200 rounded"
+            className="p-1 hover:bg-gray-200 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            aria-label="Close menu"
           >
             <X className="w-5 h-5 text-gray-600" />
           </button>
@@ -142,18 +190,20 @@ export default function DMMDemo() {
             {/* Menu Header */}
             <button
               onClick={() => toggleMenu(menu.name)}
-              className={`w-full px-2 py-1.5 flex items-center gap-2 text-left hover:bg-[#e8e8e8] transition-colors ${
+              aria-expanded={expandedMenu === menu.name}
+              aria-controls={`submenu-${menu.name.replace(/\s+/g, '-').toLowerCase()}`}
+              className={`w-full px-2 py-1.5 flex items-center gap-2 text-left hover:bg-[#e8e8e8] transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500 ${
                 expandedMenu === menu.name
                   ? "bg-[#d32f2f] text-white font-semibold"
                   : "text-gray-700"
               } ${isTablet ? "text-xs" : "text-sm"}`}
             >
-              <menu.icon className={isTablet ? "w-3 h-3" : "w-4 h-4"} />
+              <menu.icon className={isTablet ? "w-3 h-3" : "w-4 h-4"} aria-hidden="true" />
               <span className={`flex-1 whitespace-nowrap ${isTablet ? "text-[10px]" : "text-xs"}`}>{menu.name}</span>
               {expandedMenu === menu.name ? (
-                <ChevronDown className="w-3 h-3" />
+                <ChevronDown className="w-3 h-3" aria-hidden="true" />
               ) : (
-                <ChevronRight className="w-3 h-3" />
+                <ChevronRight className="w-3 h-3" aria-hidden="true" />
               )}
             </button>
 
@@ -161,19 +211,23 @@ export default function DMMDemo() {
             <AnimatePresence>
               {expandedMenu === menu.name && (
                 <motion.div
+                  id={`submenu-${menu.name.replace(/\s+/g, '-').toLowerCase()}`}
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden bg-white"
+                  role="region"
+                  aria-label={`${menu.name} submenu`}
                 >
                   <div className="grid grid-cols-2 gap-0.5 p-1">
                     {menu.items.map((item) => (
                       <button
                         key={item.name}
-                        className={`p-1.5 text-xs text-gray-600 hover:bg-[#e3f2fd] rounded flex flex-col items-center gap-0.5 transition-colors`}
+                        className="p-1.5 text-xs text-gray-600 hover:bg-[#e3f2fd] rounded flex flex-col items-center gap-0.5 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        aria-label={item.name}
                       >
-                        <span className={isTablet ? "text-xs" : "text-base"}>{item.icon}</span>
+                        <span className={isTablet ? "text-xs" : "text-base"} aria-hidden="true">{item.icon}</span>
                         <span className={`text-center leading-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-full ${isTablet ? "text-[6px]" : "text-[10px]"}`}>
                           {item.name}
                         </span>
@@ -189,13 +243,14 @@ export default function DMMDemo() {
         {/* Exit DMM System */}
         <button
           onClick={handleLogout}
-          className="w-full px-2 py-1.5 flex items-center gap-2 text-left text-sm text-gray-700 hover:bg-[#ffebee] hover:text-red-600 transition-colors"
+          className="w-full px-2 py-1.5 flex items-center gap-2 text-left text-sm text-gray-700 hover:bg-[#ffebee] hover:text-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-red-500"
+          aria-label="Exit DMM System and log out"
         >
-          <LogOut className="w-4 h-4" />
+          <LogOut className="w-4 h-4" aria-hidden="true" />
           <span className="text-xs">Exit DMM System</span>
         </button>
       </div>
-    </div>
+    </nav>
   );
 
   // Dashboard preview cards component
@@ -359,11 +414,12 @@ export default function DMMDemo() {
                       <button
                         onClick={handleLogin}
                         disabled={isLoggingIn}
-                        className="px-4 py-1.5 text-sm bg-[#e8e8e8] border border-[#aaa] hover:bg-[#ddd] active:bg-[#ccc] disabled:opacity-50 rounded-sm text-black font-medium"
+                        className="px-4 py-1.5 text-sm bg-[#e8e8e8] border border-[#aaa] hover:bg-[#ddd] active:bg-[#ccc] active:scale-95 disabled:opacity-50 rounded-sm text-black font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                        aria-label={isLoggingIn ? "Logging in..." : "Log in to DMM System"}
                       >
                         {isLoggingIn ? "..." : "Logon"}
                       </button>
-                      <button className="px-4 py-1.5 text-sm bg-[#e8e8e8] border border-[#aaa] hover:bg-[#ddd] rounded-sm text-black font-medium">
+                      <button className="px-4 py-1.5 text-sm bg-[#e8e8e8] border border-[#aaa] hover:bg-[#ddd] active:bg-[#ccc] active:scale-95 rounded-sm text-black font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
                         Cancel
                       </button>
                     </div>
@@ -504,11 +560,12 @@ export default function DMMDemo() {
                           <button
                             onClick={handleLogin}
                             disabled={isLoggingIn}
-                            className="px-3 py-1 text-sm bg-[#e8e8e8] border border-[#aaa] hover:bg-[#ddd] active:bg-[#ccc] disabled:opacity-50 rounded-sm text-black font-medium"
+                            className="px-3 py-1 text-sm bg-[#e8e8e8] border border-[#aaa] hover:bg-[#ddd] active:bg-[#ccc] active:scale-95 disabled:opacity-50 rounded-sm text-black font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                            aria-label={isLoggingIn ? "Logging in..." : "Log in to DMM System"}
                           >
                             {isLoggingIn ? "..." : "Logon"}
                           </button>
-                          <button className="px-3 py-1 text-sm bg-[#e8e8e8] border border-[#aaa] hover:bg-[#ddd] rounded-sm text-black font-medium">
+                          <button className="px-3 py-1 text-sm bg-[#e8e8e8] border border-[#aaa] hover:bg-[#ddd] active:bg-[#ccc] active:scale-95 rounded-sm text-black font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
                             Cancel
                           </button>
                         </div>
@@ -553,7 +610,7 @@ export default function DMMDemo() {
                     </motion.div>
 
                     {/* Main content */}
-                    <div className="flex-1 p-6 flex flex-col items-center justify-center -ml-10">
+                    <div className="flex-1 p-6 flex flex-col items-center justify-center">
                       <h1 className="text-3xl font-bold text-white mb-2 drop-shadow-lg text-center">
                         Machine Monitoring
                       </h1>
@@ -650,11 +707,12 @@ export default function DMMDemo() {
                           <button
                             onClick={handleLogin}
                             disabled={isLoggingIn}
-                            className="px-3 py-1 text-sm bg-[#e8e8e8] border border-[#aaa] hover:bg-[#ddd] active:bg-[#ccc] disabled:opacity-50 rounded-sm text-black font-medium"
+                            className="px-3 py-1 text-sm bg-[#e8e8e8] border border-[#aaa] hover:bg-[#ddd] active:bg-[#ccc] active:scale-95 disabled:opacity-50 rounded-sm text-black font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                            aria-label={isLoggingIn ? "Logging in..." : "Log in to DMM System"}
                           >
                             {isLoggingIn ? "..." : "Logon"}
                           </button>
-                          <button className="px-3 py-1 text-sm bg-[#e8e8e8] border border-[#aaa] hover:bg-[#ddd] rounded-sm text-black font-medium">
+                          <button className="px-3 py-1 text-sm bg-[#e8e8e8] border border-[#aaa] hover:bg-[#ddd] active:bg-[#ccc] active:scale-95 rounded-sm text-black font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1">
                             Cancel
                           </button>
                         </div>
@@ -691,17 +749,22 @@ export default function DMMDemo() {
                     {/* Mobile header with menu button */}
                     <div className="p-2 bg-[#f5f5f5] border-b border-[#ccc] flex items-center justify-between">
                       <button
+                        ref={menuButtonRef}
                         onClick={() => setMobileMenuOpen(true)}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-white border border-[#ccc] rounded text-sm text-gray-700"
+                        className="flex items-center gap-2 px-3 py-1.5 bg-white border border-[#ccc] rounded text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        aria-expanded={mobileMenuOpen}
+                        aria-controls="mobile-menu-drawer"
+                        aria-label="Open navigation menu"
                       >
-                        <Menu className="w-4 h-4" />
+                        <Menu className="w-4 h-4" aria-hidden="true" />
                         <span>Menu</span>
                       </button>
                       <button
                         onClick={handleLogout}
-                        className="flex items-center gap-2 px-3 py-1.5 bg-white border border-[#ccc] rounded text-sm text-red-600 hover:bg-red-50"
+                        className="flex items-center gap-2 px-3 py-1.5 bg-white border border-[#ccc] rounded text-sm text-red-600 hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+                        aria-label="Log out of DMM System"
                       >
-                        <LogOut className="w-4 h-4" />
+                        <LogOut className="w-4 h-4" aria-hidden="true" />
                         <span>Logout</span>
                       </button>
                     </div>
@@ -717,14 +780,20 @@ export default function DMMDemo() {
                             exit={{ opacity: 0 }}
                             className="absolute inset-0 bg-black/50 z-40"
                             onClick={() => setMobileMenuOpen(false)}
+                            aria-hidden="true"
                           />
                           {/* Drawer inside phone */}
                           <motion.div
+                            ref={mobileMenuRef}
+                            id="mobile-menu-drawer"
                             initial={{ x: "-100%" }}
                             animate={{ x: 0 }}
                             exit={{ x: "-100%" }}
                             transition={{ type: "spring", damping: 25, stiffness: 300 }}
                             className="absolute left-0 top-0 bottom-0 w-48 z-50"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label="Navigation menu"
                           >
                             <SidebarMenu isMobile />
                           </motion.div>

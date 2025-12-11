@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, ChevronDown, Phone, Mail, MapPin } from "lucide-react";
@@ -46,6 +46,8 @@ export default function Navigation() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileOpenSection, setMobileOpenSection] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -69,6 +71,47 @@ export default function Navigation() {
     return () => {
       document.body.style.overflow = "unset";
     };
+  }, [mobileMenuOpen]);
+
+  // Focus trap for mobile menu
+  useEffect(() => {
+    if (!mobileMenuOpen || !mobileMenuRef.current) return;
+
+    // Focus the close button when menu opens
+    closeButtonRef.current?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileMenuOpen(false);
+        return;
+      }
+
+      if (e.key !== "Tab") return;
+
+      const focusableElements = mobileMenuRef.current?.querySelectorAll(
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      );
+
+      if (!focusableElements || focusableElements.length === 0) return;
+
+      const firstElement = focusableElements[0] as HTMLElement;
+      const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement.focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [mobileMenuOpen]);
 
   const toggleMobileSection = (label: string) => {
@@ -173,11 +216,15 @@ export default function Navigation() {
 
               {/* Slide-out Drawer */}
               <motion.div
+                ref={mobileMenuRef}
                 initial={{ x: "100%" }}
                 animate={{ x: 0 }}
                 exit={{ x: "100%" }}
                 transition={{ type: "spring", damping: 25, stiffness: 200 }}
                 className="fixed inset-y-0 right-0 w-[85%] max-w-sm bg-white z-[9999] lg:hidden flex flex-col shadow-2xl"
+                role="dialog"
+                aria-modal="true"
+                aria-label="Navigation menu"
               >
               {/* Drawer Header */}
               <div className="flex items-center justify-between p-4 border-b border-gray-100">
@@ -189,8 +236,9 @@ export default function Navigation() {
                   className="h-10 w-auto"
                 />
                 <button
+                  ref={closeButtonRef}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="p-2 text-slate hover:text-navy hover:bg-gray-100 rounded-lg transition-colors"
+                  className="p-2 text-slate hover:text-navy hover:bg-gray-100 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-emerald"
                   aria-label="Close menu"
                 >
                   <X className="w-6 h-6" />

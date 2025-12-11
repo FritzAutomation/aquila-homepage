@@ -138,6 +138,7 @@ export default function ASCOCaseStudyPage() {
                 width={600}
                 height={400}
                 className="rounded-2xl shadow-lg w-full h-auto"
+                priority
               />
             </motion.div>
           </div>

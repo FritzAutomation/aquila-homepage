@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Cookie, X, Settings } from "lucide-react";
+import { Cookie, X, Settings, Shield, BarChart3, Target } from "lucide-react";
 import Link from "next/link";
 
 const COOKIE_CONSENT_KEY = "aquila-cookie-consent";
@@ -21,6 +21,8 @@ export default function CookieConsent() {
     analytics: false,
     marketing: false,
   });
+  const bannerRef = useRef<HTMLDivElement>(null);
+  const acceptButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     // Check if user has already consented
@@ -31,6 +33,25 @@ export default function CookieConsent() {
       return () => clearTimeout(timer);
     }
   }, []);
+
+  // Focus the accept button when banner appears
+  useEffect(() => {
+    if (isVisible && acceptButtonRef.current) {
+      acceptButtonRef.current.focus();
+    }
+  }, [isVisible]);
+
+  // Handle escape key
+  useEffect(() => {
+    if (!isVisible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleAcceptNecessary();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isVisible]);
 
   const handleAcceptAll = () => {
     const fullConsent: ConsentState = {
@@ -69,11 +90,16 @@ export default function CookieConsent() {
     <AnimatePresence>
       {isVisible && (
         <motion.div
+          ref={bannerRef}
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: "spring", damping: 25, stiffness: 200 }}
           className="fixed bottom-0 left-0 right-0 z-50 p-4 md:p-6"
+          role="dialog"
+          aria-modal="false"
+          aria-label="Cookie consent"
+          aria-describedby="cookie-description"
         >
           <div className="max-w-4xl mx-auto bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
             {/* Main Banner */}
@@ -86,7 +112,7 @@ export default function CookieConsent() {
                   <h3 className="text-lg font-semibold text-navy mb-2">
                     We value your privacy
                   </h3>
-                  <p className="text-sm text-slate mb-4">
+                  <p id="cookie-description" className="text-sm text-slate mb-4">
                     We use cookies to enhance your browsing experience, analyze site traffic,
                     and personalize content. By clicking &quot;Accept All&quot;, you consent to our use of cookies.{" "}
                     <Link href="/privacy" className="text-emerald hover:underline">
@@ -106,10 +132,15 @@ export default function CookieConsent() {
                       >
                         <div className="border-t border-gray-100 pt-4 mb-4 space-y-3">
                           {/* Necessary Cookies */}
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium text-navy text-sm">Necessary Cookies</p>
-                              <p className="text-xs text-slate">Required for the website to function</p>
+                          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-emerald/10 rounded-lg flex items-center justify-center">
+                                <Shield className="w-4 h-4 text-emerald" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-navy text-sm">Necessary Cookies</p>
+                                <p className="text-xs text-slate">Required for the website to function</p>
+                              </div>
                             </div>
                             <div className="relative">
                               <input
@@ -117,21 +148,31 @@ export default function CookieConsent() {
                                 checked={consent.necessary}
                                 disabled
                                 className="sr-only"
+                                id="necessary-cookies"
                               />
-                              <div className="w-10 h-6 bg-emerald rounded-full cursor-not-allowed">
+                              <label htmlFor="necessary-cookies" className="sr-only">Necessary cookies (always enabled)</label>
+                              <div className="w-10 h-6 bg-emerald rounded-full cursor-not-allowed opacity-75" aria-hidden="true">
                                 <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow" />
                               </div>
                             </div>
                           </div>
 
                           {/* Analytics Cookies */}
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium text-navy text-sm">Analytics Cookies</p>
-                              <p className="text-xs text-slate">Help us understand how visitors use our site</p>
+                          <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                                <BarChart3 className="w-4 h-4 text-blue-500" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-navy text-sm">Analytics Cookies</p>
+                                <p className="text-xs text-slate">Help us understand how visitors use our site</p>
+                              </div>
                             </div>
                             <button
                               onClick={() => toggleConsent("analytics")}
+                              role="switch"
+                              aria-checked={consent.analytics}
+                              aria-label="Toggle analytics cookies"
                               className="relative w-10 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald focus:ring-offset-2"
                               style={{ backgroundColor: consent.analytics ? "#10B981" : "#E5E7EB" }}
                             >
@@ -144,13 +185,21 @@ export default function CookieConsent() {
                           </div>
 
                           {/* Marketing Cookies */}
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="font-medium text-navy text-sm">Marketing Cookies</p>
-                              <p className="text-xs text-slate">Used to deliver relevant advertisements</p>
+                          <div className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-purple-50 rounded-lg flex items-center justify-center">
+                                <Target className="w-4 h-4 text-purple-500" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-navy text-sm">Marketing Cookies</p>
+                                <p className="text-xs text-slate">Used to deliver relevant advertisements</p>
+                              </div>
                             </div>
                             <button
                               onClick={() => toggleConsent("marketing")}
+                              role="switch"
+                              aria-checked={consent.marketing}
+                              aria-label="Toggle marketing cookies"
                               className="relative w-10 h-6 rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-emerald focus:ring-offset-2"
                               style={{ backgroundColor: consent.marketing ? "#10B981" : "#E5E7EB" }}
                             >
@@ -169,28 +218,29 @@ export default function CookieConsent() {
                   {/* Buttons */}
                   <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                     <button
+                      ref={acceptButtonRef}
                       onClick={handleAcceptAll}
-                      className="px-4 py-2 bg-emerald text-white rounded-lg font-medium hover:bg-emerald/90 transition-colors text-sm"
+                      className="px-4 py-2 bg-emerald text-white rounded-lg font-medium hover:bg-emerald/90 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-emerald focus:ring-offset-2"
                     >
                       Accept All
                     </button>
                     <button
                       onClick={handleAcceptNecessary}
-                      className="px-4 py-2 bg-gray-100 text-navy rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm"
+                      className="px-4 py-2 bg-gray-100 text-navy rounded-lg font-medium hover:bg-gray-200 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-2"
                     >
                       Necessary Only
                     </button>
                     {showSettings ? (
                       <button
                         onClick={handleSavePreferences}
-                        className="px-4 py-2 bg-navy text-white rounded-lg font-medium hover:bg-navy/90 transition-colors text-sm"
+                        className="px-4 py-2 bg-navy text-white rounded-lg font-medium hover:bg-navy/90 transition-colors text-sm focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2"
                       >
                         Save Preferences
                       </button>
                     ) : (
                       <button
                         onClick={() => setShowSettings(true)}
-                        className="px-4 py-2 text-slate hover:text-navy transition-colors text-sm flex items-center justify-center gap-1"
+                        className="px-4 py-2 text-slate hover:text-navy transition-colors text-sm flex items-center justify-center gap-1 focus:outline-none focus:ring-2 focus:ring-emerald focus:ring-offset-2 rounded-lg"
                       >
                         <Settings className="w-4 h-4" />
                         Customize

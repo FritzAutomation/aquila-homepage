@@ -8,10 +8,10 @@ const footerLinks = {
     { label: "Custom Solutions", href: "/products/custom" },
   ],
   Services: [
-    { label: "Training", href: "/services" },
-    { label: "System Integration", href: "/services" },
-    { label: "Consulting", href: "/services" },
-    { label: "Support", href: "/services" },
+    { label: "Training", href: "/services/training" },
+    { label: "System Integration", href: "/services/integration" },
+    { label: "Consulting", href: "/services/consulting" },
+    { label: "Support", href: "/services/support" },
   ],
   Company: [
     { label: "About Us", href: "/about" },

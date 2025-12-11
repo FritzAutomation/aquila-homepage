@@ -28,11 +28,11 @@ export default function CTA() {
             manufacturing operations.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button href="#demo" size="lg">
+            <Button href="/contact" size="lg">
               Request a Demo
             </Button>
             <Button
-              href="#contact"
+              href="/contact"
               variant="secondary"
               size="lg"
               className="bg-white/10 border-white/20 text-white hover:bg-white/20"

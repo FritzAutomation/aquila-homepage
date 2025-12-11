@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useCallback, useRef } from "react";
+import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import { Quote, ChevronLeft, ChevronRight } from "lucide-react";
 import { SectionWrapper } from "../ui";
 
@@ -67,27 +67,54 @@ const testimonials = [
 export default function Testimonial() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const swipeThreshold = 50;
 
   const nextTestimonial = useCallback(() => {
     setDirection(1);
     setCurrentIndex((prev) => (prev + 1) % testimonials.length);
   }, []);
 
-  const prevTestimonial = () => {
+  const prevTestimonial = useCallback(() => {
     setDirection(-1);
     setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
-  };
+  }, []);
 
   const goToTestimonial = (index: number) => {
     setDirection(index > currentIndex ? 1 : -1);
     setCurrentIndex(index);
   };
 
-  // Auto-advance carousel
+  // Handle swipe/drag gestures
+  const handleDragEnd = (event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (info.offset.x > swipeThreshold) {
+      prevTestimonial();
+    } else if (info.offset.x < -swipeThreshold) {
+      nextTestimonial();
+    }
+  };
+
+  // Auto-advance carousel (pause on hover/focus)
   useEffect(() => {
+    if (isPaused) return;
     const timer = setInterval(nextTestimonial, 8000);
     return () => clearInterval(timer);
-  }, [nextTestimonial]);
+  }, [nextTestimonial, isPaused]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!containerRef.current?.contains(document.activeElement)) return;
+      if (e.key === "ArrowLeft") {
+        prevTestimonial();
+      } else if (e.key === "ArrowRight") {
+        nextTestimonial();
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [nextTestimonial, prevTestimonial]);
 
   const current = testimonials[currentIndex];
 
@@ -123,11 +150,26 @@ export default function Testimonial() {
         </p>
       </motion.div>
 
-      <div className="max-w-4xl mx-auto relative">
+      <div
+        ref={containerRef}
+        className="max-w-4xl mx-auto relative"
+        role="region"
+        aria-roledescription="carousel"
+        aria-label="Customer testimonials"
+        onMouseEnter={() => setIsPaused(true)}
+        onMouseLeave={() => setIsPaused(false)}
+        onFocus={() => setIsPaused(true)}
+        onBlur={() => setIsPaused(false)}
+      >
+        {/* Screen reader announcement */}
+        <div className="sr-only" aria-live="polite" aria-atomic="true">
+          Testimonial {currentIndex + 1} of {testimonials.length}: {current.quote} - {current.author}
+        </div>
+
         {/* Navigation Arrows */}
         <button
           onClick={prevTestimonial}
-          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-12 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-slate hover:text-navy hover:shadow-xl transition-all z-10"
+          className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 md:-translate-x-12 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-slate hover:text-navy hover:shadow-xl transition-all z-10 focus:outline-none focus:ring-2 focus:ring-emerald focus:ring-offset-2"
           aria-label="Previous testimonial"
         >
           <ChevronLeft className="w-5 h-5" />
@@ -135,14 +177,14 @@ export default function Testimonial() {
 
         <button
           onClick={nextTestimonial}
-          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-12 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-slate hover:text-navy hover:shadow-xl transition-all z-10"
+          className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 md:translate-x-12 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center text-slate hover:text-navy hover:shadow-xl transition-all z-10 focus:outline-none focus:ring-2 focus:ring-emerald focus:ring-offset-2"
           aria-label="Next testimonial"
         >
           <ChevronRight className="w-5 h-5" />
         </button>
 
         {/* Testimonial Card */}
-        <div className="pt-8">
+        <div className="pt-8 touch-pan-y">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={currentIndex}
@@ -152,7 +194,11 @@ export default function Testimonial() {
               animate="center"
               exit="exit"
               transition={{ duration: 0.3, ease: "easeInOut" }}
-              className="pb-4"
+              className="pb-4 cursor-grab active:cursor-grabbing"
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.2}
+              onDragEnd={handleDragEnd}
             >
               <div className="bg-white rounded-3xl p-8 md:p-12 shadow-lg relative" style={{ boxShadow: '0 10px 40px -10px rgba(0,0,0,0.1)' }}>
                 {/* Quote Icon */}
@@ -194,17 +240,20 @@ export default function Testimonial() {
         </div>
 
         {/* Carousel Dots */}
-        <div className="flex justify-center gap-2 mt-8">
-          {testimonials.map((_, index) => (
+        <div className="flex justify-center gap-2 mt-8" role="tablist" aria-label="Testimonial navigation">
+          {testimonials.map((t, index) => (
             <button
               key={index}
+              role="tab"
               onClick={() => goToTestimonial(index)}
-              className={`w-2 h-2 rounded-full transition-all ${
+              className={`w-2 h-2 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-emerald focus:ring-offset-2 ${
                 index === currentIndex
                   ? "bg-emerald w-6"
                   : "bg-slate-light/50 hover:bg-slate-light"
               }`}
-              aria-label={`Go to testimonial ${index + 1}`}
+              aria-label={`Go to testimonial ${index + 1} by ${t.author}`}
+              aria-selected={index === currentIndex}
+              tabIndex={index === currentIndex ? 0 : -1}
             />
           ))}
         </div>

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play } from "lucide-react";
+import { Play, ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 import { Button, VideoModal } from "../ui";
 
@@ -49,20 +49,47 @@ export default function Hero() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [direction, setDirection] = useState(0);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
 
-  // Auto-advance slides
+  const goToSlide = useCallback((index: number) => {
+    setDirection(index > currentSlide ? 1 : -1);
+    setCurrentSlide(index);
+  }, [currentSlide]);
+
+  const nextSlide = useCallback(() => {
+    setDirection(1);
+    setCurrentSlide((prev) => (prev + 1) % slides.length);
+  }, []);
+
+  const prevSlide = useCallback(() => {
+    setDirection(-1);
+    setCurrentSlide((prev) => (prev - 1 + slides.length) % slides.length);
+  }, []);
+
+  // Auto-advance slides (pause on hover/focus)
   useEffect(() => {
+    if (isPaused) return;
     const timer = setInterval(() => {
       setDirection(1);
       setCurrentSlide((prev) => (prev + 1) % slides.length);
     }, 6000);
     return () => clearInterval(timer);
-  }, []);
+  }, [isPaused]);
 
-  const goToSlide = (index: number) => {
-    setDirection(index > currentSlide ? 1 : -1);
-    setCurrentSlide(index);
-  };
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        prevSlide();
+      } else if (e.key === "ArrowRight") {
+        nextSlide();
+      }
+    };
+
+    return () => {
+      // Cleanup if needed
+    };
+  }, [nextSlide, prevSlide]);
 
   const slideVariants = {
     enter: (direction: number) => ({
@@ -165,9 +192,28 @@ export default function Hero() {
           </div>
 
           {/* Right Content - Image Carousel */}
-          <div className="relative">
+          <div
+            className="relative"
+            role="region"
+            aria-roledescription="carousel"
+            aria-label="Product features carousel"
+            onMouseEnter={() => setIsPaused(true)}
+            onMouseLeave={() => setIsPaused(false)}
+            onFocus={() => setIsPaused(true)}
+            onBlur={() => setIsPaused(false)}
+          >
+            {/* Screen reader announcement */}
+            <div className="sr-only" aria-live="polite" aria-atomic="true">
+              Slide {currentSlide + 1} of {slides.length}: {slide.title} - {slide.subtitle}
+            </div>
+
             <div className="relative overflow-hidden">
-              <div className="relative min-h-[200px] md:min-h-[250px] flex items-center justify-center">
+              <div
+                className="relative min-h-[200px] md:min-h-[250px] flex items-center justify-center"
+                role="group"
+                aria-roledescription="slide"
+                aria-label={`${currentSlide + 1} of ${slides.length}`}
+              >
                 <AnimatePresence mode="wait" custom={direction}>
                   <motion.div
                     key={currentSlide}
@@ -181,7 +227,7 @@ export default function Hero() {
                   >
                     <Image
                       src={slide.image}
-                      alt={slide.title}
+                      alt={`${slide.title}: ${slide.subtitle}`}
                       width={700}
                       height={300}
                       className="w-full h-auto max-h-[250px] object-contain"
@@ -190,20 +236,39 @@ export default function Hero() {
                   </motion.div>
                 </AnimatePresence>
               </div>
+
+              {/* Navigation Arrows */}
+              <button
+                onClick={prevSlide}
+                className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center text-navy hover:text-emerald transition-colors focus:outline-none focus:ring-2 focus:ring-emerald focus:ring-offset-2 z-10"
+                aria-label="Previous slide"
+              >
+                <ChevronLeft className="w-5 h-5" />
+              </button>
+              <button
+                onClick={nextSlide}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 hover:bg-white rounded-full shadow-lg flex items-center justify-center text-navy hover:text-emerald transition-colors focus:outline-none focus:ring-2 focus:ring-emerald focus:ring-offset-2 z-10"
+                aria-label="Next slide"
+              >
+                <ChevronRight className="w-5 h-5" />
+              </button>
             </div>
 
             {/* Slide Indicators */}
-            <div className="flex justify-center gap-2 mt-4">
-              {slides.map((_, index) => (
+            <div className="flex justify-center gap-2 mt-4" role="tablist" aria-label="Slide indicators">
+              {slides.map((s, index) => (
                 <button
                   key={index}
+                  role="tab"
                   onClick={() => goToSlide(index)}
-                  className={`h-2 rounded-full transition-all duration-300 ${
+                  className={`h-2 rounded-full transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald focus:ring-offset-2 ${
                     index === currentSlide
                       ? "w-8 bg-emerald"
                       : "w-2 bg-slate-light/50 hover:bg-slate-light"
                   }`}
-                  aria-label={`Go to slide ${index + 1}`}
+                  aria-label={`Go to slide ${index + 1}: ${s.title}`}
+                  aria-selected={index === currentSlide}
+                  tabIndex={index === currentSlide ? 0 : -1}
                 />
               ))}
             </div>
