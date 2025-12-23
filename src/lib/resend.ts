@@ -16,6 +16,7 @@ function getResendClient(): Resend {
 
 const FROM_EMAIL = process.env.EMAIL_FROM || 'onboarding@resend.dev'
 const REPLY_TO_EMAIL = process.env.REPLY_TO_EMAIL || 'fritzjunker69@gmail.com'
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://aquila-homepage.vercel.app'
 
 interface SendTicketConfirmationParams {
   to: string
@@ -64,7 +65,20 @@ export async function sendTicketConfirmation({
               <p><strong>Category:</strong> ${issueType}</p>
             </div>
 
-            <p>You can reply to this email to add more information to your ticket.</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${BASE_URL}/support/status"
+                 style="display: inline-block; background-color: #10B981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                Check Ticket Status
+              </a>
+            </div>
+
+            <p style="color: #666; font-size: 14px; text-align: center;">
+              Use your ticket ID <strong>${ticketId}</strong> and email address to check your ticket status.
+            </p>
+
+            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;" />
+
+            <p>You can also reply to this email to add more information to your ticket.</p>
 
             <p>Best regards,<br/>
             <strong>The Aquila Group Support Team</strong></p>
@@ -136,7 +150,14 @@ export async function sendAgentReply({
 
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;" />
 
-            <p style="color: #666; font-size: 12px;">
+            <div style="text-align: center; margin: 20px 0;">
+              <a href="${BASE_URL}/support/status"
+                 style="display: inline-block; background-color: #1E3A5F; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-size: 14px;">
+                View Ticket Status
+              </a>
+            </div>
+
+            <p style="color: #666; font-size: 12px; text-align: center;">
               Reply to this email to continue the conversation.
             </p>
           </div>
