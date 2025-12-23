@@ -11,7 +11,11 @@ const footerLinks = {
     { label: "Training", href: "/services/training" },
     { label: "System Integration", href: "/services/integration" },
     { label: "Consulting", href: "/services/consulting" },
-    { label: "Support", href: "/services/support" },
+  ],
+  Support: [
+    { label: "Contact Support", href: "/support" },
+    { label: "Check Ticket Status", href: "/support/status" },
+    { label: "Knowledge Base", href: "/support/kb" },
   ],
   Company: [
     { label: "About Us", href: "/about" },

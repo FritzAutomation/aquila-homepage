@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { MapPin, Phone, Mail, Clock, Send, AlertCircle, CheckCircle } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, Send, AlertCircle, CheckCircle, Ticket, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import { Navigation, Footer } from "@/components/layout";
 import { PageHeader, Card, Button, SectionWrapper } from "@/components/ui";
@@ -511,6 +511,39 @@ export default function ContactPage() {
               </motion.div>
             ))}
           </div>
+        </SectionWrapper>
+
+        {/* Support Ticket CTA */}
+        <SectionWrapper>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="bg-gradient-to-br from-navy to-navy/90 rounded-3xl p-8 md:p-12 text-center"
+          >
+            <div className="max-w-2xl mx-auto">
+              <div className="w-16 h-16 bg-emerald/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Ticket className="w-8 h-8 text-emerald" />
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">
+                Need Technical Support?
+              </h2>
+              <p className="text-white/80 text-lg mb-8">
+                Submit a support ticket for faster, tracked assistance. Our team will
+                respond within 4 hours for critical issues and 24 hours for general inquiries.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button href="/support" variant="primary" size="lg">
+                  Submit Support Ticket
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+                <Button href="/support/status" variant="ghost" size="lg" className="border border-white/30 text-white hover:bg-white/10">
+                  Check Ticket Status
+                </Button>
+              </div>
+            </div>
+          </motion.div>
         </SectionWrapper>
       </main>
       <Footer />

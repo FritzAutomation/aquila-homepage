@@ -38,6 +38,7 @@ const navItems = [
     ],
   },
   { label: "News", href: "/news" },
+  { label: "Support", href: "/support" },
 ];
 
 export default function Navigation() {

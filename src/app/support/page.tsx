@@ -6,19 +6,18 @@ import {
   Send,
   Loader2,
   CheckCircle,
-  ArrowLeft,
   Mail,
   User,
   Phone,
   Building2,
   MessageSquare,
   HelpCircle,
-  Paperclip,
   X,
   FileText,
   Image as ImageIcon,
   Upload,
 } from "lucide-react";
+import { Navigation, Footer } from "@/components/layout";
 import {
   PRODUCT_LABELS,
   ISSUE_TYPE_LABELS,
@@ -154,62 +153,61 @@ export default function SupportPage() {
   // Success state
   if (result?.success) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-            <div className="w-16 h-16 bg-emerald/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-emerald" />
-            </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Ticket Submitted!
-            </h2>
-            <p className="text-gray-600 mb-4">
-              Your ticket <strong className="text-navy">{result.ticket_id}</strong> has been created.
-            </p>
-            <p className="text-sm text-gray-500 mb-6">
-              We&apos;ve sent a confirmation email to <strong>{formData.email}</strong>.
-              Our team will respond within 24 hours.
-            </p>
-            <div className="space-y-3">
-              <Link
-                href="/support/status"
-                className="block w-full py-2.5 px-4 bg-navy text-white font-medium rounded-lg hover:bg-navy-dark transition-colors"
-              >
-                Check Ticket Status
-              </Link>
-              <Link
-                href="/"
-                className="block w-full py-2.5 px-4 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Return to Homepage
-              </Link>
+      <>
+        <Navigation />
+        <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4 pt-24">
+          <div className="w-full max-w-md">
+            <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
+              <div className="w-16 h-16 bg-emerald/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="w-8 h-8 text-emerald" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Ticket Submitted!
+              </h2>
+              <p className="text-gray-600 mb-4">
+                Your ticket <strong className="text-navy">{result.ticket_id}</strong> has been created.
+              </p>
+              <p className="text-sm text-gray-500 mb-6">
+                We&apos;ve sent a confirmation email to <strong>{formData.email}</strong>.
+                Our team will respond within 24 hours.
+              </p>
+              <div className="space-y-3">
+                <Link
+                  href="/support/status"
+                  className="block w-full py-2.5 px-4 bg-navy text-white font-medium rounded-lg hover:bg-navy-dark transition-colors"
+                >
+                  Check Ticket Status
+                </Link>
+                <Link
+                  href="/"
+                  className="block w-full py-2.5 px-4 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Return to Homepage
+                </Link>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </main>
+        <Footer />
+      </>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800 mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to website
-          </Link>
-          <div className="w-12 h-12 bg-navy rounded-xl flex items-center justify-center mx-auto mb-4">
-            <HelpCircle className="w-6 h-6 text-white" />
+    <>
+      <Navigation />
+      <main className="min-h-screen bg-gray-50 pt-24 pb-12 px-4">
+        <div className="max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="w-12 h-12 bg-navy rounded-xl flex items-center justify-center mx-auto mb-4">
+              <HelpCircle className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900">Contact Support</h1>
+            <p className="text-gray-600 mt-2">
+              Submit a support request and we&apos;ll get back to you within 24 hours.
+            </p>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Contact Support</h1>
-          <p className="text-gray-600 mt-2">
-            Submit a support request and we&apos;ll get back to you within 24 hours.
-          </p>
-        </div>
 
         {/* Form */}
         <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
@@ -492,20 +490,22 @@ export default function SupportPage() {
         </div>
 
         {/* Help Links */}
-        <div className="mt-8 text-center">
-          <p className="text-gray-600 mb-2">Need immediate assistance?</p>
-          <p className="text-sm text-gray-500">
-            Call us at{" "}
-            <a href="tel:+18005551234" className="text-emerald font-medium hover:underline">
-              1-800-555-1234
-            </a>{" "}
-            or email{" "}
-            <a href="mailto:support@the-aquila-group.com" className="text-emerald font-medium hover:underline">
-              support@the-aquila-group.com
-            </a>
-          </p>
+          <div className="mt-8 text-center">
+            <p className="text-gray-600 mb-2">Need immediate assistance?</p>
+            <p className="text-sm text-gray-500">
+              Call us at{" "}
+              <a href="tel:+16088349213" className="text-emerald font-medium hover:underline">
+                (608) 834-9213
+              </a>{" "}
+              or email{" "}
+              <a href="mailto:sales@the-aquila-group.com" className="text-emerald font-medium hover:underline">
+                sales@the-aquila-group.com
+              </a>
+            </p>
+          </div>
         </div>
-      </div>
-    </div>
+      </main>
+      <Footer />
+    </>
   );
 }

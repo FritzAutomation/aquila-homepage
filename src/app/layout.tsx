@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { BackToTop, CookieConsent, ScrollProgress } from "@/components/ui";
+import FloatingHelpButton from "@/components/FloatingHelpButton";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -145,6 +146,7 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         <ScrollProgress />
         {children}
+        <FloatingHelpButton />
         <BackToTop />
         <CookieConsent />
       </body>

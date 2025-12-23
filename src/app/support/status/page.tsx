@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   Search,
   Loader2,
-  ArrowLeft,
   Ticket,
   Clock,
   CheckCircle,
@@ -13,6 +12,7 @@ import {
   MessageSquare,
   User,
 } from "lucide-react";
+import { Navigation, Footer } from "@/components/layout";
 import {
   PRODUCT_LABELS,
   ISSUE_TYPE_LABELS,
@@ -109,25 +109,20 @@ export default function TicketStatusPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <Link
-            href="/support"
-            className="inline-flex items-center gap-1 text-sm text-gray-600 hover:text-gray-800 mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to support
-          </Link>
-          <div className="w-12 h-12 bg-navy rounded-xl flex items-center justify-center mx-auto mb-4">
-            <Ticket className="w-6 h-6 text-white" />
+    <>
+      <Navigation />
+      <main className="min-h-screen bg-gray-50 pt-24 pb-12 px-4">
+        <div className="max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="text-center mb-8">
+            <div className="w-12 h-12 bg-navy rounded-xl flex items-center justify-center mx-auto mb-4">
+              <Ticket className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900">Check Ticket Status</h1>
+            <p className="text-gray-600 mt-2">
+              Enter your ticket ID and email to view your support request.
+            </p>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900">Check Ticket Status</h1>
-          <p className="text-gray-600 mt-2">
-            Enter your ticket ID and email to view your support request.
-          </p>
-        </div>
 
         {/* Search Form */}
         <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-6">
@@ -316,16 +311,18 @@ export default function TicketStatusPage() {
         )}
 
         {/* Help Links */}
-        <div className="mt-8 text-center">
-          <p className="text-gray-600 mb-2">Can&apos;t find your ticket?</p>
-          <Link
-            href="/support"
-            className="text-emerald font-medium hover:underline"
-          >
-            Submit a new support request
-          </Link>
+          <div className="mt-8 text-center">
+            <p className="text-gray-600 mb-2">Can&apos;t find your ticket?</p>
+            <Link
+              href="/support"
+              className="text-emerald font-medium hover:underline"
+            >
+              Submit a new support request
+            </Link>
+          </div>
         </div>
-      </div>
-    </div>
+      </main>
+      <Footer />
+    </>
   );
 }
