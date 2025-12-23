@@ -246,7 +246,7 @@ export async function POST(request: NextRequest) {
           company_id: companyId,
           subject: subject,
           product: 'other',  // Default since we can't determine from email
-          issue_type: 'general_inquiry',
+          issue_type: 'other',  // Valid values: bug, feature, training, integration, billing, other
           source: 'email',
           status: 'open',
           priority: 'normal'
