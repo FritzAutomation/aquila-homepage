@@ -6,6 +6,7 @@ import crypto from 'crypto'
 
 // Resend inbound email webhook payload
 interface ResendInboundEmail {
+  email_id: string
   from: string
   to: string[]
   subject: string
@@ -149,6 +150,7 @@ export async function POST(request: NextRequest) {
     }
 
     const emailData: ResendInboundEmail = payload.data
+    const emailId = emailData.email_id // Unique ID from Resend
     const { email: senderEmail, name: senderName } = parseEmailAddress(emailData.from)
     const subject = emailData.subject || '(No subject)'
 
@@ -168,6 +170,28 @@ export async function POST(request: NextRequest) {
 
     const supabase = createAdminClient()
     const ticketNumber = extractTicketNumber(subject)
+
+    // Check for duplicate - same email and subject within last 5 minutes
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString()
+    const { data: recentTicket } = await supabase
+      .from('tickets')
+      .select('id, ticket_number')
+      .eq('email', senderEmail)
+      .eq('subject', subject)
+      .eq('source', 'email')
+      .gte('created_at', fiveMinutesAgo)
+      .limit(1)
+      .single()
+
+    if (recentTicket && !ticketNumber) {
+      // Already processed this email
+      console.log('Duplicate email detected, skipping:', emailId)
+      return NextResponse.json({
+        success: true,
+        action: 'duplicate_skipped',
+        ticket_id: `TKT-${String(recentTicket.ticket_number).padStart(4, '0')}`
+      })
+    }
 
     if (ticketNumber) {
       // This is a reply to an existing ticket
