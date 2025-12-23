@@ -44,9 +44,6 @@ export default function FloatingHelpButton() {
   const buttonRef = useRef<HTMLButtonElement>(null);
   const pathname = usePathname();
 
-  // Hide on admin pages
-  const isAdminPage = pathname?.startsWith("/admin");
-
   useEffect(() => {
     setMounted(true);
   }, []);
@@ -103,7 +100,8 @@ export default function FloatingHelpButton() {
   }, [isOpen]);
 
   // Don't render on admin pages or before mounting
-  if (!mounted || isAdminPage) return null;
+  if (!mounted) return null;
+  if (pathname && pathname.startsWith("/admin")) return null;
 
   // Move up when back-to-top button is visible (48px button + 16px gap)
   const bottomOffset = isBackToTopVisible ? 88 : 24; // 88px when visible, 24px (bottom-6) otherwise
