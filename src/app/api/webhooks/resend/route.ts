@@ -154,6 +154,11 @@ export async function POST(request: NextRequest) {
 
     const payload = JSON.parse(rawBody)
 
+    // Debug: Log the COMPLETE raw payload to understand full structure
+    console.log('=== FULL RAW PAYLOAD ===')
+    console.log(rawBody.substring(0, 2000)) // First 2000 chars to avoid log limits
+    console.log('=== END PAYLOAD ===')
+
     // Resend wraps inbound emails in a specific event structure
     const eventType = payload.type
 
