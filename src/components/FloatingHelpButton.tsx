@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { HelpCircle, X, MessageSquare, Search, Phone, Mail } from "lucide-react";
 import Link from "next/link";
@@ -41,6 +42,10 @@ export default function FloatingHelpButton() {
   const [isBackToTopVisible, setIsBackToTopVisible] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const pathname = usePathname();
+
+  // Hide on admin pages
+  const isAdminPage = pathname?.startsWith("/admin");
 
   useEffect(() => {
     setMounted(true);
@@ -97,7 +102,8 @@ export default function FloatingHelpButton() {
     };
   }, [isOpen]);
 
-  if (!mounted) return null;
+  // Don't render on admin pages or before mounting
+  if (!mounted || isAdminPage) return null;
 
   // Move up when back-to-top button is visible (48px button + 16px gap)
   const bottomOffset = isBackToTopVisible ? 88 : 24; // 88px when visible, 24px (bottom-6) otherwise
