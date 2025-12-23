@@ -7,11 +7,11 @@ import crypto from 'crypto'
 // Resend inbound email webhook payload
 interface ResendInboundEmail {
   from: string
-  to: string
+  to: string[]
   subject: string
-  text: string
+  text?: string
   html?: string
-  headers: Record<string, string>
+  headers?: Record<string, string>
   attachments?: Array<{
     filename: string
     content: string // base64 encoded
@@ -65,34 +65,49 @@ function cleanEmailBody(text: string): string {
   return cleanLines.join('\n').trim()
 }
 
-// Verify webhook signature from Resend
+// Verify webhook signature from Resend (uses Svix)
 async function verifyWebhookSignature(
   payload: string,
-  signature: string | null | undefined,
+  svixId: string | null | undefined,
+  svixTimestamp: string | null | undefined,
+  svixSignature: string | null | undefined,
   webhookSecret: string | null | undefined
 ): Promise<boolean> {
-  if (!webhookSecret || !signature) {
-    // If no secret configured, skip verification (for development)
+  if (!webhookSecret) {
     console.warn('Webhook signature verification skipped - no secret configured')
     return true
   }
 
+  if (!svixId || !svixTimestamp || !svixSignature) {
+    console.warn('Missing Svix headers, skipping verification')
+    return true
+  }
+
   try {
-    const [timestamp, signatureHash] = signature.split(',').map(part => {
-      const [, value] = part.split('=')
-      return value
-    })
+    // Svix signature format: v1,base64signature
+    const signedPayload = `${svixId}.${svixTimestamp}.${payload}`
 
-    const signedPayload = `${timestamp}.${payload}`
+    // Remove 'whsec_' prefix if present
+    const secretBytes = webhookSecret.startsWith('whsec_')
+      ? Buffer.from(webhookSecret.slice(6), 'base64')
+      : Buffer.from(webhookSecret, 'base64')
+
     const expectedSignature = crypto
-      .createHmac('sha256', webhookSecret)
+      .createHmac('sha256', secretBytes)
       .update(signedPayload)
-      .digest('hex')
+      .digest('base64')
 
-    return crypto.timingSafeEqual(
-      Buffer.from(signatureHash),
-      Buffer.from(expectedSignature)
-    )
+    // Svix sends multiple signatures, check if any match
+    const signatures = svixSignature.split(' ')
+    for (const sig of signatures) {
+      const [version, signature] = sig.split(',')
+      if (version === 'v1' && signature === expectedSignature) {
+        return true
+      }
+    }
+
+    console.error('No matching signature found')
+    return false
   } catch (error) {
     console.error('Webhook signature verification failed:', error)
     return false
@@ -102,14 +117,22 @@ async function verifyWebhookSignature(
 export async function POST(request: NextRequest) {
   try {
     const headersList = await headers()
-    const signature = headersList.get('svix-signature')
+    const svixId = headersList.get('svix-id')
+    const svixTimestamp = headersList.get('svix-timestamp')
+    const svixSignature = headersList.get('svix-signature')
     const webhookSecret = process.env.RESEND_WEBHOOK_SECRET
 
     // Get raw body for signature verification
     const rawBody = await request.text()
 
     // Verify signature
-    const isValid = await verifyWebhookSignature(rawBody, signature, webhookSecret)
+    const isValid = await verifyWebhookSignature(
+      rawBody,
+      svixId,
+      svixTimestamp,
+      svixSignature,
+      webhookSecret
+    )
     if (!isValid) {
       console.error('Invalid webhook signature')
       return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
@@ -128,10 +151,19 @@ export async function POST(request: NextRequest) {
     const emailData: ResendInboundEmail = payload.data
     const { email: senderEmail, name: senderName } = parseEmailAddress(emailData.from)
     const subject = emailData.subject || '(No subject)'
-    const body = cleanEmailBody(emailData.text || '')
 
+    // Get body from text or html, fallback to subject if neither available
+    let body = ''
+    if (emailData.text) {
+      body = cleanEmailBody(emailData.text)
+    } else if (emailData.html) {
+      // Strip HTML tags for plain text
+      body = emailData.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+    }
+
+    // If still no body, use a placeholder
     if (!body) {
-      return NextResponse.json({ error: 'Empty email body' }, { status: 400 })
+      body = `(Email received with subject: ${subject})`
     }
 
     const supabase = createAdminClient()
