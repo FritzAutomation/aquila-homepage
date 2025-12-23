@@ -16,6 +16,8 @@ import {
   AlertCircle,
   Lock,
   MessageSquare,
+  FileText,
+  ChevronDown,
 } from "lucide-react";
 import {
   PRODUCT_LABELS,
@@ -36,6 +38,14 @@ interface Message {
   sender_name: string | null;
   created_at: string;
   is_internal: boolean;
+}
+
+interface CannedResponse {
+  id: string;
+  title: string;
+  content: string;
+  category: string | null;
+  shortcut: string | null;
 }
 
 interface TicketDetail {
@@ -95,10 +105,35 @@ export default function TicketDetailPage({
   const [sending, setSending] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [isInternalNote, setIsInternalNote] = useState(false);
+  const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
+  const [showCannedResponses, setShowCannedResponses] = useState(false);
 
   useEffect(() => {
     fetchTicket();
+    fetchCannedResponses();
   }, [id]);
+
+  async function fetchCannedResponses() {
+    try {
+      const res = await fetch("/api/canned-responses");
+      if (res.ok) {
+        const data = await res.json();
+        setCannedResponses(data.responses || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch canned responses:", error);
+    }
+  }
+
+  function insertCannedResponse(response: CannedResponse) {
+    setReplyContent((prev) => {
+      if (prev.trim()) {
+        return prev + "\n\n" + response.content;
+      }
+      return response.content;
+    });
+    setShowCannedResponses(false);
+  }
 
   async function fetchTicket() {
     try {
@@ -322,7 +357,7 @@ export default function TicketDetailPage({
             }`}
           >
             {/* Toggle between Reply and Internal Note */}
-            <div className="flex gap-2 mb-3">
+            <div className="flex flex-wrap items-center gap-2 mb-3">
               <button
                 type="button"
                 onClick={() => setIsInternalNote(false)}
@@ -347,6 +382,52 @@ export default function TicketDetailPage({
                 <Lock className="w-4 h-4" />
                 Internal Note
               </button>
+
+              {/* Canned Responses Picker */}
+              <div className="relative ml-auto">
+                <button
+                  type="button"
+                  onClick={() => setShowCannedResponses(!showCannedResponses)}
+                  className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-100 text-gray-600 hover:bg-gray-200 transition-colors"
+                >
+                  <FileText className="w-4 h-4" />
+                  Templates
+                  <ChevronDown className={`w-4 h-4 transition-transform ${showCannedResponses ? "rotate-180" : ""}`} />
+                </button>
+
+                {showCannedResponses && (
+                  <div className="absolute right-0 top-full mt-1 w-72 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-80 overflow-y-auto">
+                    {cannedResponses.length === 0 ? (
+                      <p className="p-3 text-sm text-gray-500">No templates available</p>
+                    ) : (
+                      <div className="py-1">
+                        {cannedResponses.map((response) => (
+                          <button
+                            key={response.id}
+                            type="button"
+                            onClick={() => insertCannedResponse(response)}
+                            className="w-full text-left px-3 py-2 hover:bg-gray-50 transition-colors"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium text-sm text-gray-900">
+                                {response.title}
+                              </span>
+                              {response.category && (
+                                <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                                  {response.category}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+                              {response.content}
+                            </p>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             <textarea
