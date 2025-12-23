@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendTicketConfirmation } from '@/lib/resend'
 import { headers } from 'next/headers'
 import crypto from 'crypto'
+import { Resend } from 'resend'
 
 // Resend inbound email webhook payload
 interface ResendInboundEmail {
@@ -207,6 +208,33 @@ export async function POST(request: NextRequest) {
             console.log('Failed to decode html attachment:', e)
           }
         }
+      }
+    }
+
+    // If still no body, try to fetch from Resend API using email_id
+    if (!body && emailId && process.env.RESEND_API_KEY) {
+      console.log('Attempting to fetch email content via Resend API, email_id:', emailId)
+      try {
+        const resend = new Resend(process.env.RESEND_API_KEY)
+        // Try to get email details - this may not work for inbound emails
+        const response = await fetch(`https://api.resend.com/emails/${emailId}`, {
+          headers: {
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
+          }
+        })
+        if (response.ok) {
+          const emailDetails = await response.json()
+          console.log('Fetched email details:', JSON.stringify(emailDetails))
+          if (emailDetails.text) {
+            body = cleanEmailBody(emailDetails.text)
+          } else if (emailDetails.html) {
+            body = emailDetails.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+          }
+        } else {
+          console.log('Failed to fetch email from API:', response.status, await response.text())
+        }
+      } catch (e) {
+        console.log('Error fetching email from API:', e)
       }
     }
 
