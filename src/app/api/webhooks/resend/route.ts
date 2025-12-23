@@ -163,25 +163,51 @@ export async function POST(request: NextRequest) {
 
     const emailData: ResendInboundEmail = payload.data
 
-    // Debug: Log the raw email data structure to understand the payload
-    console.log('Inbound email payload keys:', Object.keys(emailData))
-    console.log('Has text?', !!emailData.text, 'Length:', emailData.text?.length || 0)
-    console.log('Has html?', !!emailData.html, 'Length:', emailData.html?.length || 0)
+    // Debug: Log the payload structure
+    console.log('Email data keys:', Object.keys(emailData || {}))
+    console.log('Attachments:', JSON.stringify(emailData.attachments))
 
     const emailId = emailData.email_id // Unique ID from Resend
     const { email: senderEmail, name: senderName } = parseEmailAddress(emailData.from)
     const subject = emailData.subject || '(No subject)'
 
-    // Get body from text or html, fallback to subject if neither available
+    // Get body from text, html, or check attachments for body content
     let body = ''
+
+    // Check standard text/html fields first
     if (emailData.text) {
-      console.log('Using text body, first 200 chars:', emailData.text.substring(0, 200))
+      console.log('Found text field')
       body = cleanEmailBody(emailData.text)
-      console.log('After cleaning, body length:', body.length)
     } else if (emailData.html) {
-      console.log('Using html body, first 200 chars:', emailData.html.substring(0, 200))
-      // Strip HTML tags for plain text
+      console.log('Found html field')
       body = emailData.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+    }
+
+    // Check if body is in attachments (some email providers put body there)
+    if (!body && emailData.attachments && emailData.attachments.length > 0) {
+      console.log('Checking attachments for body content')
+      for (const attachment of emailData.attachments) {
+        // Look for text/plain or text/html attachments that might contain the body
+        if (attachment.content_type === 'text/plain' || attachment.filename === 'body.txt') {
+          try {
+            body = Buffer.from(attachment.content, 'base64').toString('utf-8')
+            body = cleanEmailBody(body)
+            console.log('Found body in text attachment')
+            break
+          } catch (e) {
+            console.log('Failed to decode attachment:', e)
+          }
+        } else if (attachment.content_type === 'text/html' || attachment.filename === 'body.html') {
+          try {
+            const htmlContent = Buffer.from(attachment.content, 'base64').toString('utf-8')
+            body = htmlContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+            console.log('Found body in html attachment')
+            break
+          } catch (e) {
+            console.log('Failed to decode html attachment:', e)
+          }
+        }
+      }
     }
 
     // If still no body, use a placeholder
