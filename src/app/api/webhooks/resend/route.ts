@@ -245,7 +245,7 @@ export async function POST(request: NextRequest) {
           name: senderName,
           company_id: companyId,
           subject: subject,
-          product: 'other',  // Default since we can't determine from email
+          product: 'general',  // Valid: dmm, green-light, custom, general
           issue_type: 'other',  // Valid values: bug, feature, training, integration, billing, other
           source: 'email',
           status: 'open',
