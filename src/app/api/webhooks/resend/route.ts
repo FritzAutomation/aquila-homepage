@@ -1,0 +1,267 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { createAdminClient } from '@/lib/supabase/admin'
+import { sendTicketConfirmation } from '@/lib/resend'
+import { headers } from 'next/headers'
+import crypto from 'crypto'
+
+// Resend inbound email webhook payload
+interface ResendInboundEmail {
+  from: string
+  to: string
+  subject: string
+  text: string
+  html?: string
+  headers: Record<string, string>
+  attachments?: Array<{
+    filename: string
+    content: string // base64 encoded
+    content_type: string
+  }>
+}
+
+// Extract email address from "Name <email@example.com>" format
+function parseEmailAddress(from: string): { email: string; name: string | null } {
+  const match = from.match(/^(?:(.+?)\s*)?<?([^\s<>]+@[^\s<>]+)>?$/)
+  if (match) {
+    return {
+      name: match[1]?.trim().replace(/^["']|["']$/g, '') || null,
+      email: match[2].toLowerCase()
+    }
+  }
+  return { email: from.toLowerCase(), name: null }
+}
+
+// Extract ticket number from subject like "[TKT-0001] Some subject"
+function extractTicketNumber(subject: string): number | null {
+  const match = subject.match(/\[TKT-(\d+)\]/)
+  if (match) {
+    return parseInt(match[1], 10)
+  }
+  return null
+}
+
+// Clean up email body (remove quoted replies, signatures, etc.)
+function cleanEmailBody(text: string): string {
+  // Remove common reply markers and everything after
+  const lines = text.split('\n')
+  const cleanLines: string[] = []
+
+  for (const line of lines) {
+    // Stop at common reply indicators
+    if (
+      line.startsWith('On ') && line.includes(' wrote:') ||
+      line.startsWith('>') ||
+      line.startsWith('From:') ||
+      line.startsWith('Sent:') ||
+      line.startsWith('---') ||
+      line.startsWith('___') ||
+      line.includes('Original Message')
+    ) {
+      break
+    }
+    cleanLines.push(line)
+  }
+
+  return cleanLines.join('\n').trim()
+}
+
+// Verify webhook signature from Resend
+async function verifyWebhookSignature(
+  payload: string,
+  signature: string | null | undefined,
+  webhookSecret: string | null | undefined
+): Promise<boolean> {
+  if (!webhookSecret || !signature) {
+    // If no secret configured, skip verification (for development)
+    console.warn('Webhook signature verification skipped - no secret configured')
+    return true
+  }
+
+  try {
+    const [timestamp, signatureHash] = signature.split(',').map(part => {
+      const [, value] = part.split('=')
+      return value
+    })
+
+    const signedPayload = `${timestamp}.${payload}`
+    const expectedSignature = crypto
+      .createHmac('sha256', webhookSecret)
+      .update(signedPayload)
+      .digest('hex')
+
+    return crypto.timingSafeEqual(
+      Buffer.from(signatureHash),
+      Buffer.from(expectedSignature)
+    )
+  } catch (error) {
+    console.error('Webhook signature verification failed:', error)
+    return false
+  }
+}
+
+export async function POST(request: NextRequest) {
+  try {
+    const headersList = await headers()
+    const signature = headersList.get('svix-signature')
+    const webhookSecret = process.env.RESEND_WEBHOOK_SECRET
+
+    // Get raw body for signature verification
+    const rawBody = await request.text()
+
+    // Verify signature
+    const isValid = await verifyWebhookSignature(rawBody, signature, webhookSecret)
+    if (!isValid) {
+      console.error('Invalid webhook signature')
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
+    }
+
+    const payload = JSON.parse(rawBody)
+
+    // Resend wraps inbound emails in a specific event structure
+    const eventType = payload.type
+
+    // Only process inbound email events
+    if (eventType !== 'email.received') {
+      return NextResponse.json({ message: 'Event type ignored' })
+    }
+
+    const emailData: ResendInboundEmail = payload.data
+    const { email: senderEmail, name: senderName } = parseEmailAddress(emailData.from)
+    const subject = emailData.subject || '(No subject)'
+    const body = cleanEmailBody(emailData.text || '')
+
+    if (!body) {
+      return NextResponse.json({ error: 'Empty email body' }, { status: 400 })
+    }
+
+    const supabase = createAdminClient()
+    const ticketNumber = extractTicketNumber(subject)
+
+    if (ticketNumber) {
+      // This is a reply to an existing ticket
+      const { data: existingTicket, error: ticketError } = await supabase
+        .from('tickets')
+        .select('id, email, status')
+        .eq('ticket_number', ticketNumber)
+        .single()
+
+      if (ticketError || !existingTicket) {
+        console.error('Ticket not found for reply:', ticketNumber)
+        return NextResponse.json({ error: 'Ticket not found' }, { status: 404 })
+      }
+
+      // Verify the sender is the original ticket creator (basic security)
+      if (existingTicket.email.toLowerCase() !== senderEmail) {
+        console.warn('Email sender does not match ticket owner:', senderEmail, existingTicket.email)
+        // Still allow it but log the mismatch - could be CC'd person replying
+      }
+
+      // Add message to the ticket
+      const { error: messageError } = await supabase
+        .from('messages')
+        .insert({
+          ticket_id: existingTicket.id,
+          content: body,
+          sender_type: 'customer',
+          sender_email: senderEmail,
+          sender_name: senderName
+        })
+
+      if (messageError) {
+        console.error('Failed to add message:', messageError)
+        return NextResponse.json({ error: 'Failed to add message' }, { status: 500 })
+      }
+
+      // Reopen ticket if it was resolved/closed
+      if (existingTicket.status === 'resolved' || existingTicket.status === 'closed') {
+        await supabase
+          .from('tickets')
+          .update({ status: 'open' })
+          .eq('id', existingTicket.id)
+      }
+
+      return NextResponse.json({
+        success: true,
+        action: 'message_added',
+        ticket_number: ticketNumber
+      })
+
+    } else {
+      // This is a new ticket
+
+      // Try to find company by email domain
+      let companyId: string | null = null
+      const emailDomain = senderEmail.split('@')[1]
+
+      if (emailDomain) {
+        const { data: existingCompany } = await supabase
+          .from('companies')
+          .select('id')
+          .eq('domain', emailDomain)
+          .single()
+
+        if (existingCompany) {
+          companyId = existingCompany.id
+        }
+      }
+
+      // Create the ticket
+      const { data: ticket, error: ticketError } = await supabase
+        .from('tickets')
+        .insert({
+          email: senderEmail,
+          name: senderName,
+          company_id: companyId,
+          subject: subject,
+          product: 'other',  // Default since we can't determine from email
+          issue_type: 'general_inquiry',
+          source: 'email',
+          status: 'open',
+          priority: 'normal'
+        })
+        .select()
+        .single()
+
+      if (ticketError || !ticket) {
+        console.error('Failed to create ticket:', ticketError)
+        return NextResponse.json({ error: 'Failed to create ticket' }, { status: 500 })
+      }
+
+      // Add the email body as the first message
+      await supabase
+        .from('messages')
+        .insert({
+          ticket_id: ticket.id,
+          content: body,
+          sender_type: 'customer',
+          sender_email: senderEmail,
+          sender_name: senderName
+        })
+
+      // Send confirmation email
+      await sendTicketConfirmation({
+        to: senderEmail,
+        ticketNumber: ticket.ticket_number,
+        subject: subject,
+        customerName: senderName || undefined,
+        product: 'Other',
+        issueType: 'General Inquiry'
+      })
+
+      return NextResponse.json({
+        success: true,
+        action: 'ticket_created',
+        ticket_id: `TKT-${String(ticket.ticket_number).padStart(4, '0')}`
+      })
+    }
+
+  } catch (error) {
+    console.error('Webhook error:', error)
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+  }
+}
+
+// Respond to webhook validation requests
+export async function GET() {
+  return NextResponse.json({ status: 'Webhook endpoint active' })
+}
