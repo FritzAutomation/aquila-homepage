@@ -22,14 +22,26 @@ interface ResendInboundEmail {
 
 // Extract email address from "Name <email@example.com>" format
 function parseEmailAddress(from: string): { email: string; name: string | null } {
-  const match = from.match(/^(?:(.+?)\s*)?<?([^\s<>]+@[^\s<>]+)>?$/)
-  if (match) {
+  // Handle "Name <email@example.com>" format
+  const bracketMatch = from.match(/^(.+?)\s*<([^<>]+@[^<>]+)>$/)
+  if (bracketMatch) {
     return {
-      name: match[1]?.trim().replace(/^["']|["']$/g, '') || null,
-      email: match[2].toLowerCase()
+      name: bracketMatch[1].trim().replace(/^["']|["']$/g, '') || null,
+      email: bracketMatch[2].toLowerCase().trim()
     }
   }
-  return { email: from.toLowerCase(), name: null }
+
+  // Handle plain email address
+  const emailMatch = from.match(/^([^\s<>]+@[^\s<>]+)$/)
+  if (emailMatch) {
+    return {
+      name: null,
+      email: emailMatch[1].toLowerCase().trim()
+    }
+  }
+
+  // Fallback - treat entire string as email
+  return { email: from.toLowerCase().trim(), name: null }
 }
 
 // Extract ticket number from subject like "[TKT-0001] Some subject"
