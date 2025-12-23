@@ -15,6 +15,7 @@ function getResendClient(): Resend {
 }
 
 const FROM_EMAIL = process.env.EMAIL_FROM || 'onboarding@resend.dev'
+const REPLY_TO_EMAIL = process.env.REPLY_TO_EMAIL || 'fritzjunker69@gmail.com'
 
 interface SendTicketConfirmationParams {
   to: string
@@ -39,6 +40,7 @@ export async function sendTicketConfirmation({
     const resend = getResendClient()
     const { data, error } = await resend.emails.send({
       from: `Aquila Support <${FROM_EMAIL}>`,
+      replyTo: REPLY_TO_EMAIL,
       to: [to],
       subject: `[${ticketId}] We received your request: ${subject}`,
       html: `
@@ -110,6 +112,7 @@ export async function sendAgentReply({
     const resend = getResendClient()
     const { data, error } = await resend.emails.send({
       from: `Aquila Support <${FROM_EMAIL}>`,
+      replyTo: REPLY_TO_EMAIL,
       to: [to],
       subject: `Re: [${ticketId}] ${originalSubject}`,
       html: `
