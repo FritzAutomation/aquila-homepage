@@ -162,6 +162,12 @@ export async function POST(request: NextRequest) {
     }
 
     const emailData: ResendInboundEmail = payload.data
+
+    // Debug: Log the raw email data structure to understand the payload
+    console.log('Inbound email payload keys:', Object.keys(emailData))
+    console.log('Has text?', !!emailData.text, 'Length:', emailData.text?.length || 0)
+    console.log('Has html?', !!emailData.html, 'Length:', emailData.html?.length || 0)
+
     const emailId = emailData.email_id // Unique ID from Resend
     const { email: senderEmail, name: senderName } = parseEmailAddress(emailData.from)
     const subject = emailData.subject || '(No subject)'
@@ -169,14 +175,18 @@ export async function POST(request: NextRequest) {
     // Get body from text or html, fallback to subject if neither available
     let body = ''
     if (emailData.text) {
+      console.log('Using text body, first 200 chars:', emailData.text.substring(0, 200))
       body = cleanEmailBody(emailData.text)
+      console.log('After cleaning, body length:', body.length)
     } else if (emailData.html) {
+      console.log('Using html body, first 200 chars:', emailData.html.substring(0, 200))
       // Strip HTML tags for plain text
       body = emailData.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
     }
 
     // If still no body, use a placeholder
     if (!body) {
+      console.log('No body extracted, using placeholder')
       body = `(Email received with subject: ${subject})`
     }
 
