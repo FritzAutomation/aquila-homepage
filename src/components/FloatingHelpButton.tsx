@@ -5,6 +5,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { HelpCircle, X, MessageSquare, Search, Phone, Mail } from "lucide-react";
 import Link from "next/link";
 
+// Threshold must match BackToTop component (shows when scrollY > 400)
+const BACK_TO_TOP_THRESHOLD = 400;
+
 const helpOptions = [
   {
     icon: MessageSquare,
@@ -35,11 +38,24 @@ const helpOptions = [
 export default function FloatingHelpButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isBackToTopVisible, setIsBackToTopVisible] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  // Track scroll to know when BackToTop button is visible
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsBackToTopVisible(window.scrollY > BACK_TO_TOP_THRESHOLD);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    handleScroll(); // Check initial position
+
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   // Close menu when clicking outside
@@ -83,8 +99,15 @@ export default function FloatingHelpButton() {
 
   if (!mounted) return null;
 
+  // Move up when back-to-top button is visible (48px button + 16px gap)
+  const bottomOffset = isBackToTopVisible ? 88 : 24; // 88px when visible, 24px (bottom-6) otherwise
+
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <motion.div
+      className="fixed right-6 z-50"
+      animate={{ bottom: bottomOffset }}
+      transition={{ type: "spring", stiffness: 300, damping: 30 }}
+    >
       {/* Menu */}
       <AnimatePresence>
         {isOpen && (
@@ -179,6 +202,6 @@ export default function FloatingHelpButton() {
           )}
         </AnimatePresence>
       </motion.button>
-    </div>
+    </motion.div>
   );
 }
