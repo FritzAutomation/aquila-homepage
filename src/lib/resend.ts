@@ -36,6 +36,7 @@ export async function sendTicketConfirmation({
   issueType
 }: SendTicketConfirmationParams) {
   const ticketId = `TKT-${String(ticketNumber).padStart(4, '0')}`
+  const statusUrl = `${BASE_URL}/support/status?ticket=${encodeURIComponent(ticketId)}&email=${encodeURIComponent(to)}`
 
   try {
     const resend = getResendClient()
@@ -66,15 +67,11 @@ export async function sendTicketConfirmation({
             </div>
 
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${BASE_URL}/support/status"
+              <a href="${statusUrl}"
                  style="display: inline-block; background-color: #10B981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">
-                Check Ticket Status
+                View Your Ticket
               </a>
             </div>
-
-            <p style="color: #666; font-size: 14px; text-align: center;">
-              Use your ticket ID <strong>${ticketId}</strong> and email address to check your ticket status.
-            </p>
 
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;" />
 
@@ -121,6 +118,7 @@ export async function sendAgentReply({
   agentName
 }: SendAgentReplyParams) {
   const ticketId = `TKT-${String(ticketNumber).padStart(4, '0')}`
+  const statusUrl = `${BASE_URL}/support/status?ticket=${encodeURIComponent(ticketId)}&email=${encodeURIComponent(to)}`
 
   try {
     const resend = getResendClient()
@@ -151,9 +149,9 @@ export async function sendAgentReply({
             <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;" />
 
             <div style="text-align: center; margin: 20px 0;">
-              <a href="${BASE_URL}/support/status"
+              <a href="${statusUrl}"
                  style="display: inline-block; background-color: #1E3A5F; color: white; padding: 10px 20px; text-decoration: none; border-radius: 6px; font-size: 14px;">
-                View Ticket Status
+                View Your Ticket
               </a>
             </div>
 

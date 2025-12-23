@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Search,
@@ -63,16 +64,32 @@ const STATUS_COLORS: Record<TicketStatus, string> = {
   closed: "bg-gray-100 text-gray-700 border-gray-200",
 };
 
-export default function TicketStatusPage() {
+function TicketStatusContent() {
+  const searchParams = useSearchParams();
   const [ticketId, setTicketId] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [ticket, setTicket] = useState<TicketData | null>(null);
   const [error, setError] = useState("");
   const [searched, setSearched] = useState(false);
+  const [autoLoaded, setAutoLoaded] = useState(false);
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Auto-load ticket from URL parameters
+  useEffect(() => {
+    const ticketParam = searchParams.get("ticket");
+    const emailParam = searchParams.get("email");
+
+    if (ticketParam) setTicketId(ticketParam);
+    if (emailParam) setEmail(emailParam);
+
+    // Auto-lookup if both params are present
+    if (ticketParam && emailParam && !autoLoaded) {
+      setAutoLoaded(true);
+      lookupTicket(ticketParam, emailParam);
+    }
+  }, [searchParams, autoLoaded]);
+
+  const lookupTicket = async (ticketIdValue: string, emailValue: string) => {
     setLoading(true);
     setError("");
     setTicket(null);
@@ -80,7 +97,7 @@ export default function TicketStatusPage() {
 
     try {
       const res = await fetch(
-        `/api/tickets/lookup?ticket_id=${encodeURIComponent(ticketId)}&email=${encodeURIComponent(email)}`
+        `/api/tickets/lookup?ticket_id=${encodeURIComponent(ticketIdValue)}&email=${encodeURIComponent(emailValue)}`
       );
 
       const data = await res.json();
@@ -96,6 +113,11 @@ export default function TicketStatusPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault();
+    lookupTicket(ticketId, email);
   };
 
   const formatDate = (dateString: string) => {
@@ -324,5 +346,36 @@ export default function TicketStatusPage() {
       </main>
       <Footer />
     </>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <>
+      <Navigation />
+      <main className="min-h-screen bg-gray-50 pt-24 pb-12 px-4">
+        <div className="max-w-2xl mx-auto">
+          <div className="text-center mb-8">
+            <div className="w-12 h-12 bg-navy rounded-xl flex items-center justify-center mx-auto mb-4">
+              <Ticket className="w-6 h-6 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900">Check Ticket Status</h1>
+            <p className="text-gray-600 mt-2">Loading...</p>
+          </div>
+          <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 flex items-center justify-center">
+            <Loader2 className="w-8 h-8 animate-spin text-emerald" />
+          </div>
+        </div>
+      </main>
+      <Footer />
+    </>
+  );
+}
+
+export default function TicketStatusPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <TicketStatusContent />
+    </Suspense>
   );
 }
