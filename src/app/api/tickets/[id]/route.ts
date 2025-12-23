@@ -11,10 +11,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     const { id } = await params
     const supabase = createAdminClient()
 
-    // Get ticket with company info and assignee
+    // Get ticket with company info
     const { data: ticket, error: ticketError } = await supabase
       .from('tickets')
-      .select('*, company:companies(id, name, domain), assignee:staff_profiles(id, name)')
+      .select('*, company:companies(id, name, domain)')
       .eq('id', id)
       .single()
 
@@ -100,7 +100,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       .from('tickets')
       .update(updateData)
       .eq('id', id)
-      .select('*, company:companies(id, name, domain), assignee:staff_profiles(id, name)')
+      .select('*, company:companies(id, name, domain)')
       .single()
 
     if (error) {
