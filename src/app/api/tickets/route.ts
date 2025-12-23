@@ -151,7 +151,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('tickets')
-      .select('*, company:companies(id, name, domain)', { count: 'exact' })
+      .select('*, company:companies(id, name, domain), assignee:staff_profiles(id, name)', { count: 'exact' })
 
     // Apply filters
     if (status) query = query.eq('status', status)
@@ -159,7 +159,11 @@ export async function GET(request: NextRequest) {
     if (issue_type) query = query.eq('issue_type', issue_type)
     if (priority) query = query.eq('priority', priority)
     if (company_id) query = query.eq('company_id', company_id)
-    if (assigned_to) query = query.eq('assigned_to', assigned_to)
+    if (assigned_to === 'unassigned') {
+      query = query.is('assigned_to', null)
+    } else if (assigned_to) {
+      query = query.eq('assigned_to', assigned_to)
+    }
 
     // Search in subject or email
     if (search) {

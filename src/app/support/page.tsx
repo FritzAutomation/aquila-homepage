@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
 import {
   Send,
@@ -13,6 +13,11 @@ import {
   Building2,
   MessageSquare,
   HelpCircle,
+  Paperclip,
+  X,
+  FileText,
+  Image as ImageIcon,
+  Upload,
 } from "lucide-react";
 import {
   PRODUCT_LABELS,
@@ -38,6 +43,17 @@ interface SubmitResult {
   ticket_number?: number;
 }
 
+interface FileAttachment {
+  file: File;
+  preview?: string;
+}
+
+const formatFileSize = (bytes: number): string => {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+};
+
 export default function SupportPage() {
   const [formData, setFormData] = useState<FormData>({
     email: "",
@@ -52,6 +68,8 @@ export default function SupportPage() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<SubmitResult | null>(null);
   const [error, setError] = useState("");
+  const [files, setFiles] = useState<FileAttachment[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
@@ -60,12 +78,35 @@ export default function SupportPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    const maxFiles = 5;
+    const remainingSlots = maxFiles - files.length;
+
+    const newFiles = selectedFiles.slice(0, remainingSlots).map((file) => ({
+      file,
+      preview: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
+    }));
+
+    setFiles((prev) => [...prev, ...newFiles]);
+
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitting(true);
     setError("");
 
     try {
+      // Create the ticket first
       const res = await fetch("/api/tickets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -77,6 +118,25 @@ export default function SupportPage() {
       if (!res.ok) {
         setError(data.error || "Failed to submit ticket");
         return;
+      }
+
+      // Upload attachments if any
+      if (files.length > 0) {
+        for (const fileData of files) {
+          const uploadFormData = new window.FormData();
+          uploadFormData.append("file", fileData.file);
+          uploadFormData.append("ticket_id", data.ticket.id);
+
+          try {
+            await fetch("/api/upload", {
+              method: "POST",
+              body: uploadFormData,
+            });
+          } catch (uploadError) {
+            console.error("Failed to upload file:", uploadError);
+            // Continue with other files even if one fails
+          }
+        }
       }
 
       setResult({
@@ -323,6 +383,83 @@ export default function SupportPage() {
                     className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald focus:border-emerald outline-none resize-none text-gray-900 placeholder:text-gray-500"
                   />
                 </div>
+              </div>
+
+              {/* File Attachments */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Attachments (optional)
+                </label>
+                <div
+                  className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
+                    files.length >= 5
+                      ? "border-gray-200 bg-gray-50 cursor-not-allowed"
+                      : "border-gray-300 hover:border-emerald hover:bg-emerald/5"
+                  }`}
+                  onClick={() => files.length < 5 && fileInputRef.current?.click()}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    disabled={files.length >= 5}
+                  />
+                  <Upload className="w-6 h-6 mx-auto mb-2 text-gray-400" />
+                  <p className="text-sm text-gray-600">
+                    {files.length >= 5
+                      ? "Maximum 5 files reached"
+                      : "Click to upload screenshots or documents"}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Images, PDF, Word, Excel up to 10MB each
+                  </p>
+                </div>
+
+                {/* File list */}
+                {files.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {files.map((fileData, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-3 p-2 border border-gray-200 rounded-lg"
+                      >
+                        {fileData.preview ? (
+                          <img
+                            src={fileData.preview}
+                            alt={fileData.file.name}
+                            className="w-10 h-10 object-cover rounded"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
+                            {fileData.file.type.startsWith("image/") ? (
+                              <ImageIcon className="w-5 h-5 text-gray-400" />
+                            ) : (
+                              <FileText className="w-5 h-5 text-gray-400" />
+                            )}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {fileData.file.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {formatFileSize(fileData.file.size)}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          className="p-1 text-gray-400 hover:text-red-500"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 

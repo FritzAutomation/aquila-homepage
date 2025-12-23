@@ -10,6 +10,11 @@ import {
   Loader2,
   Ticket,
   X,
+  CheckSquare,
+  Square,
+  Minus,
+  AlertTriangle,
+  Clock,
 } from "lucide-react";
 import {
   PRODUCT_LABELS,
@@ -21,6 +26,12 @@ import {
   type TicketStatus,
   type Priority,
 } from "@/lib/types";
+import {
+  calculateSLAStatus,
+  formatTimeRemaining,
+  DEFAULT_SLA_CONFIGS,
+  type SLAConfig,
+} from "@/lib/sla";
 
 interface TicketRow {
   id: string;
@@ -33,7 +44,18 @@ interface TicketRow {
   email: string;
   name: string | null;
   created_at: string;
+  first_response_at: string | null;
+  resolved_at: string | null;
   company: { id: string; name: string; domain: string | null } | null;
+  assigned_to: string | null;
+  assignee: { id: string; name: string } | null;
+}
+
+interface StaffMember {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
 }
 
 interface Pagination {
@@ -68,6 +90,10 @@ export default function TicketsPage() {
   });
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
+  const [selectedTickets, setSelectedTickets] = useState<Set<string>>(new Set());
+  const [bulkUpdating, setBulkUpdating] = useState(false);
+  const [slaConfigs, setSlaConfigs] = useState<SLAConfig[]>(DEFAULT_SLA_CONFIGS);
 
   // Filters
   const [search, setSearch] = useState("");
@@ -75,6 +101,7 @@ export default function TicketsPage() {
   const [product, setProduct] = useState("");
   const [issueType, setIssueType] = useState("");
   const [priority, setPriority] = useState("");
+  const [assignedTo, setAssignedTo] = useState("");
 
   const fetchTickets = useCallback(async (page = 1) => {
     setLoading(true);
@@ -89,6 +116,7 @@ export default function TicketsPage() {
       if (product) params.set("product", product);
       if (issueType) params.set("issue_type", issueType);
       if (priority) params.set("priority", priority);
+      if (assignedTo) params.set("assigned_to", assignedTo);
 
       const res = await fetch(`/api/tickets?${params}`);
       if (res.ok) {
@@ -101,11 +129,42 @@ export default function TicketsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, status, product, issueType, priority]);
+  }, [search, status, product, issueType, priority, assignedTo]);
 
   useEffect(() => {
     fetchTickets(1);
   }, [fetchTickets]);
+
+  useEffect(() => {
+    async function fetchStaff() {
+      try {
+        const res = await fetch("/api/staff");
+        if (res.ok) {
+          const data = await res.json();
+          setStaffMembers(data.staff || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch staff:", error);
+      }
+    }
+
+    async function fetchSLAConfigs() {
+      try {
+        const res = await fetch("/api/settings");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.sla_config && data.sla_config.length > 0) {
+            setSlaConfigs(data.sla_config);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch SLA configs:", error);
+      }
+    }
+
+    fetchStaff();
+    fetchSLAConfigs();
+  }, []);
 
   const clearFilters = () => {
     setSearch("");
@@ -113,9 +172,62 @@ export default function TicketsPage() {
     setProduct("");
     setIssueType("");
     setPriority("");
+    setAssignedTo("");
   };
 
-  const hasActiveFilters = search || status || product || issueType || priority;
+  const hasActiveFilters = search || status || product || issueType || priority || assignedTo;
+
+  // Selection helpers
+  const toggleTicketSelection = (ticketId: string) => {
+    setSelectedTickets(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(ticketId)) {
+        newSet.delete(ticketId);
+      } else {
+        newSet.add(ticketId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedTickets.size === tickets.length) {
+      setSelectedTickets(new Set());
+    } else {
+      setSelectedTickets(new Set(tickets.map(t => t.id)));
+    }
+  };
+
+  const clearSelection = () => {
+    setSelectedTickets(new Set());
+  };
+
+  // Bulk actions
+  const handleBulkAction = async (action: string, value?: string) => {
+    if (selectedTickets.size === 0) return;
+
+    setBulkUpdating(true);
+    try {
+      const res = await fetch('/api/tickets/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ticket_ids: Array.from(selectedTickets),
+          action,
+          value
+        })
+      });
+
+      if (res.ok) {
+        await fetchTickets(pagination.page);
+        clearSelection();
+      }
+    } catch (error) {
+      console.error('Bulk action failed:', error);
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -127,8 +239,86 @@ export default function TicketsPage() {
     });
   };
 
+  // Get SLA indicator for a ticket
+  const getSLAIndicator = (ticket: TicketRow) => {
+    const slaStatus = calculateSLAStatus(ticket, slaConfigs);
+
+    // Check for breaches first (highest priority)
+    if (slaStatus.firstResponse.status === "breached") {
+      return {
+        icon: AlertTriangle,
+        color: "text-red-500",
+        bgColor: "bg-red-50",
+        label: `First response ${formatTimeRemaining(slaStatus.firstResponse.hoursRemaining || 0)}`,
+      };
+    }
+    if (slaStatus.resolution.status === "breached") {
+      return {
+        icon: AlertTriangle,
+        color: "text-red-500",
+        bgColor: "bg-red-50",
+        label: `Resolution ${formatTimeRemaining(slaStatus.resolution.hoursRemaining || 0)}`,
+      };
+    }
+
+    // Check for warnings
+    if (slaStatus.firstResponse.status === "warning") {
+      return {
+        icon: Clock,
+        color: "text-amber-500",
+        bgColor: "bg-amber-50",
+        label: `First response ${formatTimeRemaining(slaStatus.firstResponse.hoursRemaining || 0)}`,
+      };
+    }
+    if (slaStatus.resolution.status === "warning") {
+      return {
+        icon: Clock,
+        color: "text-amber-500",
+        bgColor: "bg-amber-50",
+        label: `Resolution ${formatTimeRemaining(slaStatus.resolution.hoursRemaining || 0)}`,
+      };
+    }
+
+    return null;
+  };
+
+  // Count tickets with SLA issues
+  const slaBreachedCount = tickets.filter((t) => {
+    const sla = calculateSLAStatus(t, slaConfigs);
+    return sla.firstResponse.status === "breached" || sla.resolution.status === "breached";
+  }).length;
+
+  const slaWarningCount = tickets.filter((t) => {
+    const sla = calculateSLAStatus(t, slaConfigs);
+    return sla.firstResponse.status === "warning" || sla.resolution.status === "warning";
+  }).length;
+
   return (
     <div className="space-y-4">
+      {/* SLA Alert Banner */}
+      {(slaBreachedCount > 0 || slaWarningCount > 0) && (
+        <div className={`rounded-lg p-3 flex items-center gap-3 ${
+          slaBreachedCount > 0 ? "bg-red-50 border border-red-200" : "bg-amber-50 border border-amber-200"
+        }`}>
+          {slaBreachedCount > 0 ? (
+            <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />
+          ) : (
+            <Clock className="w-5 h-5 text-amber-500 flex-shrink-0" />
+          )}
+          <div className="flex-1">
+            <p className={`text-sm font-medium ${slaBreachedCount > 0 ? "text-red-700" : "text-amber-700"}`}>
+              {slaBreachedCount > 0 && (
+                <span>{slaBreachedCount} ticket{slaBreachedCount > 1 ? "s have" : " has"} breached SLA</span>
+              )}
+              {slaBreachedCount > 0 && slaWarningCount > 0 && <span className="mx-1">·</span>}
+              {slaWarningCount > 0 && (
+                <span>{slaWarningCount} ticket{slaWarningCount > 1 ? "s" : ""} approaching deadline</span>
+              )}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
@@ -172,7 +362,7 @@ export default function TicketsPage() {
               </button>
             )}
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <select
               value={status}
               onChange={(e) => setStatus(e.target.value)}
@@ -224,6 +414,86 @@ export default function TicketsPage() {
                 </option>
               ))}
             </select>
+
+            <select
+              value={assignedTo}
+              onChange={(e) => setAssignedTo(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald focus:border-emerald outline-none text-sm text-gray-900"
+            >
+              <option value="">All Assignees</option>
+              <option value="unassigned">Unassigned</option>
+              {staffMembers.map((staff) => (
+                <option key={staff.id} value={staff.id}>
+                  {staff.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Actions Toolbar */}
+      {selectedTickets.size > 0 && (
+        <div className="bg-emerald/5 border border-emerald/20 rounded-lg p-3 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-medium text-emerald">
+              {selectedTickets.size} ticket{selectedTickets.size > 1 ? 's' : ''} selected
+            </span>
+            <button
+              onClick={clearSelection}
+              className="text-sm text-gray-500 hover:text-gray-700"
+            >
+              Clear selection
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            <select
+              onChange={(e) => {
+                if (e.target.value) {
+                  handleBulkAction('status', e.target.value);
+                  e.target.value = '';
+                }
+              }}
+              disabled={bulkUpdating}
+              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-emerald focus:border-emerald outline-none"
+            >
+              <option value="">Change Status...</option>
+              {Object.entries(STATUS_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+            <select
+              onChange={(e) => {
+                if (e.target.value) {
+                  handleBulkAction('priority', e.target.value);
+                  e.target.value = '';
+                }
+              }}
+              disabled={bulkUpdating}
+              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-emerald focus:border-emerald outline-none"
+            >
+              <option value="">Change Priority...</option>
+              {Object.entries(PRIORITY_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+            <select
+              onChange={(e) => {
+                if (e.target.value !== '') {
+                  handleBulkAction('assign', e.target.value === 'unassign' ? '' : e.target.value);
+                  e.target.value = '';
+                }
+              }}
+              disabled={bulkUpdating}
+              className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm text-gray-900 focus:ring-2 focus:ring-emerald focus:border-emerald outline-none"
+            >
+              <option value="">Assign to...</option>
+              <option value="unassign">Unassign</option>
+              {staffMembers.map((staff) => (
+                <option key={staff.id} value={staff.id}>{staff.name}</option>
+              ))}
+            </select>
+            {bulkUpdating && <Loader2 className="w-4 h-4 animate-spin text-emerald" />}
           </div>
         </div>
       )}
@@ -250,6 +520,20 @@ export default function TicketsPage() {
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
+                    <th className="w-10 px-4 py-3">
+                      <button
+                        onClick={toggleSelectAll}
+                        className="text-gray-500 hover:text-gray-700"
+                      >
+                        {selectedTickets.size === tickets.length && tickets.length > 0 ? (
+                          <CheckSquare className="w-5 h-5 text-emerald" />
+                        ) : selectedTickets.size > 0 ? (
+                          <Minus className="w-5 h-5 text-emerald" />
+                        ) : (
+                          <Square className="w-5 h-5" />
+                        )}
+                      </button>
+                    </th>
                     <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3">
                       Ticket
                     </th>
@@ -263,6 +547,9 @@ export default function TicketsPage() {
                       Status
                     </th>
                     <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3 hidden lg:table-cell">
+                      Assignee
+                    </th>
+                    <th className="text-left text-xs font-medium text-gray-500 uppercase tracking-wider px-4 py-3 hidden xl:table-cell">
                       Created
                     </th>
                   </tr>
@@ -271,8 +558,20 @@ export default function TicketsPage() {
                   {tickets.map((ticket) => (
                     <tr
                       key={ticket.id}
-                      className="hover:bg-gray-50 transition-colors"
+                      className={`hover:bg-gray-50 transition-colors ${selectedTickets.has(ticket.id) ? 'bg-emerald/5' : ''}`}
                     >
+                      <td className="w-10 px-4 py-3">
+                        <button
+                          onClick={() => toggleTicketSelection(ticket.id)}
+                          className="text-gray-500 hover:text-gray-700"
+                        >
+                          {selectedTickets.has(ticket.id) ? (
+                            <CheckSquare className="w-5 h-5 text-emerald" />
+                          ) : (
+                            <Square className="w-5 h-5" />
+                          )}
+                        </button>
+                      </td>
                       <td className="px-4 py-3">
                         <Link
                           href={`/admin/tickets/${ticket.id}`}
@@ -288,6 +587,22 @@ export default function TicketsPage() {
                             <span className="text-sm font-mono text-gray-700">
                               TKT-{String(ticket.ticket_number).padStart(4, "0")}
                             </span>
+                            {(() => {
+                              const slaIndicator = getSLAIndicator(ticket);
+                              if (slaIndicator) {
+                                const Icon = slaIndicator.icon;
+                                return (
+                                  <span
+                                    className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium ${slaIndicator.bgColor} ${slaIndicator.color}`}
+                                    title={slaIndicator.label}
+                                  >
+                                    <Icon className="w-3 h-3" />
+                                    <span className="hidden sm:inline">{slaIndicator.label}</span>
+                                  </span>
+                                );
+                              }
+                              return null;
+                            })()}
                           </div>
                           <p className="text-sm font-medium text-gray-900 mt-1 line-clamp-1">
                             {ticket.subject}
@@ -323,6 +638,17 @@ export default function TicketsPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 hidden lg:table-cell">
+                        {ticket.assignee ? (
+                          <span className="text-sm text-gray-900">
+                            {ticket.assignee.name}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-gray-400 italic">
+                            Unassigned
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3 hidden xl:table-cell">
                         <span className="text-sm text-gray-600">
                           {formatDate(ticket.created_at)}
                         </span>

@@ -18,6 +18,7 @@ import {
   MessageSquare,
   FileText,
   ChevronDown,
+  UserCheck,
 } from "lucide-react";
 import {
   PRODUCT_LABELS,
@@ -48,6 +49,13 @@ interface CannedResponse {
   shortcut: string | null;
 }
 
+interface StaffMember {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+}
+
 interface TicketDetail {
   id: string;
   ticket_number: number;
@@ -65,6 +73,7 @@ interface TicketDetail {
   resolved_at: string | null;
   messages: Message[];
   company: { id: string; name: string; domain: string | null } | null;
+  assigned_to: string | null;
 }
 
 const STATUS_OPTIONS: TicketStatus[] = [
@@ -107,10 +116,12 @@ export default function TicketDetailPage({
   const [isInternalNote, setIsInternalNote] = useState(false);
   const [cannedResponses, setCannedResponses] = useState<CannedResponse[]>([]);
   const [showCannedResponses, setShowCannedResponses] = useState(false);
+  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
 
   useEffect(() => {
     fetchTicket();
     fetchCannedResponses();
+    fetchStaffMembers();
   }, [id]);
 
   async function fetchCannedResponses() {
@@ -122,6 +133,18 @@ export default function TicketDetailPage({
       }
     } catch (error) {
       console.error("Failed to fetch canned responses:", error);
+    }
+  }
+
+  async function fetchStaffMembers() {
+    try {
+      const res = await fetch("/api/staff");
+      if (res.ok) {
+        const data = await res.json();
+        setStaffMembers(data.staff || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch staff members:", error);
     }
   }
 
@@ -186,6 +209,26 @@ export default function TicketDetailPage({
       }
     } catch (error) {
       console.error("Failed to update priority:", error);
+    } finally {
+      setUpdating(false);
+    }
+  }
+
+  async function handleAssignmentChange(assignedTo: string | null) {
+    if (!ticket) return;
+    setUpdating(true);
+    try {
+      const res = await fetch(`/api/tickets/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ assigned_to: assignedTo }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTicket((prev) => (prev ? { ...prev, ...data } : null));
+      }
+    } catch (error) {
+      console.error("Failed to update assignment:", error);
     } finally {
       setUpdating(false);
     }
@@ -518,6 +561,26 @@ export default function TicketDetailPage({
                   {PRIORITY_OPTIONS.map((p) => (
                     <option key={p} value={p}>
                       {PRIORITY_LABELS[p]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Assigned To
+                </label>
+                <select
+                  value={ticket.assigned_to || ""}
+                  onChange={(e) =>
+                    handleAssignmentChange(e.target.value || null)
+                  }
+                  disabled={updating}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald focus:border-emerald outline-none text-sm text-gray-900"
+                >
+                  <option value="">Unassigned</option>
+                  {staffMembers.map((staff) => (
+                    <option key={staff.id} value={staff.id}>
+                      {staff.name}
                     </option>
                   ))}
                 </select>
