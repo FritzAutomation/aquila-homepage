@@ -43,7 +43,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const { id } = await params
     const body = await request.json()
 
-    const { content, sender_type, sender_email, sender_name, send_email } = body
+    const { content, sender_type, sender_email, sender_name, send_email, is_internal } = body
 
     if (!content) {
       return NextResponse.json(
@@ -74,7 +74,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       content,
       sender_type: sender_type || 'agent',
       sender_email: sender_email || null,
-      sender_name: sender_name || null
+      sender_name: sender_name || null,
+      is_internal: is_internal || false
     }
 
     const { data: message, error: messageError } = await supabase
@@ -102,9 +103,9 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         .eq('id', id)
     }
 
-    // Send email notification if requested and this is an agent reply
+    // Send email notification if requested, not internal, and this is an agent reply
     let emailSent = false
-    if (send_email !== false && sender_type === 'agent') {
+    if (send_email !== false && sender_type === 'agent' && !is_internal) {
       const emailResult = await sendAgentReply({
         to: ticket.email,
         ticketNumber: ticket.ticket_number,

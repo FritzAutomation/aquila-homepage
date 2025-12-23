@@ -14,6 +14,8 @@ import {
   Clock,
   Tag,
   AlertCircle,
+  Lock,
+  MessageSquare,
 } from "lucide-react";
 import {
   PRODUCT_LABELS,
@@ -33,6 +35,7 @@ interface Message {
   sender_email: string | null;
   sender_name: string | null;
   created_at: string;
+  is_internal: boolean;
 }
 
 interface TicketDetail {
@@ -91,6 +94,7 @@ export default function TicketDetailPage({
   const [replyContent, setReplyContent] = useState("");
   const [sending, setSending] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [isInternalNote, setIsInternalNote] = useState(false);
 
   useEffect(() => {
     fetchTicket();
@@ -165,7 +169,8 @@ export default function TicketDetailPage({
           content: replyContent,
           sender_type: "agent",
           sender_name: "Support Team",
-          send_email: true,
+          send_email: !isInternalNote,
+          is_internal: isInternalNote,
         }),
       });
 
@@ -175,6 +180,7 @@ export default function TicketDetailPage({
           prev ? { ...prev, messages: [...prev.messages, message] } : null
         );
         setReplyContent("");
+        setIsInternalNote(false);
       }
     } catch (error) {
       console.error("Failed to send reply:", error);
@@ -243,7 +249,8 @@ export default function TicketDetailPage({
         <div className="lg:col-span-2 space-y-4">
           {/* Messages */}
           <div className="bg-white border border-gray-200 rounded-lg">
-            <div className="p-4 border-b border-gray-200">
+            <div className="p-4 border-b border-gray-200 flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-gray-500" />
               <h2 className="font-semibold text-gray-900">Conversation</h2>
             </div>
             <div className="divide-y divide-gray-100 max-h-[500px] overflow-y-auto">
@@ -251,18 +258,28 @@ export default function TicketDetailPage({
                 <div
                   key={message.id}
                   className={`p-4 ${
-                    message.sender_type === "agent" ? "bg-emerald/5" : ""
+                    message.is_internal
+                      ? "bg-amber-50 border-l-4 border-amber-400"
+                      : message.sender_type === "agent"
+                      ? "bg-emerald/5"
+                      : ""
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     <div
                       className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        message.sender_type === "agent"
+                        message.is_internal
+                          ? "bg-amber-500 text-white"
+                          : message.sender_type === "agent"
                           ? "bg-emerald text-white"
                           : "bg-gray-200 text-gray-600"
                       }`}
                     >
-                      <User className="w-4 h-4" />
+                      {message.is_internal ? (
+                        <Lock className="w-4 h-4" />
+                      ) : (
+                        <User className="w-4 h-4" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
@@ -276,11 +293,16 @@ export default function TicketDetailPage({
                         <span className="text-xs text-gray-600">
                           {formatDate(message.created_at)}
                         </span>
-                        {message.sender_type === "agent" && (
+                        {message.is_internal ? (
+                          <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded flex items-center gap-1">
+                            <Lock className="w-3 h-3" />
+                            Internal Note
+                          </span>
+                        ) : message.sender_type === "agent" ? (
                           <span className="text-xs bg-emerald/10 text-emerald px-1.5 py-0.5 rounded">
                             Staff
                           </span>
-                        )}
+                        ) : null}
                       </div>
                       <div className="text-sm text-gray-700 whitespace-pre-wrap">
                         {message.content}
@@ -295,33 +317,81 @@ export default function TicketDetailPage({
           {/* Reply Form */}
           <form
             onSubmit={handleSendReply}
-            className="bg-white border border-gray-200 rounded-lg p-4"
+            className={`bg-white border rounded-lg p-4 ${
+              isInternalNote ? "border-amber-300" : "border-gray-200"
+            }`}
           >
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Reply to customer
-            </label>
+            {/* Toggle between Reply and Internal Note */}
+            <div className="flex gap-2 mb-3">
+              <button
+                type="button"
+                onClick={() => setIsInternalNote(false)}
+                className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  !isInternalNote
+                    ? "bg-emerald text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                <Send className="w-4 h-4" />
+                Reply to Customer
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsInternalNote(true)}
+                className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+                  isInternalNote
+                    ? "bg-amber-500 text-white"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                <Lock className="w-4 h-4" />
+                Internal Note
+              </button>
+            </div>
+
             <textarea
               value={replyContent}
               onChange={(e) => setReplyContent(e.target.value)}
-              placeholder="Type your reply..."
+              placeholder={
+                isInternalNote
+                  ? "Add an internal note (not visible to customer)..."
+                  : "Type your reply..."
+              }
               rows={4}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald focus:border-emerald outline-none resize-none text-gray-900 placeholder:text-gray-500"
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 outline-none resize-none text-gray-900 placeholder:text-gray-500 ${
+                isInternalNote
+                  ? "border-amber-300 focus:ring-amber-500 focus:border-amber-500"
+                  : "border-gray-300 focus:ring-emerald focus:border-emerald"
+              }`}
             />
             <div className="flex items-center justify-between mt-3">
               <p className="text-xs text-gray-600">
-                Email will be sent to {ticket.email}
+                {isInternalNote ? (
+                  <span className="flex items-center gap-1 text-amber-600">
+                    <Lock className="w-3 h-3" />
+                    This note is only visible to staff
+                  </span>
+                ) : (
+                  `Email will be sent to ${ticket.email}`
+                )}
               </p>
               <button
                 type="submit"
                 disabled={!replyContent.trim() || sending}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-emerald text-white font-medium rounded-lg hover:bg-emerald/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className={`inline-flex items-center gap-2 px-4 py-2 text-white font-medium rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors ${
+                  isInternalNote
+                    ? "bg-amber-500 hover:bg-amber-600"
+                    : "bg-emerald hover:bg-emerald/90"
+                }`}
               >
                 {sending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
+                ) : isInternalNote ? (
+                  <Lock className="w-4 h-4" />
                 ) : (
                   <Send className="w-4 h-4" />
                 )}
-                Send Reply
+                {isInternalNote ? "Add Note" : "Send Reply"}
               </button>
             </div>
           </form>

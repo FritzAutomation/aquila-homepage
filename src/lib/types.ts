@@ -95,6 +95,7 @@ export type Database = {
           created_at: string
           email_message_id: string | null
           attachments: unknown[]
+          is_internal: boolean
         }
         Insert: {
           id?: string
@@ -106,6 +107,7 @@ export type Database = {
           created_at?: string
           email_message_id?: string | null
           attachments?: unknown[]
+          is_internal?: boolean
         }
         Update: {
           id?: string
@@ -117,6 +119,7 @@ export type Database = {
           created_at?: string
           email_message_id?: string | null
           attachments?: unknown[]
+          is_internal?: boolean
         }
       }
       staff_profiles: {

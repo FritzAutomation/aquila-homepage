@@ -48,7 +48,8 @@ export async function GET(request: NextRequest) {
           content,
           sender_type,
           sender_name,
-          created_at
+          created_at,
+          is_internal
         )
       `)
       .eq('ticket_number', ticketNumber)
@@ -62,7 +63,14 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // Format response
+    // Format response - filter out internal notes (customers shouldn't see them)
+    const publicMessages = (ticket.messages || [])
+      .filter((msg: { is_internal: boolean }) => !msg.is_internal)
+      .sort(
+        (a: { created_at: string }, b: { created_at: string }) =>
+          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+      )
+
     const response = {
       id: ticket.id,
       ticket_number: ticket.ticket_number,
@@ -75,10 +83,7 @@ export async function GET(request: NextRequest) {
       created_at: ticket.created_at,
       first_response_at: ticket.first_response_at,
       resolved_at: ticket.resolved_at,
-      messages: (ticket.messages || []).sort(
-        (a: { created_at: string }, b: { created_at: string }) =>
-          new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-      )
+      messages: publicMessages
     }
 
     return NextResponse.json(response)
