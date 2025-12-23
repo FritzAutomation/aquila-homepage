@@ -296,7 +296,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Add the email body as the first message
-      await supabase
+      const { error: messageError } = await supabase
         .from('messages')
         .insert({
           ticket_id: ticket.id,
@@ -305,6 +305,11 @@ export async function POST(request: NextRequest) {
           sender_email: senderEmail,
           sender_name: senderName
         })
+
+      if (messageError) {
+        console.error('Failed to add message to ticket:', messageError)
+        // Don't fail the whole request, ticket was created
+      }
 
       // Send confirmation email
       await sendTicketConfirmation({
