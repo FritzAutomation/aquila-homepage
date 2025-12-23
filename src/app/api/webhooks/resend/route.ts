@@ -3,7 +3,6 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendTicketConfirmation } from '@/lib/resend'
 import { headers } from 'next/headers'
 import crypto from 'crypto'
-import { Resend } from 'resend'
 
 // Resend inbound email webhook payload
 interface ResendInboundEmail {
@@ -154,11 +153,6 @@ export async function POST(request: NextRequest) {
 
     const payload = JSON.parse(rawBody)
 
-    // Debug: Log the COMPLETE raw payload to understand full structure
-    console.log('=== FULL RAW PAYLOAD ===')
-    console.log(rawBody.substring(0, 2000)) // First 2000 chars to avoid log limits
-    console.log('=== END PAYLOAD ===')
-
     // Resend wraps inbound emails in a specific event structure
     const eventType = payload.type
 
@@ -168,11 +162,6 @@ export async function POST(request: NextRequest) {
     }
 
     const emailData: ResendInboundEmail = payload.data
-
-    // Debug: Log the payload structure
-    console.log('Email data keys:', Object.keys(emailData || {}))
-    console.log('Attachments:', JSON.stringify(emailData.attachments))
-
     const emailId = emailData.email_id // Unique ID from Resend
     const { email: senderEmail, name: senderName } = parseEmailAddress(emailData.from)
     const subject = emailData.subject || '(No subject)'
@@ -182,71 +171,38 @@ export async function POST(request: NextRequest) {
 
     // Check standard text/html fields first
     if (emailData.text) {
-      console.log('Found text field')
       body = cleanEmailBody(emailData.text)
     } else if (emailData.html) {
-      console.log('Found html field')
       body = emailData.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
     }
 
     // Check if body is in attachments (some email providers put body there)
     if (!body && emailData.attachments && emailData.attachments.length > 0) {
-      console.log('Checking attachments for body content')
       for (const attachment of emailData.attachments) {
-        // Look for text/plain or text/html attachments that might contain the body
         if (attachment.content_type === 'text/plain' || attachment.filename === 'body.txt') {
           try {
             body = Buffer.from(attachment.content, 'base64').toString('utf-8')
             body = cleanEmailBody(body)
-            console.log('Found body in text attachment')
             break
-          } catch (e) {
-            console.log('Failed to decode attachment:', e)
+          } catch {
+            // Failed to decode attachment
           }
         } else if (attachment.content_type === 'text/html' || attachment.filename === 'body.html') {
           try {
             const htmlContent = Buffer.from(attachment.content, 'base64').toString('utf-8')
             body = htmlContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-            console.log('Found body in html attachment')
             break
-          } catch (e) {
-            console.log('Failed to decode html attachment:', e)
+          } catch {
+            // Failed to decode attachment
           }
         }
       }
     }
 
-    // If still no body, try to fetch from Resend API using email_id
-    if (!body && emailId && process.env.RESEND_API_KEY) {
-      console.log('Attempting to fetch email content via Resend API, email_id:', emailId)
-      try {
-        const resend = new Resend(process.env.RESEND_API_KEY)
-        // Try to get email details - this may not work for inbound emails
-        const response = await fetch(`https://api.resend.com/emails/${emailId}`, {
-          headers: {
-            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`
-          }
-        })
-        if (response.ok) {
-          const emailDetails = await response.json()
-          console.log('Fetched email details:', JSON.stringify(emailDetails))
-          if (emailDetails.text) {
-            body = cleanEmailBody(emailDetails.text)
-          } else if (emailDetails.html) {
-            body = emailDetails.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-          }
-        } else {
-          console.log('Failed to fetch email from API:', response.status, await response.text())
-        }
-      } catch (e) {
-        console.log('Error fetching email from API:', e)
-      }
-    }
-
-    // If still no body, use a placeholder
+    // If still no body, use a helpful fallback message
+    // Note: Resend inbound webhooks currently don't include body content
     if (!body) {
-      console.log('No body extracted, using placeholder')
-      body = `(Email received with subject: ${subject})`
+      body = `[Email ticket created]\n\nSubject: ${subject}\n\nNote: Email body content was not available. Please reply to this ticket through the support portal or send another email with your details.`
     }
 
     const supabase = createAdminClient()
