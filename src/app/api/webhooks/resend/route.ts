@@ -182,7 +182,6 @@ export async function POST(request: NextRequest) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY)
         // Use emails.receiving.get() for inbound emails
-        // @ts-expect-error - receiving API may not be in types yet
         const { data: fullEmail, error: fetchError } = await resend.emails.receiving.get(emailId)
 
         if (fetchError) {
