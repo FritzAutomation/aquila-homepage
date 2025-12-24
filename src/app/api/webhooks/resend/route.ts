@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { sendTicketConfirmation } from '@/lib/resend'
 import { headers } from 'next/headers'
 import crypto from 'crypto'
+import { Resend } from 'resend'
 
 // Resend inbound email webhook payload
 interface ResendInboundEmail {
@@ -176,58 +177,26 @@ export async function POST(request: NextRequest) {
       body = emailData.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
     }
 
-    // If no body in webhook, fetch full email from Resend API
+    // If no body in webhook, fetch full email using Resend SDK's receiving API
     if (!body && emailId && process.env.RESEND_API_KEY) {
       try {
-        // Resend inbound emails endpoint
-        const response = await fetch(`https://api.resend.com/emails/${emailId}`, {
-          method: 'GET',
-          headers: {
-            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-            'Content-Type': 'application/json'
-          }
-        })
+        const resend = new Resend(process.env.RESEND_API_KEY)
+        // Use emails.receiving.get() for inbound emails
+        // @ts-expect-error - receiving API may not be in types yet
+        const { data: fullEmail, error: fetchError } = await resend.emails.receiving.get(emailId)
 
-        if (response.ok) {
-          const fullEmail = await response.json()
-          console.log('Fetched full email, keys:', Object.keys(fullEmail))
-
+        if (fetchError) {
+          console.log('Error fetching inbound email:', fetchError)
+        } else if (fullEmail) {
+          console.log('Fetched inbound email successfully')
           if (fullEmail.text) {
             body = cleanEmailBody(fullEmail.text)
           } else if (fullEmail.html) {
             body = fullEmail.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-          } else if (fullEmail.body) {
-            // Some APIs use 'body' instead of 'text'
-            body = cleanEmailBody(fullEmail.body)
-          }
-        } else {
-          const errorText = await response.text()
-          console.log('Failed to fetch email:', response.status, errorText)
-
-          // Try alternative endpoint for inbound emails
-          const inboundResponse = await fetch(`https://api.resend.com/inbound/emails/${emailId}`, {
-            method: 'GET',
-            headers: {
-              'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
-              'Content-Type': 'application/json'
-            }
-          })
-
-          if (inboundResponse.ok) {
-            const inboundEmail = await inboundResponse.json()
-            console.log('Fetched from inbound endpoint, keys:', Object.keys(inboundEmail))
-
-            if (inboundEmail.text) {
-              body = cleanEmailBody(inboundEmail.text)
-            } else if (inboundEmail.html) {
-              body = inboundEmail.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-            }
-          } else {
-            console.log('Inbound endpoint also failed:', inboundResponse.status)
           }
         }
       } catch (error) {
-        console.error('Error fetching email from Resend API:', error)
+        console.error('Error fetching inbound email from Resend:', error)
       }
     }
 
