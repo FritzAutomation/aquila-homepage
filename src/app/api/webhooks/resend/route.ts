@@ -185,9 +185,8 @@ export async function POST(request: NextRequest) {
         const { data: fullEmail, error: fetchError } = await resend.emails.receiving.get(emailId)
 
         if (fetchError) {
-          console.log('Error fetching inbound email:', fetchError)
+          console.error('Error fetching inbound email:', fetchError)
         } else if (fullEmail) {
-          console.log('Fetched inbound email successfully')
           if (fullEmail.text) {
             body = cleanEmailBody(fullEmail.text)
           } else if (fullEmail.html) {
@@ -220,8 +219,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     if (recentTicket && !ticketNumber) {
-      // Already processed this email
-      console.log('Duplicate email detected, skipping:', emailId)
+      // Already processed this email - skip to prevent duplicates
       return NextResponse.json({
         success: true,
         action: 'duplicate_skipped',
