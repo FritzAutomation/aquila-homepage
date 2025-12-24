@@ -169,38 +169,69 @@ export async function POST(request: NextRequest) {
     // Get body from text, html, or check attachments for body content
     let body = ''
 
-    // Check standard text/html fields first
+    // Check if body is in the webhook payload first
     if (emailData.text) {
       body = cleanEmailBody(emailData.text)
     } else if (emailData.html) {
       body = emailData.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
     }
 
-    // Check if body is in attachments (some email providers put body there)
-    if (!body && emailData.attachments && emailData.attachments.length > 0) {
-      for (const attachment of emailData.attachments) {
-        if (attachment.content_type === 'text/plain' || attachment.filename === 'body.txt') {
-          try {
-            body = Buffer.from(attachment.content, 'base64').toString('utf-8')
-            body = cleanEmailBody(body)
-            break
-          } catch {
-            // Failed to decode attachment
+    // If no body in webhook, fetch full email from Resend API
+    if (!body && emailId && process.env.RESEND_API_KEY) {
+      try {
+        // Resend inbound emails endpoint
+        const response = await fetch(`https://api.resend.com/emails/${emailId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+            'Content-Type': 'application/json'
           }
-        } else if (attachment.content_type === 'text/html' || attachment.filename === 'body.html') {
-          try {
-            const htmlContent = Buffer.from(attachment.content, 'base64').toString('utf-8')
-            body = htmlContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-            break
-          } catch {
-            // Failed to decode attachment
+        })
+
+        if (response.ok) {
+          const fullEmail = await response.json()
+          console.log('Fetched full email, keys:', Object.keys(fullEmail))
+
+          if (fullEmail.text) {
+            body = cleanEmailBody(fullEmail.text)
+          } else if (fullEmail.html) {
+            body = fullEmail.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+          } else if (fullEmail.body) {
+            // Some APIs use 'body' instead of 'text'
+            body = cleanEmailBody(fullEmail.body)
+          }
+        } else {
+          const errorText = await response.text()
+          console.log('Failed to fetch email:', response.status, errorText)
+
+          // Try alternative endpoint for inbound emails
+          const inboundResponse = await fetch(`https://api.resend.com/inbound/emails/${emailId}`, {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
+              'Content-Type': 'application/json'
+            }
+          })
+
+          if (inboundResponse.ok) {
+            const inboundEmail = await inboundResponse.json()
+            console.log('Fetched from inbound endpoint, keys:', Object.keys(inboundEmail))
+
+            if (inboundEmail.text) {
+              body = cleanEmailBody(inboundEmail.text)
+            } else if (inboundEmail.html) {
+              body = inboundEmail.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+            }
+          } else {
+            console.log('Inbound endpoint also failed:', inboundResponse.status)
           }
         }
+      } catch (error) {
+        console.error('Error fetching email from Resend API:', error)
       }
     }
 
     // If still no body, use a helpful fallback message
-    // Note: Resend inbound webhooks currently don't include body content
     if (!body) {
       body = `[Email ticket created]\n\nSubject: ${subject}\n\nNote: Email body content was not available. Please reply to this ticket through the support portal or send another email with your details.`
     }
