@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ChevronDown, Phone, Mail, MapPin } from "lucide-react";
+import { Menu, X, ChevronDown, Phone, Mail, MapPin, LogIn } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "../ui";
@@ -38,7 +38,15 @@ const navItems = [
     ],
   },
   { label: "News", href: "/news" },
-  { label: "Support", href: "/support" },
+  {
+    label: "Support",
+    href: "/support",
+    children: [
+      { label: "Contact Support", href: "/support", description: "Submit a support request" },
+      { label: "Check Ticket Status", href: "/support/status", description: "Track your open tickets" },
+      { label: "Knowledge Base", href: "/support/kb", description: "Browse help articles and guides" },
+    ],
+  },
 ];
 
 export default function Navigation() {
@@ -183,8 +191,15 @@ export default function Navigation() {
             ))}
           </div>
 
-          {/* CTA Button */}
-          <div className="hidden lg:block">
+          {/* CTA Buttons */}
+          <div className="hidden lg:flex items-center gap-3">
+            <a
+              href="/login"
+              className="flex items-center gap-1.5 px-3 py-2 text-slate hover:text-navy transition-colors font-medium text-sm"
+            >
+              <LogIn className="w-4 h-4" />
+              Sign In
+            </a>
             <Button href="/contact">Request Demo</Button>
           </div>
 
@@ -312,10 +327,18 @@ export default function Navigation() {
               </div>
 
               {/* Drawer Footer */}
-              <div className="border-t border-gray-100 p-4 space-y-4">
+              <div className="border-t border-gray-100 p-4 space-y-3">
                 <Button href="/contact" className="w-full" onClick={() => setMobileMenuOpen(false)}>
                   Request Demo
                 </Button>
+                <a
+                  href="/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="flex items-center justify-center gap-2 w-full py-2.5 text-navy font-medium border border-slate-light/30 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <LogIn className="w-4 h-4" />
+                  Sign In
+                </a>
 
                 {/* Contact Info */}
                 <div className="space-y-2 pt-2">

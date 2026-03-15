@@ -16,6 +16,7 @@ const footerLinks = {
     { label: "Contact Support", href: "/support" },
     { label: "Check Ticket Status", href: "/support/status" },
     { label: "Knowledge Base", href: "/support/kb" },
+    { label: "Customer Portal", href: "/login" },
   ],
   Company: [
     { label: "About Us", href: "/about" },
