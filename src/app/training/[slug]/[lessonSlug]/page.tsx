@@ -267,7 +267,7 @@ export default function LessonPage({
             {step.step_type === "content" ? (
               /* Content Step */
               <div className="bg-white rounded-xl shadow-sm border border-slate-light/20 p-6 md:p-8">
-                <div className="prose prose-slate max-w-none prose-headings:text-navy prose-a:text-emerald prose-strong:text-navy">
+                <div className="prose max-w-none prose-headings:text-navy prose-p:text-gray-700 prose-li:text-gray-700 prose-a:text-emerald prose-strong:text-navy prose-ol:text-gray-700 prose-ul:text-gray-700">
                   <ReactMarkdown>{step.content || ""}</ReactMarkdown>
                 </div>
               </div>
