@@ -130,14 +130,18 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     // Send status change notification if status actually changed
     if (body.status && oldTicket && body.status !== oldTicket.status) {
       const statusLabel = STATUS_LABELS[body.status as TicketStatus] || body.status
-      sendStatusChangeNotification({
-        to: ticket.email,
-        ticketNumber: ticket.ticket_number,
-        subject: ticket.subject,
-        customerName: ticket.name || undefined,
-        newStatus: body.status,
-        statusLabel
-      }).catch(err => console.error('Failed to send status change notification:', err))
+      try {
+        await sendStatusChangeNotification({
+          to: ticket.email,
+          ticketNumber: ticket.ticket_number,
+          subject: ticket.subject,
+          customerName: ticket.name || undefined,
+          newStatus: body.status,
+          statusLabel
+        })
+      } catch (err) {
+        console.error('Failed to send status change notification:', err)
+      }
     }
 
     return NextResponse.json({
