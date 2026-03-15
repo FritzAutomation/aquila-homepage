@@ -344,3 +344,78 @@ export async function sendStatusChangeNotification({
     return { success: false, error }
   }
 }
+
+interface SendAdminCustomerReplyNotificationParams {
+  ticketNumber: number
+  subject: string
+  customerEmail: string
+  customerName?: string
+  replyPreview: string
+  wasReopened: boolean
+}
+
+export async function sendAdminCustomerReplyNotification({
+  ticketNumber,
+  subject,
+  customerEmail,
+  customerName,
+  replyPreview,
+  wasReopened
+}: SendAdminCustomerReplyNotificationParams) {
+  const ticketId = `TKT-${String(ticketNumber).padStart(4, '0')}`
+  const adminUrl = `${BASE_URL}/admin/tickets`
+
+  const reopenedBanner = wasReopened
+    ? `<div style="background-color: #FEF3C7; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; border-left: 4px solid #F59E0B;">
+        <strong>Ticket reopened</strong> — This ticket was previously resolved and has been automatically reopened.
+      </div>`
+    : ''
+
+  try {
+    const resend = getResendClient()
+    const { data, error } = await resend.emails.send({
+      from: `Aquila Support <${FROM_EMAIL}>`,
+      to: [ADMIN_EMAIL],
+      subject: `${wasReopened ? 'Reopened: ' : 'Reply: '}[${ticketId}] ${subject}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #1E3A5F; padding: 20px; text-align: center;">
+            <h1 style="color: white; margin: 0;">Customer Reply</h1>
+          </div>
+
+          <div style="padding: 30px; background-color: #f8f9fa;">
+            ${reopenedBanner}
+            <p><strong>${customerName || customerEmail}</strong> replied to ticket <strong>${ticketId}</strong>:</p>
+
+            <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #3B82F6;">
+              <p style="margin: 0; color: #333;">${replyPreview}</p>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${adminUrl}"
+                 style="display: inline-block; background-color: #10B981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                View in Admin Dashboard
+              </a>
+            </div>
+          </div>
+
+          <div style="background-color: #1E3A5F; padding: 15px; text-align: center;">
+            <p style="color: white; margin: 0; font-size: 12px;">
+              &copy; ${new Date().getFullYear()} The Aquila Group. All rights reserved.
+            </p>
+          </div>
+        </div>
+      `
+    })
+
+    if (error) {
+      console.error('Failed to send admin reply notification:', error)
+      return { success: false, error }
+    }
+
+    return { success: true, messageId: data?.id }
+  } catch (error) {
+    console.error('Error sending admin reply notification:', error)
+    return { success: false, error }
+  }
+}

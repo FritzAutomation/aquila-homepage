@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendTicketConfirmation, sendAdminNewTicketNotification } from '@/lib/resend'
+import { sendTicketConfirmation, sendAdminNewTicketNotification, sendAdminCustomerReplyNotification } from '@/lib/resend'
 import { headers } from 'next/headers'
 import crypto from 'crypto'
 import { Resend } from 'resend'
@@ -231,7 +231,7 @@ export async function POST(request: NextRequest) {
       // This is a reply to an existing ticket
       const { data: existingTicket, error: ticketError } = await supabase
         .from('tickets')
-        .select('id, email, status')
+        .select('id, email, status, subject')
         .eq('ticket_number', ticketNumber)
         .single()
 
@@ -263,12 +263,23 @@ export async function POST(request: NextRequest) {
       }
 
       // Reopen ticket if it was resolved/closed
-      if (existingTicket.status === 'resolved' || existingTicket.status === 'closed') {
+      const wasReopened = existingTicket.status === 'resolved' || existingTicket.status === 'closed'
+      if (wasReopened) {
         await supabase
           .from('tickets')
           .update({ status: 'open' })
           .eq('id', existingTicket.id)
       }
+
+      // Notify admin of customer reply
+      await sendAdminCustomerReplyNotification({
+        ticketNumber,
+        subject: existingTicket.subject,
+        customerEmail: senderEmail,
+        customerName: senderName || undefined,
+        replyPreview: body.substring(0, 300),
+        wasReopened
+      })
 
       return NextResponse.json({
         success: true,
