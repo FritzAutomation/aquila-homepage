@@ -1,126 +1,137 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { createClient } from "@/lib/supabase/client";
-import { Mail, Lock, Loader2, ArrowRight, Sparkles } from "lucide-react";
-import Link from "next/link";
+import { useState } from "react"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
+import { Mail, Lock, Loader2, ArrowRight, Sparkles } from "lucide-react"
+import Link from "next/link"
+import Image from "next/image"
 
-export default function AdminLoginPage() {
-  const router = useRouter();
-  const [mode, setMode] = useState<"password" | "magic">("password");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [magicLinkSent, setMagicLinkSent] = useState(false);
+export default function LoginPage() {
+  const router = useRouter()
+  const [mode, setMode] = useState<"password" | "magic">("password")
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
+  const [magicLinkSent, setMagicLinkSent] = useState(false)
+
+  const redirectByRole = async () => {
+    try {
+      const res = await fetch("/api/auth/me")
+      if (res.ok) {
+        const profile = await res.json()
+        if (profile.user_type === "admin" || profile.user_type === "agent") {
+          router.push("/admin")
+        } else {
+          router.push("/portal")
+        }
+        router.refresh()
+        return
+      }
+    } catch {
+      // fallback
+    }
+    router.push("/portal")
+    router.refresh()
+  }
 
   const handlePasswordLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+    e.preventDefault()
+    setLoading(true)
+    setError("")
 
     try {
-      const supabase = createClient();
+      const supabase = createClient()
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
-      });
+      })
 
       if (error) {
-        setError(error.message);
+        setError(error.message)
       } else {
-        // Check user role and redirect appropriately
-        try {
-          const res = await fetch("/api/auth/me");
-          if (res.ok) {
-            const profile = await res.json();
-            if (profile.user_type === "customer") {
-              router.push("/portal");
-            } else {
-              router.push("/admin");
-            }
-          } else {
-            router.push("/admin");
-          }
-        } catch {
-          router.push("/admin");
-        }
-        router.refresh();
+        await redirectByRole()
       }
     } catch {
-      setError("An unexpected error occurred");
+      setError("An unexpected error occurred")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleMagicLinkLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+    e.preventDefault()
+    setLoading(true)
+    setError("")
 
     try {
-      const supabase = createClient();
+      const supabase = createClient()
       const { error } = await supabase.auth.signInWithOtp({
         email,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback?next=/auth/redirect`,
         },
-      });
+      })
 
       if (error) {
-        setError(error.message);
+        setError(error.message)
       } else {
-        setMagicLinkSent(true);
+        setMagicLinkSent(true)
       }
     } catch {
-      setError("An unexpected error occurred");
+      setError("An unexpected error occurred")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   if (magicLinkSent) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4">
         <div className="w-full max-w-md">
           <div className="bg-white rounded-2xl shadow-xl p-8 text-center">
-            <div className="w-16 h-16 bg-emerald/10 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Mail className="w-8 h-8 text-emerald" />
+            <div className="w-16 h-16 bg-[#10B981]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Mail className="w-8 h-8 text-[#10B981]" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <h2 className="text-2xl font-bold text-[#1E3A5F] mb-2">
               Check your email
             </h2>
-            <p className="text-gray-600 mb-6">
-              We sent a magic link to <strong>{email}</strong>. Click the link
-              to sign in.
+            <p className="text-[#64748B] mb-6">
+              We sent a magic link to <strong className="text-[#1E3A5F]">{email}</strong>.
+              Click the link to sign in.
             </p>
             <button
               onClick={() => {
-                setMagicLinkSent(false);
-                setEmail("");
+                setMagicLinkSent(false)
+                setEmail("")
               }}
-              className="text-emerald hover:text-emerald/80 font-medium"
+              className="text-[#10B981] hover:text-[#10B981]/80 font-medium"
             >
               Use a different email
             </button>
           </div>
         </div>
       </div>
-    );
+    )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="w-12 h-12 bg-navy rounded-xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-xl">A</span>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">Aquila Admin</h1>
-          <p className="text-gray-600 mt-1">Sign in to manage support tickets</p>
+          <Link href="/" className="inline-block">
+            <Image
+              src="/images/Aquila-Logo-DS_WA-2012.png"
+              alt="The Aquila Group"
+              width={180}
+              height={95}
+              className="h-14 w-auto mx-auto mb-4"
+            />
+          </Link>
+          <h1 className="text-2xl font-bold text-[#1E3A5F]">Sign In</h1>
+          <p className="text-[#64748B] mt-1">Access your training, tickets, and more</p>
         </div>
 
         {/* Login card */}
@@ -131,8 +142,8 @@ export default function AdminLoginPage() {
               onClick={() => setMode("password")}
               className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors ${
                 mode === "password"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
+                  ? "bg-white text-[#1E3A5F] shadow-sm"
+                  : "text-[#64748B] hover:text-[#1E3A5F]"
               }`}
             >
               Password
@@ -141,8 +152,8 @@ export default function AdminLoginPage() {
               onClick={() => setMode("magic")}
               className={`flex-1 py-2 px-4 text-sm font-medium rounded-md transition-colors flex items-center justify-center gap-1 ${
                 mode === "magic"
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-600 hover:text-gray-900"
+                  ? "bg-white text-[#1E3A5F] shadow-sm"
+                  : "text-[#64748B] hover:text-[#1E3A5F]"
               }`}
             >
               <Sparkles className="w-4 h-4" />
@@ -174,7 +185,7 @@ export default function AdminLoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@company.com"
                     required
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald focus:border-emerald outline-none transition-all text-gray-900 placeholder:text-gray-500"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none transition-all text-gray-900 placeholder:text-gray-500"
                   />
                 </div>
               </div>
@@ -195,7 +206,7 @@ export default function AdminLoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     required
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald focus:border-emerald outline-none transition-all text-gray-900 placeholder:text-gray-500"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none transition-all text-gray-900 placeholder:text-gray-500"
                   />
                 </div>
               </div>
@@ -203,7 +214,7 @@ export default function AdminLoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 px-4 bg-emerald text-white font-medium rounded-lg hover:bg-emerald/90 focus:ring-2 focus:ring-emerald focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                className="w-full py-2.5 px-4 bg-[#10B981] text-white font-medium rounded-lg hover:bg-[#10B981]/90 focus:ring-2 focus:ring-[#10B981] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -233,19 +244,19 @@ export default function AdminLoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@company.com"
                     required
-                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald focus:border-emerald outline-none transition-all text-gray-900 placeholder:text-gray-500"
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#10B981] focus:border-[#10B981] outline-none transition-all text-gray-900 placeholder:text-gray-500"
                   />
                 </div>
               </div>
 
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-[#64748B]">
                 We&apos;ll send you a magic link to sign in without a password.
               </p>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-2.5 px-4 bg-emerald text-white font-medium rounded-lg hover:bg-emerald/90 focus:ring-2 focus:ring-emerald focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                className="w-full py-2.5 px-4 bg-[#10B981] text-white font-medium rounded-lg hover:bg-[#10B981]/90 focus:ring-2 focus:ring-[#10B981] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
               >
                 {loading ? (
                   <Loader2 className="w-5 h-5 animate-spin" />
@@ -261,12 +272,12 @@ export default function AdminLoginPage() {
         </div>
 
         {/* Back to site */}
-        <p className="text-center mt-6 text-sm text-gray-600">
-          <Link href="/" className="text-emerald hover:text-emerald/80 font-medium">
+        <p className="text-center mt-6 text-sm text-[#64748B]">
+          <Link href="/" className="text-[#10B981] hover:text-[#10B981]/80 font-medium">
             &larr; Back to website
           </Link>
         </p>
       </div>
     </div>
-  );
+  )
 }
