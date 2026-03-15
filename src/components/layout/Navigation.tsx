@@ -51,6 +51,7 @@ export default function Navigation() {
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -129,7 +130,7 @@ export default function Navigation() {
       <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 md:h-20">
           {/* Logo */}
-          <a href="/" className="flex items-center">
+          <Link href="/" className="flex items-center">
             <Image
               src="/images/Aquila-Logo-DS_WA-2012.png"
               alt="The Aquila Group"
@@ -138,7 +139,7 @@ export default function Navigation() {
               className="h-12 md:h-14 w-auto"
               priority
             />
-          </a>
+          </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex items-center gap-1">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Cookie, X, Settings, Shield, BarChart3, Target } from "lucide-react";
 import Link from "next/link";
@@ -35,6 +35,33 @@ export default function CookieConsent() {
   }, []);
 
   // Focus the accept button when banner appears
+  const saveConsent = useCallback((consentState: ConsentState) => {
+    localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify(consentState));
+    setIsVisible(false);
+  }, []);
+
+  const handleAcceptAll = useCallback(() => {
+    const fullConsent: ConsentState = {
+      necessary: true,
+      analytics: true,
+      marketing: true,
+    };
+    saveConsent(fullConsent);
+  }, [saveConsent]);
+
+  const handleAcceptNecessary = useCallback(() => {
+    const minimalConsent: ConsentState = {
+      necessary: true,
+      analytics: false,
+      marketing: false,
+    };
+    saveConsent(minimalConsent);
+  }, [saveConsent]);
+
+  const handleSavePreferences = useCallback(() => {
+    saveConsent(consent);
+  }, [saveConsent, consent]);
+
   useEffect(() => {
     if (isVisible && acceptButtonRef.current) {
       acceptButtonRef.current.focus();
@@ -51,35 +78,7 @@ export default function CookieConsent() {
     };
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [isVisible]);
-
-  const handleAcceptAll = () => {
-    const fullConsent: ConsentState = {
-      necessary: true,
-      analytics: true,
-      marketing: true,
-    };
-    saveConsent(fullConsent);
-  };
-
-  const handleAcceptNecessary = () => {
-    const minimalConsent: ConsentState = {
-      necessary: true,
-      analytics: false,
-      marketing: false,
-    };
-    saveConsent(minimalConsent);
-  };
-
-  const handleSavePreferences = () => {
-    saveConsent(consent);
-  };
-
-  const saveConsent = (consentState: ConsentState) => {
-    localStorage.setItem(COOKIE_CONSENT_KEY, JSON.stringify(consentState));
-    setIsVisible(false);
-    // Here you would typically trigger analytics/marketing scripts based on consent
-  };
+  }, [isVisible, handleAcceptNecessary]);
 
   const toggleConsent = (key: keyof ConsentState) => {
     if (key === "necessary") return; // Can't disable necessary cookies

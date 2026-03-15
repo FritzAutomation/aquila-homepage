@@ -486,6 +486,7 @@ export default function GreenLightDemo() {
 
   // Signal is active when machine is running or just changed status
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSignalActive(true);
     const timeout = setTimeout(() => {
       if (status !== "running") {

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Mail, Lock, Loader2, ArrowRight, Sparkles } from "lucide-react";
+import Link from "next/link";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -246,9 +247,9 @@ export default function AdminLoginPage() {
 
         {/* Back to site */}
         <p className="text-center mt-6 text-sm text-gray-600">
-          <a href="/" className="text-emerald hover:text-emerald/80 font-medium">
+          <Link href="/" className="text-emerald hover:text-emerald/80 font-medium">
             &larr; Back to website
-          </a>
+          </Link>
         </p>
       </div>
     </div>

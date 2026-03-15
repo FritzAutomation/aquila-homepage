@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 interface PageHeaderProps {
   title: string;
@@ -26,9 +27,9 @@ export default function PageHeader({ title, subtitle, breadcrumb }: PageHeaderPr
           >
             <ol className="flex items-center gap-2 text-sm text-white/60">
               <li>
-                <a href="/" className="hover:text-white transition-colors">
+                <Link href="/" className="hover:text-white transition-colors">
                   Home
-                </a>
+                </Link>
               </li>
               {breadcrumb.map((item, index) => (
                 <li key={item.href} className="flex items-center gap-2">
@@ -36,9 +37,9 @@ export default function PageHeader({ title, subtitle, breadcrumb }: PageHeaderPr
                   {index === breadcrumb.length - 1 ? (
                     <span className="text-white">{item.label}</span>
                   ) : (
-                    <a href={item.href} className="hover:text-white transition-colors">
+                    <Link href={item.href} className="hover:text-white transition-colors">
                       {item.label}
-                    </a>
+                    </Link>
                   )}
                 </li>
               ))}

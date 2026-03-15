@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createAdminClient()
-    let updateData: Record<string, unknown> = {}
+    const updateData: Record<string, unknown> = {}
 
     switch (action) {
       case 'status':

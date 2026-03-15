@@ -96,76 +96,23 @@ const menuStructure = [
   },
 ];
 
-export default function DMMDemo() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const mobileMenuRef = useRef<HTMLDivElement>(null);
-  const menuButtonRef = useRef<HTMLButtonElement>(null);
-
-  // Focus trap for mobile menu
-  useEffect(() => {
-    if (!mobileMenuOpen) return;
-
-    const menuEl = mobileMenuRef.current;
-    if (!menuEl) return;
-
-    const focusableElements = menuEl.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
-
-    // Focus first element when menu opens
-    firstElement?.focus();
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        setMobileMenuOpen(false);
-        menuButtonRef.current?.focus();
-        return;
-      }
-
-      if (e.key !== "Tab") return;
-
-      if (e.shiftKey) {
-        if (document.activeElement === firstElement) {
-          e.preventDefault();
-          lastElement?.focus();
-        }
-      } else {
-        if (document.activeElement === lastElement) {
-          e.preventDefault();
-          firstElement?.focus();
-        }
-      }
-    };
-
-    document.addEventListener("keydown", handleKeyDown);
-    return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [mobileMenuOpen]);
-
-  const handleLogin = () => {
-    setIsLoggingIn(true);
-    setTimeout(() => {
-      setIsLoggedIn(true);
-      setIsLoggingIn(false);
-    }, 800);
-  };
-
-  const handleLogout = () => {
-    setExpandedMenu(null);
-    setMobileMenuOpen(false);
-    setIsLoggedIn(false);
-  };
-
-  const toggleMenu = (menuName: string) => {
-    setExpandedMenu(expandedMenu === menuName ? null : menuName);
-  };
-
-  // Sidebar menu component
-  const SidebarMenu = ({ isMobile = false, isTablet = false }: { isMobile?: boolean; isTablet?: boolean }) => (
+// Sidebar menu component
+function SidebarMenu({
+  isMobile = false,
+  isTablet = false,
+  expandedMenu,
+  toggleMenu,
+  handleLogout,
+  setMobileMenuOpen,
+}: {
+  isMobile?: boolean;
+  isTablet?: boolean;
+  expandedMenu: string | null;
+  toggleMenu: (menuName: string) => void;
+  handleLogout: () => void;
+  setMobileMenuOpen: (open: boolean) => void;
+}) {
+  return (
     <nav
       className={`bg-[#f5f5f5] ${isMobile ? "h-full" : "border-r border-[#ccc] shadow-lg"}`}
       aria-label="DMM System Navigation"
@@ -252,9 +199,11 @@ export default function DMMDemo() {
       </div>
     </nav>
   );
+}
 
-  // Dashboard preview cards component
-  const DashboardPreviews = ({ small = false, tablet = false }: { small?: boolean; tablet?: boolean }) => (
+// Dashboard preview cards component
+function DashboardPreviews({ small = false, tablet = false }: { small?: boolean; tablet?: boolean }) {
+  return (
     <div className={`relative ${small ? "h-24" : tablet ? "h-36" : "h-48"} flex items-end justify-center gap-1 md:gap-2`}>
       {[0, 1, 2, 3, 4].map((i) => (
         <motion.div
@@ -325,9 +274,11 @@ export default function DMMDemo() {
       ))}
     </div>
   );
+}
 
-  // Partner logos footer
-  const PartnerLogos = ({ compact = false }: { compact?: boolean }) => (
+// Partner logos footer
+function PartnerLogos({ compact = false }: { compact?: boolean }) {
+  return (
     <div className={`bg-white/90 ${compact ? "px-2 py-1.5" : "px-4 py-3"} flex justify-center items-center ${compact ? "gap-2" : "gap-8"} flex-wrap border-t border-white/20`}>
       <div className="flex items-center gap-1">
         <div className={`${compact ? "w-6 h-3" : "w-12 h-6"} bg-[#C74634] rounded-sm`}></div>
@@ -344,6 +295,75 @@ export default function DMMDemo() {
       {!compact && <span className="text-sm text-[#00A650]">⬢ kepware</span>}
     </div>
   );
+}
+
+export default function DMMDemo() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [expandedMenu, setExpandedMenu] = useState<string | null>(null);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const mobileMenuRef = useRef<HTMLDivElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+
+  // Focus trap for mobile menu
+  useEffect(() => {
+    if (!mobileMenuOpen) return;
+
+    const menuEl = mobileMenuRef.current;
+    if (!menuEl) return;
+
+    const focusableElements = menuEl.querySelectorAll<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    const firstElement = focusableElements[0];
+    const lastElement = focusableElements[focusableElements.length - 1];
+
+    // Focus first element when menu opens
+    firstElement?.focus();
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setMobileMenuOpen(false);
+        menuButtonRef.current?.focus();
+        return;
+      }
+
+      if (e.key !== "Tab") return;
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault();
+          lastElement?.focus();
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault();
+          firstElement?.focus();
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [mobileMenuOpen]);
+
+  const handleLogin = () => {
+    setIsLoggingIn(true);
+    setTimeout(() => {
+      setIsLoggedIn(true);
+      setIsLoggingIn(false);
+    }, 800);
+  };
+
+  const handleLogout = () => {
+    setExpandedMenu(null);
+    setMobileMenuOpen(false);
+    setIsLoggedIn(false);
+  };
+
+  const toggleMenu = (menuName: string) => {
+    setExpandedMenu(expandedMenu === menuName ? null : menuName);
+  };
 
   return (
     <div className="w-full max-w-5xl mx-auto">
@@ -462,7 +482,7 @@ export default function DMMDemo() {
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
                   className="w-48"
                 >
-                  <SidebarMenu />
+                  <SidebarMenu expandedMenu={expandedMenu} toggleMenu={toggleMenu} handleLogout={handleLogout} setMobileMenuOpen={setMobileMenuOpen} />
                 </motion.div>
 
                 {/* Main Content Area */}
@@ -606,7 +626,7 @@ export default function DMMDemo() {
                       transition={{ type: "spring", stiffness: 300, damping: 30 }}
                       className="w-44"
                     >
-                      <SidebarMenu isTablet />
+                      <SidebarMenu isTablet expandedMenu={expandedMenu} toggleMenu={toggleMenu} handleLogout={handleLogout} setMobileMenuOpen={setMobileMenuOpen} />
                     </motion.div>
 
                     {/* Main content */}
@@ -795,7 +815,7 @@ export default function DMMDemo() {
                             aria-modal="true"
                             aria-label="Navigation menu"
                           >
-                            <SidebarMenu isMobile />
+                            <SidebarMenu isMobile expandedMenu={expandedMenu} toggleMenu={toggleMenu} handleLogout={handleLogout} setMobileMenuOpen={setMobileMenuOpen} />
                           </motion.div>
                         </>
                       )}

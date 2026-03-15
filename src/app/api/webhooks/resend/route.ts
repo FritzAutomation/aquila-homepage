@@ -310,11 +310,9 @@ export async function POST(request: NextRequest) {
 
     // Get body from email — prefer HTML to preserve inline images, fall back to text
     let body = ''
-    let rawHtml = '' // Keep raw HTML for cid: resolution after attachment processing
 
     // Check if body is in the webhook payload first
     if (emailData.html) {
-      rawHtml = emailData.html
       body = cleanEmailHtml(emailData.html)
     } else if (emailData.text) {
       body = cleanEmailBody(emailData.text)
@@ -330,7 +328,6 @@ export async function POST(request: NextRequest) {
           console.error('Error fetching inbound email:', fetchError)
         } else if (fullEmail) {
           if (fullEmail.html) {
-            rawHtml = fullEmail.html
             body = cleanEmailHtml(fullEmail.html)
           } else if (fullEmail.text) {
             body = cleanEmailBody(fullEmail.text)
