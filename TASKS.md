@@ -36,9 +36,9 @@
 
 ## 📊 Admin Dashboard (Scaffolding exists — wire up real data)
 - [x] User management table (list, invite, edit, deactivate)
-- [ ] Org management (create orgs, assign users)
-- [ ] Ticket queue summary widget
-- [ ] Training progress summary by org
+- [x] Org management (create orgs, assign users)
+- [x] Ticket queue summary widget
+- [x] Training progress summary by org
 
 ---
 

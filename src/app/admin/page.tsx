@@ -10,6 +10,9 @@ import {
   TrendingUp,
   ArrowRight,
   Loader2,
+  Building2,
+  GraduationCap,
+  Users,
 } from "lucide-react";
 
 interface TicketStats {
@@ -34,6 +37,24 @@ interface RecentTicket {
   created_at: string;
 }
 
+interface TicketQueueItem {
+  id: string;
+  ticket_number: number;
+  subject: string;
+  priority: string;
+  email: string;
+  created_at: string;
+  status: string;
+}
+
+interface OrgSummary {
+  id: string;
+  name: string;
+  user_count: number;
+  ticket_count: number;
+  open_tickets: number;
+}
+
 const STATUS_COLORS: Record<string, string> = {
   open: "bg-blue-100 text-blue-700",
   pending: "bg-yellow-100 text-yellow-700",
@@ -52,23 +73,34 @@ const PRIORITY_COLORS: Record<string, string> = {
 export default function AdminDashboard() {
   const [stats, setStats] = useState<TicketStats | null>(null);
   const [recentTickets, setRecentTickets] = useState<RecentTicket[]>([]);
+  const [queueTickets, setQueueTickets] = useState<TicketQueueItem[]>([]);
+  const [orgs, setOrgs] = useState<OrgSummary[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        // Fetch ticket stats
-        const statsRes = await fetch("/api/analytics/stats");
-        if (statsRes.ok) {
-          const statsData = await statsRes.json();
-          setStats(statsData);
-        }
+        const [statsRes, ticketsRes, queueRes, orgsRes] = await Promise.all([
+          fetch("/api/analytics/stats"),
+          fetch("/api/tickets?limit=5"),
+          fetch("/api/tickets?status=open&status=in_progress&limit=10"),
+          fetch("/api/admin/companies"),
+        ]);
 
-        // Fetch recent tickets
-        const ticketsRes = await fetch("/api/tickets?limit=5");
+        if (statsRes.ok) {
+          setStats(await statsRes.json());
+        }
         if (ticketsRes.ok) {
           const ticketsData = await ticketsRes.json();
           setRecentTickets(ticketsData.tickets || []);
+        }
+        if (queueRes.ok) {
+          const queueData = await queueRes.json();
+          setQueueTickets(queueData.tickets || []);
+        }
+        if (orgsRes.ok) {
+          const orgsData = await orgsRes.json();
+          setOrgs(Array.isArray(orgsData) ? orgsData : []);
         }
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
@@ -190,6 +222,170 @@ export default function AdminDashboard() {
           <p className="text-sm text-gray-600 mt-1">
             Target: 72h for normal priority
           </p>
+        </div>
+      </div>
+
+      {/* Ticket Queue + Org Summary */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Ticket Queue Summary */}
+        <div className="bg-white rounded-xl border border-gray-200">
+          <div className="flex items-center justify-between p-5 border-b border-gray-200">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5 text-blue-500" />
+              <h2 className="text-lg font-semibold text-gray-900">
+                Ticket Queue
+              </h2>
+              {queueTickets.length > 0 && (
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-medium">
+                  {queueTickets.length}
+                </span>
+              )}
+            </div>
+            <Link
+              href="/admin/tickets?status=open"
+              className="text-sm text-emerald hover:text-emerald/80 font-medium flex items-center gap-1"
+            >
+              View queue
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {queueTickets.length === 0 ? (
+            <div className="p-8 text-center">
+              <CheckCircle className="w-10 h-10 text-green-300 mx-auto mb-2" />
+              <p className="text-gray-500 text-sm">Queue is clear</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-gray-100">
+              {queueTickets.slice(0, 5).map((ticket) => (
+                <Link
+                  key={ticket.id}
+                  href={`/admin/tickets/${ticket.id}`}
+                  className="flex items-center gap-3 p-3 px-5 hover:bg-gray-50 transition-colors"
+                >
+                  <div
+                    className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                      ticket.priority === "urgent"
+                        ? "bg-red-500"
+                        : ticket.priority === "high"
+                        ? "bg-orange-500"
+                        : ticket.priority === "normal"
+                        ? "bg-blue-500"
+                        : "bg-gray-400"
+                    }`}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {ticket.subject}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      TKT-{String(ticket.ticket_number).padStart(4, "0")} &bull;{" "}
+                      {formatDate(ticket.created_at)}
+                    </p>
+                  </div>
+                  <span
+                    className={`text-xs font-medium px-2 py-0.5 rounded-full flex-shrink-0 ${
+                      STATUS_COLORS[ticket.status] || STATUS_COLORS.open
+                    }`}
+                  >
+                    {ticket.status.replace("_", " ")}
+                  </span>
+                </Link>
+              ))}
+              {queueTickets.length > 5 && (
+                <div className="px-5 py-3 text-center">
+                  <Link
+                    href="/admin/tickets?status=open"
+                    className="text-sm text-emerald hover:text-emerald/80 font-medium"
+                  >
+                    +{queueTickets.length - 5} more in queue
+                  </Link>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Org Summary + Training Progress Placeholder */}
+        <div className="space-y-4">
+          {/* Org Summary */}
+          <div className="bg-white rounded-xl border border-gray-200">
+            <div className="flex items-center justify-between p-5 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-navy" />
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Organizations
+                </h2>
+              </div>
+              <Link
+                href="/admin/companies"
+                className="text-sm text-emerald hover:text-emerald/80 font-medium flex items-center gap-1"
+              >
+                Manage
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+
+            {orgs.length === 0 ? (
+              <div className="p-6 text-center">
+                <Building2 className="w-10 h-10 text-gray-300 mx-auto mb-2" />
+                <p className="text-gray-500 text-sm">No organizations yet</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {orgs.slice(0, 4).map((org) => (
+                  <div
+                    key={org.id}
+                    className="flex items-center justify-between p-3 px-5"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">
+                        {org.name}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        <Users className="w-3 h-3 inline mr-1" />
+                        {org.user_count} users &bull; {org.ticket_count} tickets
+                      </p>
+                    </div>
+                    {org.open_tickets > 0 && (
+                      <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">
+                        {org.open_tickets} open
+                      </span>
+                    )}
+                  </div>
+                ))}
+                {orgs.length > 4 && (
+                  <div className="px-5 py-3 text-center">
+                    <Link
+                      href="/admin/companies"
+                      className="text-sm text-emerald hover:text-emerald/80 font-medium"
+                    >
+                      +{orgs.length - 4} more
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Training Progress Placeholder */}
+          <div className="bg-white rounded-xl border border-gray-200 p-5">
+            <div className="flex items-center gap-2 mb-3">
+              <GraduationCap className="w-5 h-5 text-purple-500" />
+              <h2 className="text-lg font-semibold text-gray-900">
+                Training Progress
+              </h2>
+            </div>
+            <div className="bg-purple-50 rounded-lg p-4 text-center">
+              <GraduationCap className="w-8 h-8 text-purple-300 mx-auto mb-2" />
+              <p className="text-sm text-purple-700 font-medium">
+                Coming Soon
+              </p>
+              <p className="text-xs text-purple-500 mt-1">
+                Training modules are being developed. Progress tracking by organization will appear here.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 

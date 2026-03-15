@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   Search,
   Loader2,
@@ -49,6 +50,9 @@ const USER_TYPE_ICONS: Record<string, React.ElementType> = {
 };
 
 export default function AdminUsersPage() {
+  const searchParams = useSearchParams();
+  const companyIdParam = searchParams.get("company_id");
+
   const [users, setUsers] = useState<Profile[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,6 +77,7 @@ export default function AdminUsersPage() {
       if (search) params.set("search", search);
       if (typeFilter) params.set("user_type", typeFilter);
       if (statusFilter) params.set("status", statusFilter);
+      if (companyIdParam) params.set("company_id", companyIdParam);
 
       const res = await fetch(`/api/admin/users?${params}`);
       const data = await res.json();
@@ -82,7 +87,7 @@ export default function AdminUsersPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, typeFilter, statusFilter]);
+  }, [search, typeFilter, statusFilter, companyIdParam]);
 
   const fetchCompanies = async () => {
     try {
