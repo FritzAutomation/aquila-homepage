@@ -41,6 +41,7 @@ export type Database = {
           first_response_at: string | null
           resolved_at: string | null
           closed_at: string | null
+          reopened_at: string | null
           assigned_to: string | null
           subject: string
           source: 'web' | 'email'
@@ -60,6 +61,7 @@ export type Database = {
           first_response_at?: string | null
           resolved_at?: string | null
           closed_at?: string | null
+          reopened_at?: string | null
           assigned_to?: string | null
           subject: string
           source?: 'web' | 'email'
@@ -79,6 +81,7 @@ export type Database = {
           first_response_at?: string | null
           resolved_at?: string | null
           closed_at?: string | null
+          reopened_at?: string | null
           assigned_to?: string | null
           subject?: string
           source?: 'web' | 'email'

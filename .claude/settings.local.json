@@ -49,7 +49,20 @@
       "Bash(npm install:*)",
       "mcp__playwright__browser_type",
       "mcp__playwright__browser_select_option",
-      "mcp__plugin_supabase_supabase__execute_sql"
+      "mcp__plugin_supabase_supabase__execute_sql",
+      "mcp__playwright__browser_console_messages",
+      "Bash(find /c/Users/Joshua/Desktop/Josh/Python/aquila-homepage -type f -name \"*.json\" -o -name \"*.md\" -o -name \"*.ts\" -o -name \"*.tsx\" -o -name \"*.js\" -o -name \"*.jsx\" 2>/dev/null | head -100)",
+      "Bash(find /c/Users/Joshua/Desktop/Josh/Python/aquila-homepage/src/app/case-studies -name \"*.tsx\" | xargs wc -l | tail -1)",
+      "Bash(find /c/Users/Joshua/Desktop/Josh/Python/aquila-homepage/src/lib -type f \\\\\\( -name \"*.ts\" -o -name \"*.tsx\" \\\\\\) 2>/dev/null | sort)",
+      "Bash(find /c/Users/Joshua/Desktop/Josh/Python/aquila-homepage -type f -name \"*migration*\" -o -name \"*schema*\" 2>/dev/null | grep -v node_modules | head -20)",
+      "Bash(npx next:*)",
+      "Bash(nslookup -type=MX tickets.fritzautomation.dev 2>/dev/null || echo \"nslookup not available, trying dig\" && dig MX tickets.fritzautomation.dev +short 2>/dev/null || echo \"dig not available either\")",
+      "Bash(npx tsc:*)",
+      "Bash(find /c/Users/Joshua/Desktop/Josh/Python/aquila-homepage -type f \\\\\\( -name \"schema*\" -o -name \"*database*\" \\\\\\) 2>/dev/null | grep -v node_modules | head -20)",
+      "Bash(grep -r \"CREATE TABLE.*attachments\" /c/Users/Joshua/Desktop/Josh/Python/aquila-homepage --include=\"*.sql\" --include=\"*.md\" --include=\"*.ts\" 2>/dev/null | head -10)",
+      "Bash(find /c/Users/Joshua/Desktop/Josh/Python/aquila-homepage/src/app/api -type f -name \"*.ts\" 2>/dev/null | sort)",
+      "Bash(find /c/Users/Joshua/Desktop/Josh/Python/aquila-homepage -name \"*.md\" -type f 2>/dev/null | grep -v node_modules | head -10)",
+      "Bash(cd \"C:/Users/Joshua/Desktop/Josh/Python/aquila-homepage\" && npm run lint 2>&1 | tail -10)"
     ]
   }
 }

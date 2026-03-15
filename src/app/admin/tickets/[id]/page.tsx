@@ -19,6 +19,9 @@ import {
   FileText,
   ChevronDown,
   UserCheck,
+  Paperclip,
+  Image,
+  Download,
 } from "lucide-react";
 import {
   PRODUCT_LABELS,
@@ -31,6 +34,13 @@ import {
   type Priority,
 } from "@/lib/types";
 
+interface AttachmentMeta {
+  filename: string;
+  url: string;
+  mime_type: string;
+  size: number;
+}
+
 interface Message {
   id: string;
   content: string;
@@ -39,6 +49,7 @@ interface Message {
   sender_name: string | null;
   created_at: string;
   is_internal: boolean;
+  attachments: AttachmentMeta[];
 }
 
 interface CannedResponse {
@@ -71,6 +82,7 @@ interface TicketDetail {
   created_at: string;
   first_response_at: string | null;
   resolved_at: string | null;
+  reopened_at: string | null;
   messages: Message[];
   company: { id: string; name: string; domain: string | null } | null;
   assigned_to: string | null;
@@ -385,6 +397,39 @@ export default function TicketDetailPage({
                       <div className="text-sm text-gray-700 whitespace-pre-wrap">
                         {message.content}
                       </div>
+                      {message.attachments && message.attachments.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {message.attachments.map((att, i) => (
+                            <div key={i}>
+                              {att.mime_type.startsWith("image/") ? (
+                                <a href={att.url} target="_blank" rel="noopener noreferrer" className="block">
+                                  <img
+                                    src={att.url}
+                                    alt={att.filename}
+                                    className="max-w-sm max-h-64 rounded-lg border border-gray-200 hover:border-blue-400 transition-colors"
+                                  />
+                                  <span className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                    <Image className="w-3 h-3" />
+                                    {att.filename} ({(att.size / 1024).toFixed(0)} KB)
+                                  </span>
+                                </a>
+                              ) : (
+                                <a
+                                  href={att.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg hover:bg-gray-100 hover:border-blue-400 transition-colors text-sm"
+                                >
+                                  <Paperclip className="w-4 h-4 text-gray-500" />
+                                  <span className="text-gray-700">{att.filename}</span>
+                                  <span className="text-gray-400 text-xs">({(att.size / 1024).toFixed(0)} KB)</span>
+                                  <Download className="w-3 h-3 text-gray-400" />
+                                </a>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -660,6 +705,13 @@ export default function TicketDetailPage({
                   <Clock className="w-4 h-4 text-gray-500" />
                   <span className="text-gray-700">Resolved:</span>
                   <span className="text-gray-800">{formatDate(ticket.resolved_at)}</span>
+                </div>
+              )}
+              {ticket.reopened_at && (
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-amber-500" />
+                  <span className="text-amber-700">Reopened:</span>
+                  <span className="text-gray-800">{formatDate(ticket.reopened_at)}</span>
                 </div>
               )}
             </div>

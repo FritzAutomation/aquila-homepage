@@ -4,6 +4,8 @@ import { sendTicketConfirmation, sendAdminNewTicketNotification, sendAdminCustom
 import { headers } from 'next/headers'
 import crypto from 'crypto'
 import { Resend } from 'resend'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import path from 'path'
 
 // Resend inbound email webhook payload
 interface ResendInboundEmail {
@@ -77,6 +79,87 @@ function cleanEmailBody(text: string): string {
   }
 
   return cleanLines.join('\n').trim()
+}
+
+// Process email attachments: upload to Storage and record in database
+async function processAttachments(
+  supabase: SupabaseClient,
+  ticketId: string,
+  messageId: string,
+  attachments: Array<{ filename: string; content: string; content_type: string }>
+): Promise<void> {
+  if (!attachments || attachments.length === 0) return
+
+  const attachmentMetadata: Array<{ filename: string; url: string; mime_type: string; size: number }> = []
+
+  for (const attachment of attachments) {
+    try {
+      const buffer = Buffer.from(attachment.content, 'base64')
+      const ext = path.extname(attachment.filename) || ''
+      const randomId = crypto.randomUUID()
+      const timestamp = Date.now()
+      const storagePath = `tickets/${ticketId}/${timestamp}-${randomId}${ext}`
+
+      // Upload to Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from('attachments')
+        .upload(storagePath, buffer, {
+          contentType: attachment.content_type,
+          upsert: false
+        })
+
+      if (uploadError) {
+        console.error('Failed to upload attachment:', attachment.filename, uploadError)
+        continue
+      }
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('attachments')
+        .getPublicUrl(storagePath)
+
+      const publicUrl = urlData.publicUrl
+
+      // Insert record into attachments table
+      const { error: insertError } = await supabase
+        .from('attachments')
+        .insert({
+          filename: attachment.filename,
+          storage_path: storagePath,
+          url: publicUrl,
+          mime_type: attachment.content_type,
+          size: buffer.length,
+          ticket_id: ticketId,
+          message_id: messageId
+        })
+
+      if (insertError) {
+        console.error('Failed to insert attachment record:', attachment.filename, insertError)
+        continue
+      }
+
+      attachmentMetadata.push({
+        filename: attachment.filename,
+        url: publicUrl,
+        mime_type: attachment.content_type,
+        size: buffer.length
+      })
+    } catch (error) {
+      console.error('Error processing attachment:', attachment.filename, error)
+    }
+  }
+
+  // Update message with attachment metadata
+  if (attachmentMetadata.length > 0) {
+    const { error: updateError } = await supabase
+      .from('messages')
+      .update({ attachments: attachmentMetadata })
+      .eq('id', messageId)
+
+    if (updateError) {
+      console.error('Failed to update message attachments:', updateError)
+    }
+  }
 }
 
 // Verify webhook signature from Resend (uses Svix)
@@ -247,7 +330,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Add message to the ticket
-      const { error: messageError } = await supabase
+      const { data: replyMessage, error: messageError } = await supabase
         .from('messages')
         .insert({
           ticket_id: existingTicket.id,
@@ -256,10 +339,21 @@ export async function POST(request: NextRequest) {
           sender_email: senderEmail,
           sender_name: senderName
         })
+        .select()
+        .single()
 
-      if (messageError) {
+      if (messageError || !replyMessage) {
         console.error('Failed to add message:', messageError)
         return NextResponse.json({ error: 'Failed to add message' }, { status: 500 })
+      }
+
+      // Process attachments
+      if (emailData.attachments && emailData.attachments.length > 0) {
+        try {
+          await processAttachments(supabase, existingTicket.id, replyMessage.id, emailData.attachments)
+        } catch (error) {
+          console.error('Failed to process attachments for reply:', error)
+        }
       }
 
       // Reopen ticket if it was resolved/closed
@@ -267,7 +361,7 @@ export async function POST(request: NextRequest) {
       if (wasReopened) {
         await supabase
           .from('tickets')
-          .update({ status: 'open' })
+          .update({ status: 'open', reopened_at: new Date().toISOString() })
           .eq('id', existingTicket.id)
       }
 
@@ -329,7 +423,7 @@ export async function POST(request: NextRequest) {
       }
 
       // Add the email body as the first message
-      const { error: messageError } = await supabase
+      const { data: newMessage, error: messageError } = await supabase
         .from('messages')
         .insert({
           ticket_id: ticket.id,
@@ -338,10 +432,21 @@ export async function POST(request: NextRequest) {
           sender_email: senderEmail,
           sender_name: senderName
         })
+        .select()
+        .single()
 
       if (messageError) {
         console.error('Failed to add message to ticket:', messageError)
         // Don't fail the whole request, ticket was created
+      }
+
+      // Process attachments
+      if (newMessage && emailData.attachments && emailData.attachments.length > 0) {
+        try {
+          await processAttachments(supabase, ticket.id, newMessage.id, emailData.attachments)
+        } catch (error) {
+          console.error('Failed to process attachments for new ticket:', error)
+        }
       }
 
       // Send confirmation email
