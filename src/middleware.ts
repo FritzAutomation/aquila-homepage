@@ -37,6 +37,13 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Protected portal route
+  if (request.nextUrl.pathname.startsWith("/portal")) {
+    if (!user) {
+      return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
+  }
+
   // Protected admin routes (except login)
   if (request.nextUrl.pathname.startsWith("/admin")) {
     // Allow access to login page

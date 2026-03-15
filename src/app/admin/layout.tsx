@@ -18,6 +18,7 @@ import {
   ChevronRight,
   ExternalLink,
   Users,
+  GraduationCap,
 } from "lucide-react";
 
 const navigation = [
@@ -26,6 +27,7 @@ const navigation = [
   { name: "Knowledge Base", href: "/admin/kb", icon: BookOpen },
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Companies", href: "/admin/companies", icon: Building2 },
+  { name: "Training", href: "/admin/training", icon: GraduationCap },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { name: "Reports", href: "/admin/reports", icon: FileText },
   { name: "Settings", href: "/admin/settings", icon: Settings },

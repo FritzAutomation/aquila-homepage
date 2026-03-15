@@ -48,9 +48,9 @@
 - [x] Build lesson/step UI with guided walkthrough format
 - [x] Add knowledge-check question component (multiple choice, pass/fail)
 - [x] Build progress tracking — per user, per module, completion percentage
-- [ ] Build admin view — see all users' training progress by org
+- [x] Build admin view — see all users' training progress by org
 - [x] Seed placeholder content for 5 DMM modules and 4 Green Light modules
-- [ ] Connect progress to customer portal dashboard
+- [x] Connect progress to customer portal dashboard
 
 ---
 

@@ -55,6 +55,20 @@ interface OrgSummary {
   open_tickets: number;
 }
 
+interface TrainingSummary {
+  total_modules: number;
+  total_learners: number;
+  total_completions: number;
+  orgs_with_progress: number;
+}
+
+interface TrainingOrgProgress {
+  company_id: string;
+  company_name: string;
+  active_learners: number;
+  overall_percent: number;
+}
+
 const STATUS_COLORS: Record<string, string> = {
   open: "bg-blue-100 text-blue-700",
   pending: "bg-yellow-100 text-yellow-700",
@@ -75,16 +89,19 @@ export default function AdminDashboard() {
   const [recentTickets, setRecentTickets] = useState<RecentTicket[]>([]);
   const [queueTickets, setQueueTickets] = useState<TicketQueueItem[]>([]);
   const [orgs, setOrgs] = useState<OrgSummary[]>([]);
+  const [trainingSummary, setTrainingSummary] = useState<TrainingSummary | null>(null);
+  const [trainingOrgs, setTrainingOrgs] = useState<TrainingOrgProgress[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const [statsRes, ticketsRes, queueRes, orgsRes] = await Promise.all([
+        const [statsRes, ticketsRes, queueRes, orgsRes, trainingRes] = await Promise.all([
           fetch("/api/analytics/stats"),
           fetch("/api/tickets?limit=5"),
           fetch("/api/tickets?status=open&status=in_progress&limit=10"),
           fetch("/api/admin/companies"),
+          fetch("/api/admin/training"),
         ]);
 
         if (statsRes.ok) {
@@ -101,6 +118,11 @@ export default function AdminDashboard() {
         if (orgsRes.ok) {
           const orgsData = await orgsRes.json();
           setOrgs(Array.isArray(orgsData) ? orgsData : []);
+        }
+        if (trainingRes.ok) {
+          const trainingData = await trainingRes.json();
+          setTrainingSummary(trainingData.summary);
+          setTrainingOrgs(trainingData.organizations || []);
         }
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
@@ -368,23 +390,58 @@ export default function AdminDashboard() {
             )}
           </div>
 
-          {/* Training Progress Placeholder */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <div className="flex items-center gap-2 mb-3">
-              <GraduationCap className="w-5 h-5 text-purple-500" />
-              <h2 className="text-lg font-semibold text-gray-900">
-                Training Progress
-              </h2>
+          {/* Training Progress */}
+          <div className="bg-white rounded-xl border border-gray-200">
+            <div className="flex items-center justify-between p-5 border-b border-gray-200">
+              <div className="flex items-center gap-2">
+                <GraduationCap className="w-5 h-5 text-purple-500" />
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Training Progress
+                </h2>
+              </div>
+              <Link
+                href="/admin/training"
+                className="text-sm text-emerald hover:text-emerald/80 font-medium flex items-center gap-1"
+              >
+                Details
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
-            <div className="bg-purple-50 rounded-lg p-4 text-center">
-              <GraduationCap className="w-8 h-8 text-purple-300 mx-auto mb-2" />
-              <p className="text-sm text-purple-700 font-medium">
-                Coming Soon
-              </p>
-              <p className="text-xs text-purple-500 mt-1">
-                Training modules are being developed. Progress tracking by organization will appear here.
-              </p>
-            </div>
+
+            {trainingSummary ? (
+              <div className="p-5">
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div className="bg-purple-50 rounded-lg p-3 text-center">
+                    <p className="text-xl font-bold text-purple-700">{trainingSummary.total_learners}</p>
+                    <p className="text-xs text-purple-500">Active Learners</p>
+                  </div>
+                  <div className="bg-emerald-50 rounded-lg p-3 text-center">
+                    <p className="text-xl font-bold text-emerald-700">{trainingSummary.total_completions}</p>
+                    <p className="text-xs text-emerald-500">Steps Completed</p>
+                  </div>
+                </div>
+                {trainingOrgs.filter(o => o.active_learners > 0).slice(0, 3).map((org) => (
+                  <div key={org.company_id} className="flex items-center gap-2 py-1.5">
+                    <span className="text-sm text-gray-700 flex-1 truncate">{org.company_name}</span>
+                    <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-emerald rounded-full"
+                        style={{ width: `${org.overall_percent}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-gray-500 w-8 text-right">{org.overall_percent}%</span>
+                  </div>
+                ))}
+                {trainingOrgs.filter(o => o.active_learners > 0).length === 0 && (
+                  <p className="text-sm text-gray-500 text-center">No learner activity yet</p>
+                )}
+              </div>
+            ) : (
+              <div className="p-6 text-center">
+                <GraduationCap className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">Loading...</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
