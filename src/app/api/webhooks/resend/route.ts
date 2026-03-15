@@ -109,7 +109,18 @@ async function processAttachments(
       console.error('Failed to list attachments from Resend:', error)
       return
     }
-    attachmentList = data as unknown as typeof attachmentList
+    // The Resend SDK may return { data: [...] } or the array directly
+    // Handle both cases to be safe
+    const rawData = data as Record<string, unknown>
+    if (Array.isArray(rawData)) {
+      attachmentList = rawData as unknown as typeof attachmentList
+    } else if (rawData && Array.isArray((rawData as Record<string, unknown>).data)) {
+      attachmentList = (rawData as Record<string, unknown>).data as unknown as typeof attachmentList
+    } else {
+      // Try iterating as-is, log the structure for debugging
+      console.error('Unexpected attachment list structure:', JSON.stringify(data).substring(0, 500))
+      return
+    }
   } catch (error) {
     console.error('Error fetching attachment list:', error)
     return
