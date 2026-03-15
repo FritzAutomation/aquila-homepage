@@ -7,14 +7,14 @@
 ---
 
 ## 🎫 Support Ticket System (Start here — polish existing scaffolding)
-- [ ] Confirm intake form is saving to Supabase correctly with proper error handling
-- [ ] Show a confirmation screen/message to the user after successful submission
-- [ ] Wire ticket status page to real authenticated data (customer sees their own tickets)
-- [ ] Display ticket status accurately — Open / In Progress / Resolved
-- [ ] Build admin-side ticket queue with status controls
-- [ ] Add email notification on ticket submission (notify Aquila admin)
-- [ ] Add email notification on ticket status change (notify customer)
-- [ ] Add ticket detail view for admin
+- [x] Confirm intake form is saving to Supabase correctly with proper error handling
+- [x] Show a confirmation screen/message to the user after successful submission
+- [x] Wire ticket status page to real authenticated data (customer sees their own tickets)
+- [x] Display ticket status accurately — Open / In Progress / Resolved
+- [x] Build admin-side ticket queue with status controls
+- [x] Add email notification on ticket submission (notify Aquila admin)
+- [x] Add email notification on ticket status change (notify customer)
+- [x] Add ticket detail view for admin
 
 ---
 

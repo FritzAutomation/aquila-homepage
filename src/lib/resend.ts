@@ -180,3 +180,167 @@ export async function sendAgentReply({
     return { success: false, error }
   }
 }
+
+const ADMIN_EMAIL = process.env.ADMIN_NOTIFICATION_EMAIL || 'JFritzjunker@FritzAutomation.dev'
+
+interface SendAdminNewTicketNotificationParams {
+  ticketNumber: number
+  subject: string
+  customerEmail: string
+  customerName?: string
+  product: string
+  issueType: string
+}
+
+export async function sendAdminNewTicketNotification({
+  ticketNumber,
+  subject,
+  customerEmail,
+  customerName,
+  product,
+  issueType
+}: SendAdminNewTicketNotificationParams) {
+  const ticketId = `TKT-${String(ticketNumber).padStart(4, '0')}`
+  const adminUrl = `${BASE_URL}/admin/tickets`
+
+  try {
+    const resend = getResendClient()
+    const { data, error } = await resend.emails.send({
+      from: `Aquila Support <${FROM_EMAIL}>`,
+      to: [ADMIN_EMAIL],
+      subject: `New ticket: [${ticketId}] ${subject}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #1E3A5F; padding: 20px; text-align: center;">
+            <h1 style="color: white; margin: 0;">New Support Ticket</h1>
+          </div>
+
+          <div style="padding: 30px; background-color: #f8f9fa;">
+            <p>A new support ticket has been submitted.</p>
+
+            <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              <h3 style="margin-top: 0; color: #1E3A5F;">Ticket Details</h3>
+              <p><strong>Ticket ID:</strong> ${ticketId}</p>
+              <p><strong>Subject:</strong> ${subject}</p>
+              <p><strong>Customer:</strong> ${customerName || customerEmail}</p>
+              <p><strong>Email:</strong> ${customerEmail}</p>
+              <p><strong>Product:</strong> ${product}</p>
+              <p><strong>Category:</strong> ${issueType}</p>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${adminUrl}"
+                 style="display: inline-block; background-color: #10B981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                View in Admin Dashboard
+              </a>
+            </div>
+          </div>
+
+          <div style="background-color: #1E3A5F; padding: 15px; text-align: center;">
+            <p style="color: white; margin: 0; font-size: 12px;">
+              &copy; ${new Date().getFullYear()} The Aquila Group. All rights reserved.
+            </p>
+          </div>
+        </div>
+      `
+    })
+
+    if (error) {
+      console.error('Failed to send admin notification:', error)
+      return { success: false, error }
+    }
+
+    return { success: true, messageId: data?.id }
+  } catch (error) {
+    console.error('Error sending admin notification:', error)
+    return { success: false, error }
+  }
+}
+
+interface SendStatusChangeNotificationParams {
+  to: string
+  ticketNumber: number
+  subject: string
+  customerName?: string
+  newStatus: string
+  statusLabel: string
+}
+
+export async function sendStatusChangeNotification({
+  to,
+  ticketNumber,
+  subject,
+  customerName,
+  newStatus,
+  statusLabel
+}: SendStatusChangeNotificationParams) {
+  const ticketId = `TKT-${String(ticketNumber).padStart(4, '0')}`
+  const statusUrl = `${BASE_URL}/support/status?ticket=${encodeURIComponent(ticketId)}&email=${encodeURIComponent(to)}`
+
+  const statusMessages: Record<string, string> = {
+    open: 'Your ticket has been reopened. Our team will follow up shortly.',
+    in_progress: 'Our team is actively working on your request.',
+    pending: 'We\'re waiting on additional information to proceed. Please check your ticket for details.',
+    resolved: 'Your issue has been resolved. If you need further assistance, feel free to reply to this email.',
+    closed: 'Your ticket has been closed. If you need further help, you can submit a new request.'
+  }
+
+  const statusMessage = statusMessages[newStatus] || `Your ticket status has been updated to ${statusLabel}.`
+
+  try {
+    const resend = getResendClient()
+    const { data, error } = await resend.emails.send({
+      from: `Aquila Support <${FROM_EMAIL}>`,
+      replyTo: REPLY_TO_EMAIL,
+      to: [to],
+      subject: `[${ticketId}] Status update: ${statusLabel}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <div style="background-color: #1E3A5F; padding: 20px; text-align: center;">
+            <h1 style="color: white; margin: 0;">The Aquila Group</h1>
+          </div>
+
+          <div style="padding: 30px; background-color: #f8f9fa;">
+            <p>Hi ${customerName || 'there'},</p>
+
+            <p>Your ticket <strong>${ticketId}</strong> — <em>${subject}</em> — has been updated.</p>
+
+            <div style="background-color: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #1E3A5F;">
+              <p style="margin: 0 0 8px 0;"><strong>New Status:</strong> ${statusLabel}</p>
+              <p style="margin: 0; color: #555;">${statusMessage}</p>
+            </div>
+
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${statusUrl}"
+                 style="display: inline-block; background-color: #10B981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;">
+                View Your Ticket
+              </a>
+            </div>
+
+            <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;" />
+
+            <p style="color: #666; font-size: 12px; text-align: center;">
+              Reply to this email if you have questions about this update.
+            </p>
+          </div>
+
+          <div style="background-color: #1E3A5F; padding: 15px; text-align: center;">
+            <p style="color: white; margin: 0; font-size: 12px;">
+              &copy; ${new Date().getFullYear()} The Aquila Group. All rights reserved.
+            </p>
+          </div>
+        </div>
+      `
+    })
+
+    if (error) {
+      console.error('Failed to send status change notification:', error)
+      return { success: false, error }
+    }
+
+    return { success: true, messageId: data?.id }
+  } catch (error) {
+    console.error('Error sending status change notification:', error)
+    return { success: false, error }
+  }
+}

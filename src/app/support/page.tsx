@@ -80,9 +80,18 @@ export default function SupportPage() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = Array.from(e.target.files || []);
     const maxFiles = 5;
+    const maxSize = 10 * 1024 * 1024; // 10MB
     const remainingSlots = maxFiles - files.length;
 
-    const newFiles = selectedFiles.slice(0, remainingSlots).map((file) => ({
+    const validFiles = selectedFiles.filter((file) => {
+      if (file.size > maxSize) {
+        setError(`File "${file.name}" exceeds the 10MB limit and was not added.`);
+        return false;
+      }
+      return true;
+    });
+
+    const newFiles = validFiles.slice(0, remainingSlots).map((file) => ({
       file,
       preview: file.type.startsWith("image/") ? URL.createObjectURL(file) : undefined,
     }));
@@ -105,11 +114,22 @@ export default function SupportPage() {
     setError("");
 
     try {
+      // Trim text fields before submission
+      const trimmedData = {
+        ...formData,
+        email: formData.email.trim(),
+        name: formData.name.trim(),
+        phone: formData.phone.trim(),
+        company: formData.company.trim(),
+        subject: formData.subject.trim(),
+        message: formData.message.trim(),
+      };
+
       // Create the ticket first
       const res = await fetch("/api/tickets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(trimmedData),
       });
 
       const data = await res.json();
@@ -173,7 +193,7 @@ export default function SupportPage() {
               </p>
               <div className="space-y-3">
                 <Link
-                  href="/support/status"
+                  href={`/support/status?ticket=${encodeURIComponent(result.ticket_id || '')}&email=${encodeURIComponent(formData.email)}`}
                   className="block w-full py-2.5 px-4 bg-navy text-white font-medium rounded-lg hover:bg-navy-dark transition-colors"
                 >
                   Check Ticket Status

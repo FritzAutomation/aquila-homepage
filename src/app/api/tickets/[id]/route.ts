@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendStatusChangeNotification } from '@/lib/resend'
+import { STATUS_LABELS, type TicketStatus } from '@/lib/types'
 
 interface RouteParams {
   params: Promise<{ id: string }>
@@ -96,6 +98,13 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       )
     }
 
+    // Get old ticket data before update (for status change detection)
+    const { data: oldTicket } = await supabase
+      .from('tickets')
+      .select('status, email, name, subject, ticket_number')
+      .eq('id', id)
+      .single()
+
     const { data: ticket, error } = await supabase
       .from('tickets')
       .update(updateData)
@@ -116,6 +125,19 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         { error: 'Ticket not found' },
         { status: 404 }
       )
+    }
+
+    // Send status change notification if status actually changed
+    if (body.status && oldTicket && body.status !== oldTicket.status) {
+      const statusLabel = STATUS_LABELS[body.status as TicketStatus] || body.status
+      sendStatusChangeNotification({
+        to: ticket.email,
+        ticketNumber: ticket.ticket_number,
+        subject: ticket.subject,
+        customerName: ticket.name || undefined,
+        newStatus: body.status,
+        statusLabel
+      }).catch(err => console.error('Failed to send status change notification:', err))
     }
 
     return NextResponse.json({

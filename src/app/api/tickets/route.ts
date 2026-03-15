@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendTicketConfirmation } from '@/lib/resend'
+import { sendTicketConfirmation, sendAdminNewTicketNotification } from '@/lib/resend'
 import { PRODUCT_LABELS, ISSUE_TYPE_LABELS, type Product, type IssueType } from '@/lib/types'
 
 // POST /api/tickets - Create a new ticket
@@ -8,8 +8,15 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    // Validate required fields
-    const { email, name, phone, company, subject, message, product, issue_type } = body
+    // Extract and trim fields
+    const email = (body.email || '').trim()
+    const name = (body.name || '').trim()
+    const phone = (body.phone || '').trim()
+    const company = (body.company || '').trim()
+    const subject = (body.subject || '').trim()
+    const message = (body.message || '').trim()
+    const product = body.product
+    const issue_type = body.issue_type
 
     if (!email || !subject || !message || !product || !issue_type) {
       return NextResponse.json(
@@ -107,6 +114,20 @@ export async function POST(request: NextRequest) {
     if (!emailResult.success) {
       console.error('Failed to send confirmation email:', emailResult.error)
       // Don't fail the request, ticket was created
+    }
+
+    // Notify admin of new ticket
+    const adminNotification = await sendAdminNewTicketNotification({
+      ticketNumber: ticket.ticket_number,
+      subject,
+      customerEmail: email,
+      customerName: name || undefined,
+      product: PRODUCT_LABELS[product as Product] || product,
+      issueType: ISSUE_TYPE_LABELS[issue_type as IssueType] || issue_type
+    })
+
+    if (!adminNotification.success) {
+      console.error('Failed to send admin notification:', adminNotification.error)
     }
 
     return NextResponse.json({

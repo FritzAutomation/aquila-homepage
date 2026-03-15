@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { sendTicketConfirmation } from '@/lib/resend'
+import { sendTicketConfirmation, sendAdminNewTicketNotification } from '@/lib/resend'
 import { headers } from 'next/headers'
 import crypto from 'crypto'
 import { Resend } from 'resend'
@@ -341,6 +341,16 @@ export async function POST(request: NextRequest) {
         customerName: senderName || undefined,
         product: 'Other',
         issueType: 'General Inquiry'
+      })
+
+      // Notify admin of new ticket
+      await sendAdminNewTicketNotification({
+        ticketNumber: ticket.ticket_number,
+        subject: subject,
+        customerEmail: senderEmail,
+        customerName: senderName || undefined,
+        product: 'General',
+        issueType: 'Other'
       })
 
       return NextResponse.json({
