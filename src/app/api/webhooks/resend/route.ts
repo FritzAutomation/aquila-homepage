@@ -119,6 +119,68 @@ function cleanEmailHtml(html: string): string {
   return cleaned
 }
 
+// Extract base64 data URIs from HTML, upload to Storage, and replace with public URLs
+async function resolveDataUriImages(
+  supabase: SupabaseClient,
+  ticketId: string,
+  messageId: string,
+  content: string
+): Promise<string> {
+  const dataUriRegex = /data:(image\/[a-zA-Z+]+);base64,([A-Za-z0-9+/=]+)/g
+  let resolved = content
+  let match: RegExpExecArray | null
+
+  const replacements: Array<{ original: string; url: string }> = []
+
+  while ((match = dataUriRegex.exec(content)) !== null) {
+    const mimeType = match[1]
+    const base64Data = match[2]
+
+    try {
+      const buffer = Buffer.from(base64Data, 'base64')
+      const extMap: Record<string, string> = { 'image/png': '.png', 'image/jpeg': '.jpg', 'image/gif': '.gif', 'image/webp': '.webp', 'image/svg+xml': '.svg' }
+      const ext = extMap[mimeType] || '.png'
+      const randomId = crypto.randomUUID()
+      const timestamp = Date.now()
+      const storagePath = `tickets/${ticketId}/${timestamp}-${randomId}${ext}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('attachments')
+        .upload(storagePath, buffer, { contentType: mimeType, upsert: false })
+
+      if (uploadError) {
+        console.error('Failed to upload inline data URI image:', uploadError)
+        continue
+      }
+
+      const { data: urlData } = supabase.storage
+        .from('attachments')
+        .getPublicUrl(storagePath)
+
+      // Record in attachments table
+      await supabase.from('attachments').insert({
+        filename: `inline-image${ext}`,
+        storage_path: storagePath,
+        url: urlData.publicUrl,
+        mime_type: mimeType,
+        size: buffer.length,
+        ticket_id: ticketId,
+        message_id: messageId
+      })
+
+      replacements.push({ original: match[0], url: urlData.publicUrl })
+    } catch (error) {
+      console.error('Error processing data URI image:', error)
+    }
+  }
+
+  for (const { original, url } of replacements) {
+    resolved = resolved.replace(original, url)
+  }
+
+  return resolved
+}
+
 // Process email attachments: fetch from Resend API, upload to Storage, record in database
 // Resend webhooks only include attachment metadata, not content.
 // We must use the Attachments API to get download URLs, then fetch the actual files.
@@ -446,17 +508,23 @@ export async function POST(request: NextRequest) {
           const cidMap = await processAttachments(supabase, existingTicket.id, replyMessage.id, emailId)
 
           // Replace cid: references in message content with actual Storage URLs
+          let resolvedBody = body
           if (cidMap.size > 0) {
-            let resolvedBody = body
             for (const [cid, url] of cidMap) {
               resolvedBody = resolvedBody.replace(new RegExp(`cid:${cid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'gi'), url)
             }
-            if (resolvedBody !== body) {
-              await supabase
-                .from('messages')
-                .update({ content: resolvedBody })
-                .eq('id', replyMessage.id)
-            }
+          }
+
+          // Extract and upload base64 data URI images embedded in the HTML
+          if (resolvedBody.includes('data:image/')) {
+            resolvedBody = await resolveDataUriImages(supabase, existingTicket.id, replyMessage.id, resolvedBody)
+          }
+
+          if (resolvedBody !== body) {
+            await supabase
+              .from('messages')
+              .update({ content: resolvedBody })
+              .eq('id', replyMessage.id)
           }
         } catch (error) {
           console.error('Failed to process attachments for reply:', error)
@@ -553,17 +621,23 @@ export async function POST(request: NextRequest) {
           const cidMap = await processAttachments(supabase, ticket.id, newMessage.id, emailId)
 
           // Replace cid: references in message content with actual Storage URLs
+          let resolvedBody = body
           if (cidMap.size > 0) {
-            let resolvedBody = body
             for (const [cid, url] of cidMap) {
               resolvedBody = resolvedBody.replace(new RegExp(`cid:${cid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'gi'), url)
             }
-            if (resolvedBody !== body) {
-              await supabase
-                .from('messages')
-                .update({ content: resolvedBody })
-                .eq('id', newMessage.id)
-            }
+          }
+
+          // Extract and upload base64 data URI images embedded in the HTML
+          if (resolvedBody.includes('data:image/')) {
+            resolvedBody = await resolveDataUriImages(supabase, ticket.id, newMessage.id, resolvedBody)
+          }
+
+          if (resolvedBody !== body) {
+            await supabase
+              .from('messages')
+              .update({ content: resolvedBody })
+              .eq('id', newMessage.id)
           }
         } catch (error) {
           console.error('Failed to process attachments for new ticket:', error)
