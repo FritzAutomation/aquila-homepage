@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { generateSlug } from '@/lib/kb-utils'
 
 // GET /api/kb - List articles (public: published only, admin: all)
 export async function GET(request: NextRequest) {
@@ -71,10 +72,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Generate slug from title
-    const slug = title
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, '-')
-      .replace(/^-|-$/g, '')
+    const slug = generateSlug(title)
 
     const adminClient = createAdminClient()
 

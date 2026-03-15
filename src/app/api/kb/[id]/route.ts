@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { generateSlug } from '@/lib/kb-utils'
 
 // GET /api/kb/[id] - Get single article by ID or slug
 export async function GET(
@@ -68,7 +69,7 @@ export async function PATCH(
     const updateData: Record<string, unknown> = {}
     if (title !== undefined) {
       updateData.title = title
-      updateData.slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+      updateData.slug = generateSlug(title)
     }
     if (content !== undefined) updateData.content = content
     if (excerpt !== undefined) updateData.excerpt = excerpt

@@ -10,6 +10,7 @@ import {
   Tag,
 } from "lucide-react";
 import { Navigation, Footer } from "@/components/layout";
+import { renderMarkdown } from "@/lib/kb-utils";
 
 interface Article {
   id: string;
@@ -37,51 +38,6 @@ const PRODUCT_LABELS: Record<string, string> = {
   "green-light": "Green Light Monitoring",
   custom: "Custom Solutions",
 };
-
-// Simple Markdown renderer for common patterns
-function renderMarkdown(content: string): string {
-  let html = content
-    // Escape HTML
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    // Headers
-    .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold text-gray-900 mt-6 mb-2">$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold text-gray-900 mt-8 mb-3">$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold text-gray-900 mt-8 mb-4">$1</h1>')
-    // Bold and italic
-    .replace(/\*\*\*(.+?)\*\*\*/g, "<strong><em>$1</em></strong>")
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    // Code blocks
-    .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre class="bg-gray-100 rounded-lg p-4 overflow-x-auto my-4 text-sm font-mono"><code>$2</code></pre>')
-    // Inline code
-    .replace(/`([^`]+)`/g, '<code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono text-gray-800">$1</code>')
-    // Blockquotes
-    .replace(/^&gt; (.+)$/gm, '<blockquote class="border-l-4 border-emerald pl-4 py-1 my-3 text-gray-600 italic">$1</blockquote>')
-    // Unordered lists
-    .replace(/^- (.+)$/gm, '<li class="ml-4 list-disc text-gray-700">$1</li>')
-    // Ordered lists
-    .replace(/^\d+\. (.+)$/gm, '<li class="ml-4 list-decimal text-gray-700">$1</li>')
-    // Horizontal rules
-    .replace(/^---$/gm, '<hr class="my-6 border-gray-200" />')
-    // Line breaks to paragraphs
-    .replace(/\n\n/g, '</p><p class="text-gray-700 leading-relaxed mb-4">')
-    .replace(/\n/g, "<br />");
-
-  // Wrap consecutive <li> elements with appropriate list tag
-  html = html.replace(
-    /(<li[^>]*>.*?<\/li>(<br \/>)?[\s]*)+/g,
-    (match) => {
-      const isOrdered = match.includes("list-decimal");
-      const tag = isOrdered ? "ol" : "ul";
-      const cleaned = match.replace(/<br \/>/g, "");
-      return `<${tag} class="my-3 space-y-1">${cleaned}</${tag}>`;
-    }
-  );
-
-  return `<p class="text-gray-700 leading-relaxed mb-4">${html}</p>`;
-}
 
 export default function ArticlePage({
   params,
