@@ -22,7 +22,7 @@
 - [x] Build admin article editor (create, edit, publish, unpublish)
 - [x] Add product category tagging (DMM, Green Light, Custom)
 - [x] Add article search indexing
-- [ ] Link KB articles contextually from support portal and training modules
+- [x] Link KB articles contextually from support portal and training modules
 
 ---
 

@@ -16,6 +16,8 @@ import {
   FileText,
   Image as ImageIcon,
   Upload,
+  BookOpen,
+  ArrowRight,
 } from "lucide-react";
 import { Navigation, Footer } from "@/components/layout";
 import {
@@ -227,6 +229,28 @@ export default function SupportPage() {
             <p className="text-gray-600 mt-2">
               Submit a support request and we&apos;ll get back to you within 24 hours.
             </p>
+          </div>
+
+          {/* KB Link Banner */}
+          <div className="mb-6 bg-navy/5 border border-navy/10 rounded-xl p-4 flex items-center gap-4">
+            <div className="w-10 h-10 bg-navy/10 rounded-lg flex items-center justify-center flex-shrink-0">
+              <BookOpen className="w-5 h-5 text-navy" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium text-gray-900">
+                Looking for a quick answer?
+              </p>
+              <p className="text-xs text-gray-600 mt-0.5">
+                Check our Knowledge Base for guides, troubleshooting tips, and FAQs.
+              </p>
+            </div>
+            <Link
+              href="/support/kb"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-navy text-white text-sm font-medium rounded-lg hover:bg-navy/90 transition-colors flex-shrink-0"
+            >
+              Browse KB
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
 
         {/* Form */}
