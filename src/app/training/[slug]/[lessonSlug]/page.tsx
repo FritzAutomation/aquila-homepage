@@ -267,7 +267,7 @@ export default function LessonPage({
             {step.step_type === "content" ? (
               /* Content Step */
               <div className="bg-white rounded-xl shadow-sm border border-slate-light/20 p-6 md:p-8">
-                <div className="prose max-w-none prose-headings:text-navy prose-a:text-emerald prose-strong:text-navy [&_p]:!text-[#374151] [&_li]:!text-[#374151] [&_ol]:!text-[#374151] [&_ul]:!text-[#374151] [&_h2]:!text-[#1E3A5F] [&_h3]:!text-[#1E3A5F]">
+                <div className="prose max-w-none prose-a:text-emerald [&_h1]:!text-[#1E3A5F] [&_h2]:!text-[#1E3A5F] [&_h3]:!text-[#1E3A5F] [&_h4]:!text-[#1E3A5F] [&_p]:!text-[#374151] [&_li]:!text-[#374151] [&_ol]:!text-[#374151] [&_ul]:!text-[#374151] [&_strong]:!text-[#1E3A5F]">
                   <ReactMarkdown>{step.content || ""}</ReactMarkdown>
                 </div>
               </div>
