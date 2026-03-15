@@ -49,7 +49,8 @@ export async function GET(request: NextRequest) {
           sender_type,
           sender_name,
           created_at,
-          is_internal
+          is_internal,
+          attachments
         )
       `)
       .eq('ticket_number', ticketNumber)
