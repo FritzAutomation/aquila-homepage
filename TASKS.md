@@ -43,13 +43,13 @@
 ---
 
 ## 🏗️ Training Platform (Build from scratch — highest priority after polish)
-- [ ] Design database schema for modules, lessons, steps, and progress tracking
-- [ ] Build module index page (list of DMM + Green Light training modules)
-- [ ] Build lesson/step UI with guided walkthrough format
-- [ ] Add knowledge-check question component (multiple choice, pass/fail)
-- [ ] Build progress tracking — per user, per module, completion percentage
+- [x] Design database schema for modules, lessons, steps, and progress tracking
+- [x] Build module index page (list of DMM + Green Light training modules)
+- [x] Build lesson/step UI with guided walkthrough format
+- [x] Add knowledge-check question component (multiple choice, pass/fail)
+- [x] Build progress tracking — per user, per module, completion percentage
 - [ ] Build admin view — see all users' training progress by org
-- [ ] Seed placeholder content for 5 DMM modules and 4 Green Light modules
+- [x] Seed placeholder content for 5 DMM modules and 4 Green Light modules
 - [ ] Connect progress to customer portal dashboard
 
 ---

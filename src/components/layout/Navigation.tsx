@@ -38,6 +38,7 @@ const navItems = [
     ],
   },
   { label: "News", href: "/news" },
+  { label: "Training", href: "/training" },
   {
     label: "Support",
     href: "/support",

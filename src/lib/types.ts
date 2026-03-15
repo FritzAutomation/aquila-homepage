@@ -180,6 +180,167 @@ export type Database = {
           resolution_hours?: number
         }
       }
+      training_modules: {
+        Row: {
+          id: string
+          title: string
+          slug: string
+          description: string | null
+          product: Product
+          cover_image: string | null
+          sort_order: number
+          is_published: boolean
+          estimated_minutes: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          slug: string
+          description?: string | null
+          product: Product
+          cover_image?: string | null
+          sort_order?: number
+          is_published?: boolean
+          estimated_minutes?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          slug?: string
+          description?: string | null
+          product?: Product
+          cover_image?: string | null
+          sort_order?: number
+          is_published?: boolean
+          estimated_minutes?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      training_lessons: {
+        Row: {
+          id: string
+          module_id: string
+          title: string
+          slug: string
+          description: string | null
+          sort_order: number
+          estimated_minutes: number | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          module_id: string
+          title: string
+          slug: string
+          description?: string | null
+          sort_order?: number
+          estimated_minutes?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          module_id?: string
+          title?: string
+          slug?: string
+          description?: string | null
+          sort_order?: number
+          estimated_minutes?: number | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      training_steps: {
+        Row: {
+          id: string
+          lesson_id: string
+          title: string
+          step_type: 'content' | 'quiz'
+          content: string | null
+          video_url: string | null
+          sort_order: number
+          quiz_question: string | null
+          quiz_options: string[] | null
+          quiz_correct_index: number | null
+          quiz_explanation: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          lesson_id: string
+          title: string
+          step_type?: 'content' | 'quiz'
+          content?: string | null
+          video_url?: string | null
+          sort_order?: number
+          quiz_question?: string | null
+          quiz_options?: string[] | null
+          quiz_correct_index?: number | null
+          quiz_explanation?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          lesson_id?: string
+          title?: string
+          step_type?: 'content' | 'quiz'
+          content?: string | null
+          video_url?: string | null
+          sort_order?: number
+          quiz_question?: string | null
+          quiz_options?: string[] | null
+          quiz_correct_index?: number | null
+          quiz_explanation?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      training_progress: {
+        Row: {
+          id: string
+          user_id: string
+          step_id: string
+          completed: boolean
+          completed_at: string | null
+          quiz_answer_index: number | null
+          quiz_passed: boolean | null
+          attempts: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          step_id: string
+          completed?: boolean
+          completed_at?: string | null
+          quiz_answer_index?: number | null
+          quiz_passed?: boolean | null
+          attempts?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          step_id?: string
+          completed?: boolean
+          completed_at?: string | null
+          quiz_answer_index?: number | null
+          quiz_passed?: boolean | null
+          attempts?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       company_monthly_stats: {
@@ -256,6 +417,21 @@ export type Profile = Database['public']['Tables']['profiles']['Row']
 export type StaffProfile = Profile
 
 export type SLAConfig = Database['public']['Tables']['sla_config']['Row']
+
+export type TrainingModule = Database['public']['Tables']['training_modules']['Row']
+export type TrainingModuleInsert = Database['public']['Tables']['training_modules']['Insert']
+export type TrainingLesson = Database['public']['Tables']['training_lessons']['Row']
+export type TrainingLessonInsert = Database['public']['Tables']['training_lessons']['Insert']
+export type TrainingStep = Database['public']['Tables']['training_steps']['Row']
+export type TrainingStepInsert = Database['public']['Tables']['training_steps']['Insert']
+export type TrainingProgress = Database['public']['Tables']['training_progress']['Row']
+
+// Training module with nested lessons and steps
+export type TrainingModuleWithLessons = TrainingModule & {
+  lessons: (TrainingLesson & {
+    steps: TrainingStep[]
+  })[]
+}
 
 // Ticket with messages for detail view
 export type TicketWithMessages = Ticket & {
