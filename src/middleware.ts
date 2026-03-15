@@ -51,20 +51,10 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // Protected admin routes (except login)
+  // Protected admin routes — require authentication
   if (request.nextUrl.pathname.startsWith("/admin")) {
-    // Allow access to login page
-    if (request.nextUrl.pathname === "/admin/login") {
-      // If already logged in, redirect to admin dashboard
-      if (user) {
-        return NextResponse.redirect(new URL("/admin", request.url));
-      }
-      return supabaseResponse;
-    }
-
-    // For all other admin routes, require authentication
     if (!user) {
-      return NextResponse.redirect(new URL("/admin/login", request.url));
+      return NextResponse.redirect(new URL("/login", request.url));
     }
   }
 

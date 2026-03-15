@@ -71,13 +71,8 @@ export default function AdminLayout({
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
     await supabase.auth.signOut();
-    router.push("/admin/login");
+    router.push("/login");
   };
-
-  // Don't show layout on login page
-  if (pathname === "/admin/login") {
-    return <>{children}</>;
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">

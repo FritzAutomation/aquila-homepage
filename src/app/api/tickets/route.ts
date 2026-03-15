@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { getCurrentUser } from '@/lib/auth'
 import { sendTicketConfirmation, sendAdminNewTicketNotification } from '@/lib/resend'
 import { PRODUCT_LABELS, ISSUE_TYPE_LABELS, type Product, type IssueType } from '@/lib/types'
 
@@ -150,9 +151,14 @@ export async function POST(request: NextRequest) {
 }
 
 // GET /api/tickets - List tickets with optional filters
+// Customers only see their own tickets; admin/agent see all
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
+
+    // Check if the caller is a customer — scope results to their tickets only
+    const profile = await getCurrentUser()
+    const isCustomer = profile?.user_type === 'customer'
 
     // Filter parameters
     const status = searchParams.get('status')
@@ -173,6 +179,11 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('tickets')
       .select('*, company:companies(id, name, domain), assignee:profiles(id, name)', { count: 'exact' })
+
+    // Customers can only see tickets matching their email
+    if (isCustomer && profile?.email) {
+      query = query.eq('email', profile.email)
+    }
 
     // Apply filters
     if (status) query = query.eq('status', status)

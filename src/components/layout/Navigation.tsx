@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ChevronDown, Phone, Mail, MapPin, LogIn } from "lucide-react";
+import { Menu, X, ChevronDown, Phone, Mail, MapPin, LogIn, LayoutDashboard, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "../ui";
@@ -56,12 +56,23 @@ export default function Navigation() {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
   const [mobileOpenSection, setMobileOpenSection] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const [userType, setUserType] = useState<string | null>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
+
+    // Check if user is logged in
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && !data.error) {
+          setUserType(data.user_type);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -194,13 +205,31 @@ export default function Navigation() {
 
           {/* CTA Buttons */}
           <div className="hidden lg:flex items-center gap-3">
-            <a
-              href="/login"
-              className="flex items-center gap-1.5 px-3 py-2 text-slate hover:text-navy transition-colors font-medium text-sm"
-            >
-              <LogIn className="w-4 h-4" />
-              Sign In
-            </a>
+            {userType === "admin" || userType === "agent" ? (
+              <a
+                href="/admin"
+                className="flex items-center gap-1.5 px-3 py-2 text-slate hover:text-navy transition-colors font-medium text-sm"
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                Admin
+              </a>
+            ) : userType === "customer" ? (
+              <a
+                href="/portal"
+                className="flex items-center gap-1.5 px-3 py-2 text-slate hover:text-navy transition-colors font-medium text-sm"
+              >
+                <User className="w-4 h-4" />
+                My Portal
+              </a>
+            ) : (
+              <a
+                href="/login"
+                className="flex items-center gap-1.5 px-3 py-2 text-slate hover:text-navy transition-colors font-medium text-sm"
+              >
+                <LogIn className="w-4 h-4" />
+                Sign In
+              </a>
+            )}
             <Button href="/contact">Request Demo</Button>
           </div>
 
@@ -332,14 +361,34 @@ export default function Navigation() {
                 <Button href="/contact" className="w-full" onClick={() => setMobileMenuOpen(false)}>
                   Request Demo
                 </Button>
-                <a
-                  href="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center justify-center gap-2 w-full py-2.5 text-navy font-medium border border-slate-light/30 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <LogIn className="w-4 h-4" />
-                  Sign In
-                </a>
+                {userType === "admin" || userType === "agent" ? (
+                  <a
+                    href="/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 w-full py-2.5 text-navy font-medium border border-slate-light/30 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    Admin Dashboard
+                  </a>
+                ) : userType === "customer" ? (
+                  <a
+                    href="/portal"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 w-full py-2.5 text-navy font-medium border border-slate-light/30 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <User className="w-4 h-4" />
+                    My Portal
+                  </a>
+                ) : (
+                  <a
+                    href="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 w-full py-2.5 text-navy font-medium border border-slate-light/30 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <LogIn className="w-4 h-4" />
+                    Sign In
+                  </a>
+                )}
 
                 {/* Contact Info */}
                 <div className="space-y-2 pt-2">
