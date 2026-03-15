@@ -9,6 +9,11 @@ vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: () => mockSupabase,
 }))
 
+// Mock auth — default to admin (sees all tickets)
+vi.mock('@/lib/auth', () => ({
+  getCurrentUser: vi.fn().mockResolvedValue({ user_type: 'admin', email: 'admin@aquila.com' }),
+}))
+
 // Mock resend
 vi.mock('@/lib/resend', () => ({
   sendTicketConfirmation: vi.fn().mockResolvedValue({ success: true }),
