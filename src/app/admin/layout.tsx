@@ -10,16 +10,19 @@ import {
   Building2,
   BarChart3,
   FileText,
+  BookOpen,
   Settings,
   Menu,
   X,
   LogOut,
   ChevronRight,
+  ExternalLink,
 } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { name: "Tickets", href: "/admin/tickets", icon: Ticket },
+  { name: "Knowledge Base", href: "/admin/kb", icon: BookOpen },
   { name: "Companies", href: "/admin/companies", icon: Building2 },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { name: "Reports", href: "/admin/reports", icon: FileText },
@@ -124,6 +127,13 @@ export default function AdminLayout({
                 </p>
               </div>
             </div>
+            <Link
+              href="/"
+              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+            >
+              <ExternalLink className="w-4 h-4" />
+              Back to site
+            </Link>
             <button
               onClick={handleSignOut}
               className="flex items-center gap-2 w-full px-3 py-2 text-sm text-white/60 hover:text-white hover:bg-white/5 rounded-lg transition-colors"

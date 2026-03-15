@@ -19,9 +19,9 @@
 ---
 
 ## 📚 Knowledge Base (Public KB exists — build the admin layer)
-- [ ] Build admin article editor (create, edit, publish, unpublish)
-- [ ] Add product category tagging (DMM, Green Light, Custom)
-- [ ] Add article search indexing
+- [x] Build admin article editor (create, edit, publish, unpublish)
+- [x] Add product category tagging (DMM, Green Light, Custom)
+- [x] Add article search indexing
 - [ ] Link KB articles contextually from support portal and training modules
 
 ---

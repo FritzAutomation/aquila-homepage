@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -13,8 +13,18 @@ import {
   Server,
   Users,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
 import { Navigation, Footer } from "@/components/layout";
+
+interface KBArticle {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  category: string;
+  product: string[];
+}
 
 interface FAQItem {
   question: string;
@@ -24,134 +34,60 @@ interface FAQItem {
 interface FAQCategory {
   icon: React.ElementType;
   title: string;
+  key: string;
   description: string;
   items: FAQItem[];
+  articles: KBArticle[];
 }
 
-const faqCategories: FAQCategory[] = [
-  {
-    icon: Zap,
-    title: "Getting Started",
-    description: "New to our products? Start here.",
-    items: [
-      {
-        question: "How do I set up DMM System for the first time?",
-        answer: "DMM System setup involves installing the server component, configuring your database connection, and setting up client workstations. Our team provides comprehensive onboarding support including a kickoff meeting, installation assistance, and initial training. Contact your account manager to schedule your implementation.",
-      },
-      {
-        question: "What are the system requirements for Green Light Monitoring?",
-        answer: "Green Light Monitoring requires Windows Server 2016 or later, .NET Framework 4.8, and a SQL Server 2017+ database. Client workstations need Windows 10/11 with a modern web browser. For IoT connectivity, you'll need an Opto 22 groov EPIC or RIO device.",
-      },
-      {
-        question: "How do I add new users to my system?",
-        answer: "In DMM System, go to Administration > User Management > Add User. Fill in the user details and assign appropriate roles. For Green Light Monitoring, users are managed through the Admin Dashboard under Settings > Users. Both systems support Active Directory integration for streamlined user management.",
-      },
-      {
-        question: "Can I import data from my existing ERP system?",
-        answer: "Yes, we offer integration with major ERP systems including SAP, Oracle, Microsoft Dynamics, and Epicor. Our Integration Services team can configure bi-directional data sync for work orders, inventory, and production data. Custom integrations are also available for other systems.",
-      },
-    ],
-  },
-  {
-    icon: Settings,
-    title: "Configuration & Setup",
-    description: "Customizing your system settings.",
-    items: [
-      {
-        question: "How do I configure OEE calculations?",
-        answer: "Navigate to Settings > OEE Configuration in Green Light Monitoring. You can define your planned production time, set quality parameters, and configure ideal cycle times per product. The system supports both standard OEE calculation and custom formulas for specific manufacturing processes.",
-      },
-      {
-        question: "How do I set up automated alerts and notifications?",
-        answer: "In the Admin Dashboard, go to Alerts > Alert Rules. You can create rules based on conditions like downtime duration, OEE thresholds, or quality metrics. Notifications can be sent via email, SMS, or push notification. You can also set up escalation chains for critical alerts.",
-      },
-      {
-        question: "Can I customize the dashboard layout?",
-        answer: "Yes, Green Light Monitoring dashboards are fully customizable. Click the Edit button on any dashboard to add, remove, or rearrange widgets. You can create role-specific dashboards and set them as defaults for different user groups. Custom KPI widgets can be created using our widget builder.",
-      },
-      {
-        question: "How do I configure machine connectivity?",
-        answer: "Machine connectivity is configured through our IoT Gateway interface. We support OPC-UA, Modbus TCP/IP, MQTT, and direct PLC connections. For each machine, you'll define signal mappings for status, counts, and quality data. Our Applications Engineering team can assist with complex integrations.",
-      },
-    ],
-  },
-  {
-    icon: AlertTriangle,
-    title: "Troubleshooting",
-    description: "Solutions to common issues.",
-    items: [
-      {
-        question: "Why am I seeing 'Connection Failed' errors?",
-        answer: "Connection errors typically indicate network issues between components. First, verify the server is running and accessible. Check firewall settings to ensure required ports are open (default: 443 for HTTPS, 1433 for SQL Server). If using VPN, confirm it's connected. Review the connection string in your configuration file.",
-      },
-      {
-        question: "My real-time data isn't updating. What should I check?",
-        answer: "Check the IoT Gateway status in the Admin Dashboard. Verify the machine connection is active and data is flowing. Common causes include network interruptions, PLC communication errors, or signal mapping issues. Check the Gateway logs for specific error messages. Restart the Gateway service if needed.",
-      },
-      {
-        question: "Reports are generating slowly. How can I improve performance?",
-        answer: "Slow reports usually indicate database performance issues. First, check that database maintenance jobs are running (index rebuilding, statistics updates). Consider adding indexes for frequently queried columns. For large date ranges, use summary tables instead of raw data. Our support team can analyze query performance.",
-      },
-      {
-        question: "I'm locked out of my account. What do I do?",
-        answer: "Contact your system administrator to reset your password or unlock your account. If you're the administrator, use the DMM Console application with the master recovery key. For urgent access, contact our support team who can verify your identity and assist with account recovery.",
-      },
-    ],
-  },
-  {
-    icon: Server,
-    title: "Integration & APIs",
-    description: "Connecting with other systems.",
-    items: [
-      {
-        question: "How do I access the REST API?",
-        answer: "API access requires an API key generated in Settings > API Management. Documentation is available at /api/docs on your server. The API supports OAuth 2.0 and API key authentication. Rate limits apply based on your license tier. Sample code is available for common integration scenarios.",
-      },
-      {
-        question: "Can I export data to Power BI or Tableau?",
-        answer: "Yes, we provide native connectors for both Power BI and Tableau. Install the connector from our downloads page, then use your API credentials to connect. Direct database access is also available for enterprise customers. Pre-built dashboard templates are available for common manufacturing KPIs.",
-      },
-      {
-        question: "How do I set up ERP integration?",
-        answer: "ERP integration is configured through the Integration Hub. We support real-time and batch synchronization modes. Standard integrations include work order import, inventory sync, and production posting. Custom field mappings and business rules can be configured. Contact our Integration Services team for setup assistance.",
-      },
-      {
-        question: "Is there a webhook system for real-time notifications?",
-        answer: "Yes, our webhook system can send real-time events to external systems. Configure webhooks in Settings > Integrations > Webhooks. Supported events include production updates, quality alerts, downtime events, and system notifications. We support retry logic and event logging for reliability.",
-      },
-    ],
-  },
-  {
-    icon: Users,
-    title: "Training & Best Practices",
-    description: "Getting the most from your investment.",
-    items: [
-      {
-        question: "What training options are available?",
-        answer: "We offer multiple training formats: on-site instructor-led training, virtual live training sessions, self-paced online courses, and custom training programs. All new customers receive initial training as part of implementation. Additional training can be scheduled through your account manager.",
-      },
-      {
-        question: "Are there certification programs available?",
-        answer: "Yes, we offer certification tracks for Operators, Administrators, and Power Users. Certifications validate proficiency and are recognized across our customer community. Exam preparation materials and practice tests are included with the training subscription.",
-      },
-      {
-        question: "What are the best practices for OEE improvement?",
-        answer: "Start by establishing baseline measurements and identifying your biggest losses. Focus on quick wins first - often small adjustments yield significant improvements. Use Pareto analysis to prioritize issues. Engage operators in problem-solving and celebrate improvements. Our Customer Success team can provide industry benchmarks.",
-      },
-      {
-        question: "How often should we review our system configuration?",
-        answer: "We recommend quarterly reviews of alert thresholds, dashboard effectiveness, and data quality. Annual reviews should cover system architecture, integration health, and capacity planning. Our Customer Success team can conduct reviews and provide optimization recommendations.",
-      },
-    ],
-  },
+// Hardcoded FAQ data as fallback
+const staticFAQs: Record<string, FAQItem[]> = {
+  "getting-started": [
+    { question: "How do I set up DMM System for the first time?", answer: "DMM System setup involves installing the server component, configuring your database connection, and setting up client workstations. Our team provides comprehensive onboarding support including a kickoff meeting, installation assistance, and initial training. Contact your account manager to schedule your implementation." },
+    { question: "What are the system requirements for Green Light Monitoring?", answer: "Green Light Monitoring requires Windows Server 2016 or later, .NET Framework 4.8, and a SQL Server 2017+ database. Client workstations need Windows 10/11 with a modern web browser. For IoT connectivity, you'll need an Opto 22 groov EPIC or RIO device." },
+    { question: "How do I add new users to my system?", answer: "In DMM System, go to Administration > User Management > Add User. Fill in the user details and assign appropriate roles. For Green Light Monitoring, users are managed through the Admin Dashboard under Settings > Users. Both systems support Active Directory integration for streamlined user management." },
+    { question: "Can I import data from my existing ERP system?", answer: "Yes, we offer integration with major ERP systems including SAP, Oracle, Microsoft Dynamics, and Epicor. Our Integration Services team can configure bi-directional data sync for work orders, inventory, and production data. Custom integrations are also available for other systems." },
+  ],
+  "configuration": [
+    { question: "How do I configure OEE calculations?", answer: "Navigate to Settings > OEE Configuration in Green Light Monitoring. You can define your planned production time, set quality parameters, and configure ideal cycle times per product. The system supports both standard OEE calculation and custom formulas for specific manufacturing processes." },
+    { question: "How do I set up automated alerts and notifications?", answer: "In the Admin Dashboard, go to Alerts > Alert Rules. You can create rules based on conditions like downtime duration, OEE thresholds, or quality metrics. Notifications can be sent via email, SMS, or push notification. You can also set up escalation chains for critical alerts." },
+    { question: "Can I customize the dashboard layout?", answer: "Yes, Green Light Monitoring dashboards are fully customizable. Click the Edit button on any dashboard to add, remove, or rearrange widgets. You can create role-specific dashboards and set them as defaults for different user groups. Custom KPI widgets can be created using our widget builder." },
+    { question: "How do I configure machine connectivity?", answer: "Machine connectivity is configured through our IoT Gateway interface. We support OPC-UA, Modbus TCP/IP, MQTT, and direct PLC connections. For each machine, you'll define signal mappings for status, counts, and quality data. Our Applications Engineering team can assist with complex integrations." },
+  ],
+  "troubleshooting": [
+    { question: "Why am I seeing 'Connection Failed' errors?", answer: "Connection errors typically indicate network issues between components. First, verify the server is running and accessible. Check firewall settings to ensure required ports are open (default: 443 for HTTPS, 1433 for SQL Server). If using VPN, confirm it's connected. Review the connection string in your configuration file." },
+    { question: "My real-time data isn't updating. What should I check?", answer: "Check the IoT Gateway status in the Admin Dashboard. Verify the machine connection is active and data is flowing. Common causes include network interruptions, PLC communication errors, or signal mapping issues. Check the Gateway logs for specific error messages. Restart the Gateway service if needed." },
+    { question: "Reports are generating slowly. How can I improve performance?", answer: "Slow reports usually indicate database performance issues. First, check that database maintenance jobs are running (index rebuilding, statistics updates). Consider adding indexes for frequently queried columns. For large date ranges, use summary tables instead of raw data. Our support team can analyze query performance." },
+    { question: "I'm locked out of my account. What do I do?", answer: "Contact your system administrator to reset your password or unlock your account. If you're the administrator, use the DMM Console application with the master recovery key. For urgent access, contact our support team who can verify your identity and assist with account recovery." },
+  ],
+  "integration": [
+    { question: "How do I access the REST API?", answer: "API access requires an API key generated in Settings > API Management. Documentation is available at /api/docs on your server. The API supports OAuth 2.0 and API key authentication. Rate limits apply based on your license tier. Sample code is available for common integration scenarios." },
+    { question: "Can I export data to Power BI or Tableau?", answer: "Yes, we provide native connectors for both Power BI and Tableau. Install the connector from our downloads page, then use your API credentials to connect. Direct database access is also available for enterprise customers. Pre-built dashboard templates are available for common manufacturing KPIs." },
+    { question: "How do I set up ERP integration?", answer: "ERP integration is configured through the Integration Hub. We support real-time and batch synchronization modes. Standard integrations include work order import, inventory sync, and production posting. Custom field mappings and business rules can be configured. Contact our Integration Services team for setup assistance." },
+    { question: "Is there a webhook system for real-time notifications?", answer: "Yes, our webhook system can send real-time events to external systems. Configure webhooks in Settings > Integrations > Webhooks. Supported events include production updates, quality alerts, downtime events, and system notifications. We support retry logic and event logging for reliability." },
+  ],
+  "training": [
+    { question: "What training options are available?", answer: "We offer multiple training formats: on-site instructor-led training, virtual live training sessions, self-paced online courses, and custom training programs. All new customers receive initial training as part of implementation. Additional training can be scheduled through your account manager." },
+    { question: "Are there certification programs available?", answer: "Yes, we offer certification tracks for Operators, Administrators, and Power Users. Certifications validate proficiency and are recognized across our customer community. Exam preparation materials and practice tests are included with the training subscription." },
+    { question: "What are the best practices for OEE improvement?", answer: "Start by establishing baseline measurements and identifying your biggest losses. Focus on quick wins first - often small adjustments yield significant improvements. Use Pareto analysis to prioritize issues. Engage operators in problem-solving and celebrate improvements. Our Customer Success team can provide industry benchmarks." },
+    { question: "How often should we review our system configuration?", answer: "We recommend quarterly reviews of alert thresholds, dashboard effectiveness, and data quality. Annual reviews should cover system architecture, integration health, and capacity planning. Our Customer Success team can conduct reviews and provide optimization recommendations." },
+  ],
+};
+
+const categoryMeta = [
+  { key: "getting-started", icon: Zap, title: "Getting Started", description: "New to our products? Start here." },
+  { key: "configuration", icon: Settings, title: "Configuration & Setup", description: "Customizing your system settings." },
+  { key: "troubleshooting", icon: AlertTriangle, title: "Troubleshooting", description: "Solutions to common issues." },
+  { key: "integration", icon: Server, title: "Integration & APIs", description: "Connecting with other systems." },
+  { key: "training", icon: Users, title: "Training & Best Practices", description: "Getting the most from your investment." },
 ];
 
-function FAQAccordion({ category }: { category: FAQCategory }) {
+function FAQAccordion({ items }: { items: FAQItem[] }) {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
     <div className="space-y-3">
-      {category.items.map((item, index) => (
+      {items.map((item, index) => (
         <motion.div
           key={index}
           initial={{ opacity: 0, y: 10 }}
@@ -193,21 +129,73 @@ function FAQAccordion({ category }: { category: FAQCategory }) {
   );
 }
 
+function ArticleList({ articles }: { articles: KBArticle[] }) {
+  if (articles.length === 0) return null;
+
+  return (
+    <div className="space-y-2 mt-6">
+      <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">
+        Articles
+      </h3>
+      {articles.map((article) => (
+        <Link
+          key={article.id}
+          href={`/support/kb/${article.slug}`}
+          className="block p-4 border border-gray-200 rounded-xl hover:border-emerald/50 hover:bg-emerald/5 transition-colors"
+        >
+          <h4 className="font-medium text-gray-900">{article.title}</h4>
+          {article.excerpt && (
+            <p className="text-sm text-gray-600 mt-1 line-clamp-2">
+              {article.excerpt}
+            </p>
+          )}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 export default function KnowledgeBasePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState(0);
+  const [dbArticles, setDbArticles] = useState<KBArticle[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Filter FAQ items based on search
+  useEffect(() => {
+    fetch("/api/kb")
+      .then((res) => res.json())
+      .then((data) => {
+        if (Array.isArray(data)) setDbArticles(data);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  // Build categories: static FAQs + database articles
+  const categories: FAQCategory[] = categoryMeta.map((meta) => ({
+    ...meta,
+    items: staticFAQs[meta.key] || [],
+    articles: dbArticles.filter((a) => a.category === meta.key),
+  }));
+
+  // Filter based on search
   const filteredCategories = searchQuery
-    ? faqCategories.map((category) => ({
-        ...category,
-        items: category.items.filter(
-          (item) =>
-            item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            item.answer.toLowerCase().includes(searchQuery.toLowerCase())
-        ),
-      })).filter((category) => category.items.length > 0)
-    : faqCategories;
+    ? categories
+        .map((cat) => ({
+          ...cat,
+          items: cat.items.filter(
+            (item) =>
+              item.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              item.answer.toLowerCase().includes(searchQuery.toLowerCase())
+          ),
+          articles: cat.articles.filter(
+            (a) =>
+              a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+              (a.excerpt || "").toLowerCase().includes(searchQuery.toLowerCase())
+          ),
+        }))
+        .filter((cat) => cat.items.length > 0 || cat.articles.length > 0)
+    : categories;
 
   return (
     <>
@@ -242,11 +230,15 @@ export default function KnowledgeBasePage() {
 
         {/* Main Content */}
         <div className="max-w-6xl mx-auto px-4 py-12">
-          {searchQuery ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 animate-spin text-emerald" />
+            </div>
+          ) : searchQuery ? (
             // Search Results
             <div>
               <p className="text-sm text-gray-500 mb-6">
-                {filteredCategories.reduce((acc, cat) => acc + cat.items.length, 0)} results for &ldquo;{searchQuery}&rdquo;
+                {filteredCategories.reduce((acc, cat) => acc + cat.items.length + cat.articles.length, 0)} results for &ldquo;{searchQuery}&rdquo;
               </p>
               {filteredCategories.length > 0 ? (
                 <div className="space-y-8">
@@ -258,7 +250,10 @@ export default function KnowledgeBasePage() {
                           {category.title}
                         </h2>
                       </div>
-                      <FAQAccordion category={category} />
+                      {category.items.length > 0 && (
+                        <FAQAccordion items={category.items} />
+                      )}
+                      <ArticleList articles={category.articles} />
                     </div>
                   ))}
                 </div>
@@ -284,7 +279,7 @@ export default function KnowledgeBasePage() {
               {/* Category Navigation */}
               <div className="lg:col-span-1">
                 <nav className="sticky top-24 space-y-2">
-                  {faqCategories.map((category, index) => (
+                  {categories.map((category, index) => (
                     <button
                       key={index}
                       onClick={() => setActiveCategory(index)}
@@ -300,7 +295,7 @@ export default function KnowledgeBasePage() {
                           {category.title}
                         </span>
                         <span className="block text-xs text-gray-500">
-                          {category.items.length} articles
+                          {category.items.length + category.articles.length} articles
                         </span>
                       </div>
                     </button>
@@ -308,23 +303,24 @@ export default function KnowledgeBasePage() {
                 </nav>
               </div>
 
-              {/* FAQ Content */}
+              {/* Content */}
               <div className="lg:col-span-3">
                 <div className="mb-6">
                   <div className="flex items-center gap-3 mb-2">
                     {(() => {
-                      const Icon = faqCategories[activeCategory].icon;
+                      const Icon = categories[activeCategory].icon;
                       return <Icon className="w-6 h-6 text-emerald" />;
                     })()}
                     <h2 className="text-2xl font-bold text-gray-900">
-                      {faqCategories[activeCategory].title}
+                      {categories[activeCategory].title}
                     </h2>
                   </div>
                   <p className="text-gray-600">
-                    {faqCategories[activeCategory].description}
+                    {categories[activeCategory].description}
                   </p>
                 </div>
-                <FAQAccordion category={faqCategories[activeCategory]} />
+                <FAQAccordion items={categories[activeCategory].items} />
+                <ArticleList articles={categories[activeCategory].articles} />
               </div>
             </div>
           )}
