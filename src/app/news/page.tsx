@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Calendar, ArrowRight, Award } from "lucide-react";
+import { Calendar, ArrowRight } from "lucide-react";
 import Image from "next/image";
 import { Navigation, Footer } from "@/components/layout";
 import { PageHeader, Card, Button, SectionWrapper } from "@/components/ui";

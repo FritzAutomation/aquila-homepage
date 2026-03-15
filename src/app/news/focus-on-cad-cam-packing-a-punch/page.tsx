@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { Calendar, ArrowLeft, ArrowRight } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { Navigation, Footer } from "@/components/layout";
 import { Button, SectionWrapper } from "@/components/ui";

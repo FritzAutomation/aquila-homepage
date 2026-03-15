@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, useCallback, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -18,7 +18,6 @@ import {
   MessageSquare,
   FileText,
   ChevronDown,
-  UserCheck,
   Paperclip,
   Image,
   Download,
@@ -106,13 +105,6 @@ const STATUS_COLORS: Record<string, string> = {
   closed: "bg-gray-100 text-gray-700 border-gray-200",
 };
 
-const PRIORITY_COLORS: Record<string, string> = {
-  low: "bg-gray-100 text-gray-700",
-  normal: "bg-blue-100 text-blue-700",
-  high: "bg-orange-100 text-orange-700",
-  urgent: "bg-red-100 text-red-700",
-};
-
 export default function TicketDetailPage({
   params,
 }: {
@@ -130,11 +122,27 @@ export default function TicketDetailPage({
   const [showCannedResponses, setShowCannedResponses] = useState(false);
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
 
+  const fetchTicket = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/tickets/${id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setTicket(data);
+      } else {
+        router.push("/admin/tickets");
+      }
+    } catch (error) {
+      console.error("Failed to fetch ticket:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [id, router]);
+
   useEffect(() => {
     fetchTicket();
     fetchCannedResponses();
     fetchStaffMembers();
-  }, [id]);
+  }, [id, fetchTicket]);
 
   async function fetchCannedResponses() {
     try {
@@ -168,22 +176,6 @@ export default function TicketDetailPage({
       return response.content;
     });
     setShowCannedResponses(false);
-  }
-
-  async function fetchTicket() {
-    try {
-      const res = await fetch(`/api/tickets/${id}`);
-      if (res.ok) {
-        const data = await res.json();
-        setTicket(data);
-      } else {
-        router.push("/admin/tickets");
-      }
-    } catch (error) {
-      console.error("Failed to fetch ticket:", error);
-    } finally {
-      setLoading(false);
-    }
   }
 
   async function handleStatusChange(newStatus: TicketStatus) {
@@ -413,12 +405,14 @@ export default function TicketDetailPage({
                             <div key={i}>
                               {att.mime_type.startsWith("image/") ? (
                                 <a href={att.url} target="_blank" rel="noopener noreferrer" className="block">
+                                  {/* eslint-disable-next-line @next/next/no-img-element */}
                                   <img
                                     src={att.url}
                                     alt={att.filename}
                                     className="max-w-sm max-h-64 rounded-lg border border-gray-200 hover:border-blue-400 transition-colors"
                                   />
                                   <span className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                    {/* eslint-disable-next-line jsx-a11y/alt-text */}
                                     <Image className="w-3 h-3" />
                                     {att.filename} ({(att.size / 1024).toFixed(0)} KB)
                                   </span>

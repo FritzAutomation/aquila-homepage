@@ -28,8 +28,6 @@ const formatFileSize = (bytes: number): string => {
 export default function FileUpload({
   onFilesChange,
   maxFiles = 5,
-  ticketId,
-  messageId,
 }: FileUploadProps) {
   const [files, setFiles] = useState<FileWithPreview[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -59,70 +57,6 @@ export default function FileUpload({
     setFiles(updatedFiles);
     onFilesChange(updatedFiles);
   };
-
-  const uploadFiles = async (): Promise<{ filename: string; url: string }[]> => {
-    const uploadedFiles: { filename: string; url: string }[] = [];
-
-    for (let i = 0; i < files.length; i++) {
-      const fileData = files[i];
-      if (fileData.uploaded && fileData.url) {
-        uploadedFiles.push({ filename: fileData.file.name, url: fileData.url });
-        continue;
-      }
-
-      // Mark as uploading
-      setFiles((prev) =>
-        prev.map((f, idx) => (idx === i ? { ...f, uploading: true } : f))
-      );
-
-      try {
-        const formData = new FormData();
-        formData.append("file", fileData.file);
-        if (ticketId) formData.append("ticket_id", ticketId);
-        if (messageId) formData.append("message_id", messageId);
-
-        const res = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          setFiles((prev) =>
-            prev.map((f, idx) =>
-              idx === i
-                ? { ...f, uploading: false, uploaded: true, url: data.attachment.url }
-                : f
-            )
-          );
-          uploadedFiles.push({
-            filename: fileData.file.name,
-            url: data.attachment.url,
-          });
-        } else {
-          const errorData = await res.json();
-          setFiles((prev) =>
-            prev.map((f, idx) =>
-              idx === i
-                ? { ...f, uploading: false, error: errorData.error || "Upload failed" }
-                : f
-            )
-          );
-        }
-      } catch {
-        setFiles((prev) =>
-          prev.map((f, idx) =>
-            idx === i ? { ...f, uploading: false, error: "Upload failed" } : f
-          )
-        );
-      }
-    }
-
-    return uploadedFiles;
-  };
-
-  // Expose uploadFiles method via ref or through prop
-  // For simplicity, we'll call it when parent needs it through a different mechanism
 
   return (
     <div className="space-y-3">
@@ -167,6 +101,7 @@ export default function FileUpload({
             >
               {/* Preview or icon */}
               {fileData.preview ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={fileData.preview}
                   alt={fileData.file.name}

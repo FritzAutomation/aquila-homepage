@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { GraduationCap, Monitor, Users, Clock, CheckCircle, ArrowRight } from "lucide-react";
+import { GraduationCap, Monitor, Users, CheckCircle, ArrowRight } from "lucide-react";
 import { Navigation, Footer } from "@/components/layout";
 import { PageHeader, Card, Button, SectionWrapper } from "@/components/ui";
 

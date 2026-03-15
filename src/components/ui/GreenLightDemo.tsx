@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Activity, Zap, Gauge, Timer, Hash, TrendingUp } from "lucide-react";
 
@@ -23,7 +23,7 @@ function formatTime(seconds: number): string {
 }
 
 // Laser Machine Component
-function LaserMachine({ status, onStatusChange }: { status: MachineStatus; onStatusChange?: (status: MachineStatus) => void }) {
+function LaserMachine({ status }: { status: MachineStatus }) {
   const statusColors = {
     running: "#10B981", // emerald
     idle: "#F59E0B", // amber

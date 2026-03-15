@@ -2,7 +2,7 @@
 
 import { motion, useInView } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { Target, Users, Award, ArrowRight, Mail, Phone } from "lucide-react";
+import { Target, ArrowRight, Mail, Phone } from "lucide-react";
 import Image from "next/image";
 import { Navigation, Footer } from "@/components/layout";
 import { PageHeader, Card, Button, SectionWrapper } from "@/components/ui";

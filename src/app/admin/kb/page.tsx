@@ -77,6 +77,7 @@ export default function AdminKBPage() {
 
   useEffect(() => {
     fetchArticles();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [categoryFilter]);
 
   const handleSearch = (e: React.FormEvent) => {

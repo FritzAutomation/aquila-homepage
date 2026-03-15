@@ -78,7 +78,7 @@ export default function Hero() {
 
   // Keyboard navigation
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "ArrowLeft") {
         prevSlide();
       } else if (e.key === "ArrowRight") {
@@ -86,8 +86,9 @@ export default function Hero() {
       }
     };
 
+    document.addEventListener("keydown", onKeyDown);
     return () => {
-      // Cleanup if needed
+      document.removeEventListener("keydown", onKeyDown);
     };
   }, [nextSlide, prevSlide]);
 

@@ -183,7 +183,7 @@ export default function IntegrationPage() {
                   work just as well as they did in your legacy system—often resulting in seamless floor-level transitions.
                 </p>
                 <div className="grid md:grid-cols-2 gap-4">
-                  {benefits.slice(0, 4).map((benefit, index) => (
+                  {benefits.slice(0, 4).map((benefit) => (
                     <div key={benefit} className="flex items-start gap-3">
                       <CheckCircle className="w-5 h-5 text-emerald flex-shrink-0 mt-0.5" />
                       <p className="text-white/90 text-sm">{benefit}</p>

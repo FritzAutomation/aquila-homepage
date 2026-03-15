@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Headphones, Clock, Mail, Phone, Shield, CheckCircle, ArrowRight } from "lucide-react";
+import { Clock, Mail, Phone, Shield, CheckCircle } from "lucide-react";
 import { Navigation, Footer } from "@/components/layout";
 import { PageHeader, Card, Button, SectionWrapper } from "@/components/ui";
 

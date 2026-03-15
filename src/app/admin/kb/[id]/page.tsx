@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, use } from "react";
+import { useState, useEffect, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -51,13 +51,7 @@ export default function ArticleEditorPage({
   const [slug, setSlug] = useState("");
   const [publishedAt, setPublishedAt] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!isNew) {
-      fetchArticle();
-    }
-  }, [id, isNew]);
-
-  const fetchArticle = async () => {
+  const fetchArticle = useCallback(async () => {
     try {
       const res = await fetch(`/api/kb/${id}`);
       if (!res.ok) {
@@ -79,7 +73,13 @@ export default function ArticleEditorPage({
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    if (!isNew) {
+      fetchArticle();
+    }
+  }, [id, isNew, fetchArticle]);
 
   const handleSave = async (publish?: boolean) => {
     if (!title.trim()) {

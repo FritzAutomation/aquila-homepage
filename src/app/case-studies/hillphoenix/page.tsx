@@ -1,47 +1,10 @@
 "use client";
 
-import { motion, useInView } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import { CheckCircle, ArrowRight, Quote, Factory, Layers, TrendingUp } from "lucide-react";
 import Image from "next/image";
 import { Navigation, Footer } from "@/components/layout";
 import { PageHeader, Card, Button, SectionWrapper } from "@/components/ui";
-
-function AnimatedCounter({ value, suffix = "" }: { value: number; suffix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true, margin: "-100px" });
-  const [count, setCount] = useState(0);
-  const hasAnimated = useRef(false);
-
-  useEffect(() => {
-    if (isInView && !hasAnimated.current) {
-      hasAnimated.current = true;
-      const duration = 2000;
-      const startTime = Date.now();
-
-      const updateCount = () => {
-        const elapsed = Date.now() - startTime;
-        const progress = Math.min(elapsed / duration, 1);
-        const easeOut = 1 - Math.pow(1 - progress, 4);
-        setCount(Math.floor(easeOut * value));
-
-        if (progress < 1) {
-          requestAnimationFrame(updateCount);
-        } else {
-          setCount(value);
-        }
-      };
-
-      requestAnimationFrame(updateCount);
-    }
-  }, [isInView, value]);
-
-  return (
-    <span ref={ref} className="tabular-nums">
-      {count}{suffix}
-    </span>
-  );
-}
 
 const challenges = [
   "Managing multiple punch and laser work centers",

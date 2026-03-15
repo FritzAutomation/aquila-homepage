@@ -469,6 +469,7 @@ export default function SupportPage() {
                         className="flex items-center gap-3 p-2 border border-gray-200 rounded-lg"
                       >
                         {fileData.preview ? (
+                          // eslint-disable-next-line @next/next/no-img-element
                           <img
                             src={fileData.preview}
                             alt={fileData.file.name}
