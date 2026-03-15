@@ -172,7 +172,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('tickets')
-      .select('*, company:companies(id, name, domain), assignee:staff_profiles(id, name)', { count: 'exact' })
+      .select('*, company:companies(id, name, domain), assignee:profiles(id, name)', { count: 'exact' })
 
     // Apply filters
     if (status) query = query.eq('status', status)

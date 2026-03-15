@@ -27,15 +27,15 @@
 ---
 
 ## 🔐 Auth & Role System (Scaffolding exists — harden and complete)
-- [ ] Enforce Aquila Admin vs Customer User role separation throughout
-- [ ] Build customer org grouping (multiple users under one company account)
-- [ ] Build invite-only user creation flow (no open registration)
-- [ ] Admin: create/invite/deactivate users, assign to org
+- [x] Enforce Aquila Admin vs Customer User role separation throughout
+- [x] Build customer org grouping (multiple users under one company account)
+- [x] Build invite-only user creation flow (no open registration)
+- [x] Admin: create/invite/deactivate users, assign to org
 
 ---
 
 ## 📊 Admin Dashboard (Scaffolding exists — wire up real data)
-- [ ] User management table (list, invite, edit, deactivate)
+- [x] User management table (list, invite, edit, deactivate)
 - [ ] Org management (create orgs, assign users)
 - [ ] Ticket queue summary widget
 - [ ] Training progress summary by org

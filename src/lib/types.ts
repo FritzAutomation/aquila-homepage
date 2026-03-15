@@ -9,6 +9,7 @@ export type Database = {
           domain: string | null
           created_at: string
           notes: string | null
+          status: 'active' | 'inactive'
         }
         Insert: {
           id?: string
@@ -16,6 +17,7 @@ export type Database = {
           domain?: string | null
           created_at?: string
           notes?: string | null
+          status?: 'active' | 'inactive'
         }
         Update: {
           id?: string
@@ -23,6 +25,7 @@ export type Database = {
           domain?: string | null
           created_at?: string
           notes?: string | null
+          status?: 'active' | 'inactive'
         }
       }
       tickets: {
@@ -125,27 +128,36 @@ export type Database = {
           is_internal?: boolean
         }
       }
-      staff_profiles: {
+      profiles: {
         Row: {
           id: string
-          name: string
           email: string
-          role: 'agent' | 'admin'
+          name: string
+          user_type: UserType
+          company_id: string | null
+          status: UserStatus
           created_at: string
+          updated_at: string
         }
         Insert: {
           id: string
-          name: string
           email: string
-          role?: 'agent' | 'admin'
+          name: string
+          user_type?: UserType
+          company_id?: string | null
+          status?: UserStatus
           created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
-          name?: string
           email?: string
-          role?: 'agent' | 'admin'
+          name?: string
+          user_type?: UserType
+          company_id?: string | null
+          status?: UserStatus
           created_at?: string
+          updated_at?: string
         }
       }
       sla_config: {
@@ -218,6 +230,10 @@ export type Database = {
   }
 }
 
+// Auth & Role types
+export type UserType = 'admin' | 'agent' | 'customer'
+export type UserStatus = 'invited' | 'active' | 'deactivated'
+
 // Enum types
 export type Product = 'dmm' | 'green-light' | 'custom' | 'general'
 export type IssueType = 'bug' | 'feature' | 'training' | 'integration' | 'billing' | 'other'
@@ -235,7 +251,9 @@ export type MessageInsert = Database['public']['Tables']['messages']['Insert']
 export type Company = Database['public']['Tables']['companies']['Row']
 export type CompanyInsert = Database['public']['Tables']['companies']['Insert']
 
-export type StaffProfile = Database['public']['Tables']['staff_profiles']['Row']
+export type Profile = Database['public']['Tables']['profiles']['Row']
+/** @deprecated Use Profile instead */
+export type StaffProfile = Profile
 
 export type SLAConfig = Database['public']['Tables']['sla_config']['Row']
 

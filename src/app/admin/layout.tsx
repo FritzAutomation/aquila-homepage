@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
@@ -17,12 +17,14 @@ import {
   LogOut,
   ChevronRight,
   ExternalLink,
+  Users,
 } from "lucide-react";
 
 const navigation = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
   { name: "Tickets", href: "/admin/tickets", icon: Ticket },
   { name: "Knowledge Base", href: "/admin/kb", icon: BookOpen },
+  { name: "Users", href: "/admin/users", icon: Users },
   { name: "Companies", href: "/admin/companies", icon: Building2 },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
   { name: "Reports", href: "/admin/reports", icon: FileText },
@@ -37,6 +39,29 @@ export default function AdminLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<{
+    name: string;
+    email: string;
+    user_type: string;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && !data.error) setUserProfile(data);
+      })
+      .catch(() => {});
+  }, []);
+
+  const initials = userProfile
+    ? userProfile.name
+        .split(" ")
+        .map((n: string) => n[0])
+        .join("")
+        .toUpperCase()
+        .slice(0, 2)
+    : "..";
 
   const handleSignOut = async () => {
     const supabase = createBrowserClient(
@@ -116,14 +141,16 @@ export default function AdminLayout({
           <div className="p-4 border-t border-white/10">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-9 h-9 bg-emerald/20 rounded-full flex items-center justify-center">
-                <span className="text-emerald font-medium text-sm">ST</span>
+                <span className="text-emerald font-medium text-sm">
+                  {initials}
+                </span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-white truncate">
-                  Staff User
+                  {userProfile?.name || "Loading..."}
                 </p>
                 <p className="text-xs text-white/50 truncate">
-                  staff@aquila.com
+                  {userProfile?.email || ""}
                 </p>
               </div>
             </div>

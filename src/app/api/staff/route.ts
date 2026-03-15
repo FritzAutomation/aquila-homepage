@@ -1,14 +1,22 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireStaff } from '@/lib/auth'
 
 // GET /api/staff - Get all staff members
 export async function GET() {
   try {
+    const user = await requireStaff()
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const supabase = createAdminClient()
 
     const { data: staff, error } = await supabase
-      .from('staff_profiles')
-      .select('id, name, email, role')
+      .from('profiles')
+      .select('id, name, email, user_type')
+      .in('user_type', ['admin', 'agent'])
+      .eq('status', 'active')
       .order('name')
 
     if (error) {
@@ -19,7 +27,13 @@ export async function GET() {
       )
     }
 
-    return NextResponse.json({ staff })
+    // Map user_type to role for backwards compatibility with existing UI
+    const mappedStaff = (staff || []).map(s => ({
+      ...s,
+      role: s.user_type,
+    }))
+
+    return NextResponse.json({ staff: mappedStaff })
 
   } catch (error) {
     console.error('Error fetching staff:', error)
