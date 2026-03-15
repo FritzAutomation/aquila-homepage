@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Search,
@@ -50,6 +50,14 @@ const USER_TYPE_ICONS: Record<string, React.ElementType> = {
 };
 
 export default function AdminUsersPage() {
+  return (
+    <Suspense>
+      <AdminUsersContent />
+    </Suspense>
+  );
+}
+
+function AdminUsersContent() {
   const searchParams = useSearchParams();
   const companyIdParam = searchParams.get("company_id");
 
