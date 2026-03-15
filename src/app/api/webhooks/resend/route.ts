@@ -81,20 +81,54 @@ function cleanEmailBody(text: string): string {
   return cleanLines.join('\n').trim()
 }
 
-// Process email attachments: upload to Storage and record in database
+// Process email attachments: fetch from Resend API, upload to Storage, record in database
+// Resend webhooks only include attachment metadata, not content.
+// We must use the Attachments API to get download URLs, then fetch the actual files.
 async function processAttachments(
   supabase: SupabaseClient,
   ticketId: string,
   messageId: string,
-  attachments: Array<{ filename: string; content: string; content_type: string }>
+  emailId: string
 ): Promise<void> {
-  if (!attachments || attachments.length === 0) return
+  if (!emailId || !process.env.RESEND_API_KEY) return
+
+  const resend = new Resend(process.env.RESEND_API_KEY)
+
+  // Fetch attachment list with download URLs from Resend
+  let attachmentList: Array<{
+    filename: string
+    content_type: string
+    content_length: number
+    content_id: string | null
+    download_url: string
+  }>
+
+  try {
+    const { data, error } = await resend.emails.receiving.attachments.list({ emailId })
+    if (error || !data) {
+      console.error('Failed to list attachments from Resend:', error)
+      return
+    }
+    attachmentList = data as unknown as typeof attachmentList
+  } catch (error) {
+    console.error('Error fetching attachment list:', error)
+    return
+  }
+
+  if (!attachmentList || attachmentList.length === 0) return
 
   const attachmentMetadata: Array<{ filename: string; url: string; mime_type: string; size: number }> = []
 
-  for (const attachment of attachments) {
+  for (const attachment of attachmentList) {
     try {
-      const buffer = Buffer.from(attachment.content, 'base64')
+      // Download the file content from Resend's temporary URL
+      const response = await fetch(attachment.download_url)
+      if (!response.ok) {
+        console.error('Failed to download attachment:', attachment.filename, response.status)
+        continue
+      }
+
+      const buffer = Buffer.from(await response.arrayBuffer())
       const ext = path.extname(attachment.filename) || ''
       const randomId = crypto.randomUUID()
       const timestamp = Date.now()
@@ -347,10 +381,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to add message' }, { status: 500 })
       }
 
-      // Process attachments
-      if (emailData.attachments && emailData.attachments.length > 0) {
+      // Process attachments via Resend API
+      if (emailId) {
         try {
-          await processAttachments(supabase, existingTicket.id, replyMessage.id, emailData.attachments)
+          await processAttachments(supabase, existingTicket.id, replyMessage.id, emailId)
         } catch (error) {
           console.error('Failed to process attachments for reply:', error)
         }
@@ -440,10 +474,10 @@ export async function POST(request: NextRequest) {
         // Don't fail the whole request, ticket was created
       }
 
-      // Process attachments
-      if (newMessage && emailData.attachments && emailData.attachments.length > 0) {
+      // Process attachments via Resend API
+      if (newMessage && emailId) {
         try {
-          await processAttachments(supabase, ticket.id, newMessage.id, emailData.attachments)
+          await processAttachments(supabase, ticket.id, newMessage.id, emailId)
         } catch (error) {
           console.error('Failed to process attachments for new ticket:', error)
         }
