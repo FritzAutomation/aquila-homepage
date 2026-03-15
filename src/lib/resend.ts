@@ -14,8 +14,8 @@ function getResendClient(): Resend {
   return resendClient
 }
 
-const FROM_EMAIL = process.env.EMAIL_FROM || 'onboarding@resend.dev'
-const REPLY_TO_EMAIL = process.env.REPLY_TO_EMAIL || 'fritzjunker69@gmail.com'
+const FROM_EMAIL = process.env.EMAIL_FROM || 'support@fritzautomation.dev'
+const REPLY_TO_EMAIL = process.env.REPLY_TO_EMAIL || 'support@tickets.fritzautomation.dev'
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL || 'https://aquila-homepage.vercel.app'
 
 interface SendTicketConfirmationParams {

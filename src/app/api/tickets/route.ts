@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
 
     // Create the ticket
     const ticketData = {
-      email,
+      email: email.toLowerCase(),
       name: name || null,
       phone: phone || null,
       company_id: companyId,
