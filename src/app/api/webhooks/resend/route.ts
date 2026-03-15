@@ -502,6 +502,29 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to add message' }, { status: 500 })
       }
 
+      // Reopen ticket if it was resolved/closed
+      const wasReopened = existingTicket.status === 'resolved' || existingTicket.status === 'closed'
+      if (wasReopened) {
+        await supabase
+          .from('tickets')
+          .update({ status: 'open', reopened_at: new Date().toISOString() })
+          .eq('id', existingTicket.id)
+      }
+
+      // Notify admin of customer reply (do this before heavy attachment processing)
+      try {
+        await sendAdminCustomerReplyNotification({
+          ticketNumber,
+          subject: existingTicket.subject,
+          customerEmail: senderEmail,
+          customerName: senderName || undefined,
+          replyPreview: body.replace(/<[^>]*>/g, '').substring(0, 300),
+          wasReopened
+        })
+      } catch (error) {
+        console.error('Failed to send admin reply notification:', error)
+      }
+
       // Process attachments via Resend API and resolve inline images
       if (emailId) {
         try {
@@ -530,25 +553,6 @@ export async function POST(request: NextRequest) {
           console.error('Failed to process attachments for reply:', error)
         }
       }
-
-      // Reopen ticket if it was resolved/closed
-      const wasReopened = existingTicket.status === 'resolved' || existingTicket.status === 'closed'
-      if (wasReopened) {
-        await supabase
-          .from('tickets')
-          .update({ status: 'open', reopened_at: new Date().toISOString() })
-          .eq('id', existingTicket.id)
-      }
-
-      // Notify admin of customer reply
-      await sendAdminCustomerReplyNotification({
-        ticketNumber,
-        subject: existingTicket.subject,
-        customerEmail: senderEmail,
-        customerName: senderName || undefined,
-        replyPreview: body.substring(0, 300),
-        wasReopened
-      })
 
       return NextResponse.json({
         success: true,
