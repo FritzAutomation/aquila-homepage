@@ -14,6 +14,7 @@ import {
   GraduationCap,
   HelpCircle,
 } from "lucide-react"
+import { Navigation, Footer } from "@/components/layout"
 
 interface Step {
   id: string
@@ -122,9 +123,10 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
   const progressPercent = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0
 
   return (
-    <div className="min-h-screen bg-light-gray pt-20">
+    <div className="min-h-screen bg-light-gray">
+      <Navigation />
       {/* Header */}
-      <section className="bg-navy text-white py-12">
+      <section className="bg-navy text-white pt-28 md:pt-32 pb-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link
             href="/training"
@@ -273,6 +275,7 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
           })}
         </div>
       </div>
+      <Footer />
     </div>
   )
 }

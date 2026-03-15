@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { BookOpen, Clock, ChevronRight, Layers, GraduationCap } from "lucide-react"
+import { Navigation, Footer } from "@/components/layout"
 
 interface TrainingModule {
   id: string
@@ -56,8 +57,9 @@ export default function TrainingPage() {
 
   return (
     <div className="min-h-screen bg-light-gray">
+      <Navigation />
       {/* Hero */}
-      <section className="bg-navy text-white py-16 md:py-24">
+      <section className="bg-navy text-white pt-28 md:pt-32 pb-16 md:pb-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -134,6 +136,7 @@ export default function TrainingPage() {
           </>
         )}
       </div>
+      <Footer />
     </div>
   )
 }

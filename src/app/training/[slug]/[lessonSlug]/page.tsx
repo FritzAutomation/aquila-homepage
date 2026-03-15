@@ -13,6 +13,7 @@ import {
   HelpCircle,
 } from "lucide-react"
 import ReactMarkdown from "react-markdown"
+import { Navigation } from "@/components/layout"
 
 interface Step {
   id: string
@@ -207,9 +208,10 @@ export default function LessonPage({
   const nextLesson = module_.lessons[currentLessonIndex + 1]
 
   return (
-    <div className="min-h-screen bg-light-gray pt-20">
+    <div className="min-h-screen bg-light-gray">
+      <Navigation />
       {/* Top Bar */}
-      <div className="bg-white border-b border-slate-light/20 sticky top-16 md:top-20 z-10">
+      <div className="bg-white border-b border-slate-light/20 sticky top-16 md:top-20 z-10 mt-16 md:mt-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
             <Link
