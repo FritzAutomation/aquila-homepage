@@ -69,10 +69,15 @@ function renderMarkdown(content: string): string {
     .replace(/\n\n/g, '</p><p class="text-gray-700 leading-relaxed mb-4">')
     .replace(/\n/g, "<br />");
 
-  // Wrap consecutive <li> elements
+  // Wrap consecutive <li> elements with appropriate list tag
   html = html.replace(
-    /(<li[^>]*>.*?<\/li>\s*)+/g,
-    '<ul class="my-3 space-y-1">$&</ul>'
+    /(<li[^>]*>.*?<\/li>(<br \/>)?[\s]*)+/g,
+    (match) => {
+      const isOrdered = match.includes("list-decimal");
+      const tag = isOrdered ? "ol" : "ul";
+      const cleaned = match.replace(/<br \/>/g, "");
+      return `<${tag} class="my-3 space-y-1">${cleaned}</${tag}>`;
+    }
   );
 
   return `<p class="text-gray-700 leading-relaxed mb-4">${html}</p>`;
