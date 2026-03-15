@@ -56,14 +56,12 @@ function extractTicketNumber(subject: string): number | null {
   return null
 }
 
-// Clean up email body (remove quoted replies, signatures, etc.)
+// Clean up plain text email body (remove quoted replies, signatures, etc.)
 function cleanEmailBody(text: string): string {
-  // Remove common reply markers and everything after
   const lines = text.split('\n')
   const cleanLines: string[] = []
 
   for (const line of lines) {
-    // Stop at common reply indicators
     if (
       line.startsWith('On ') && line.includes(' wrote:') ||
       line.startsWith('>') ||
@@ -81,6 +79,46 @@ function cleanEmailBody(text: string): string {
   return cleanLines.join('\n').trim()
 }
 
+// Clean up HTML email body — strip quoted replies but preserve inline images
+function cleanEmailHtml(html: string): string {
+  // Remove <style> and <head> blocks entirely
+  let cleaned = html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+  cleaned = cleaned.replace(/<head[^>]*>[\s\S]*?<\/head>/gi, '')
+
+  // Remove common quoted reply containers
+  // Gmail: <div class="gmail_quote">
+  cleaned = cleaned.replace(/<div[^>]*class="gmail_quote"[^>]*>[\s\S]*$/gi, '')
+  // Outlook: <div id="appendonsend">  or <!--[if !mso]> reply block
+  cleaned = cleaned.replace(/<div[^>]*id="appendonsend"[^>]*>[\s\S]*$/gi, '')
+  // Generic: <blockquote> used for quoted replies
+  cleaned = cleaned.replace(/<blockquote[^>]*>[\s\S]*$/gi, '')
+  // "On ... wrote:" pattern in a <div> or <p>
+  cleaned = cleaned.replace(/<(?:div|p)[^>]*>On\s.+?wrote:[\s\S]*$/gi, '')
+  // Outlook separator: <div style="border:none;border-top:solid #E1E1E1 1.0pt">
+  cleaned = cleaned.replace(/<div[^>]*border-top[^>]*>[\s\S]*$/gi, '')
+
+  // Strip all tags except img (preserve inline images)
+  // Also preserve <br> as newlines
+  cleaned = cleaned.replace(/<br\s*\/?>/gi, '\n')
+  cleaned = cleaned.replace(/<\/(?:p|div|tr|li|h[1-6])>/gi, '\n')
+  cleaned = cleaned.replace(/<(?!img\s)[^>]+>/gi, '')
+
+  // Clean up whitespace but preserve newlines
+  cleaned = cleaned.replace(/[ \t]+/g, ' ')
+  cleaned = cleaned.replace(/\n{3,}/g, '\n\n')
+  cleaned = cleaned.trim()
+
+  // Decode common HTML entities
+  cleaned = cleaned.replace(/&nbsp;/gi, ' ')
+  cleaned = cleaned.replace(/&amp;/gi, '&')
+  cleaned = cleaned.replace(/&lt;/gi, '<')
+  cleaned = cleaned.replace(/&gt;/gi, '>')
+  cleaned = cleaned.replace(/&quot;/gi, '"')
+  cleaned = cleaned.replace(/&#39;/gi, "'")
+
+  return cleaned
+}
+
 // Process email attachments: fetch from Resend API, upload to Storage, record in database
 // Resend webhooks only include attachment metadata, not content.
 // We must use the Attachments API to get download URLs, then fetch the actual files.
@@ -89,8 +127,9 @@ async function processAttachments(
   ticketId: string,
   messageId: string,
   emailId: string
-): Promise<void> {
-  if (!emailId || !process.env.RESEND_API_KEY) return
+): Promise<Map<string, string>> {
+  const cidMap = new Map<string, string>() // content_id -> public URL
+  if (!emailId || !process.env.RESEND_API_KEY) return cidMap
 
   const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -107,26 +146,24 @@ async function processAttachments(
     const { data, error } = await resend.emails.receiving.attachments.list({ emailId })
     if (error || !data) {
       console.error('Failed to list attachments from Resend:', error)
-      return
+      return cidMap
     }
     // The Resend SDK may return { data: [...] } or the array directly
-    // Handle both cases to be safe
-    const rawData = data as Record<string, unknown>
+    const rawData = data as unknown as Record<string, unknown>
     if (Array.isArray(rawData)) {
       attachmentList = rawData as unknown as typeof attachmentList
     } else if (rawData && Array.isArray((rawData as Record<string, unknown>).data)) {
       attachmentList = (rawData as Record<string, unknown>).data as unknown as typeof attachmentList
     } else {
-      // Try iterating as-is, log the structure for debugging
       console.error('Unexpected attachment list structure:', JSON.stringify(data).substring(0, 500))
-      return
+      return cidMap
     }
   } catch (error) {
     console.error('Error fetching attachment list:', error)
-    return
+    return cidMap
   }
 
-  if (!attachmentList || attachmentList.length === 0) return
+  if (!attachmentList || attachmentList.length === 0) return cidMap
 
   const attachmentMetadata: Array<{ filename: string; url: string; mime_type: string; size: number }> = []
 
@@ -164,6 +201,13 @@ async function processAttachments(
         .getPublicUrl(storagePath)
 
       const publicUrl = urlData.publicUrl
+
+      // Track content_id -> URL mapping for resolving cid: references in HTML
+      if (attachment.content_id) {
+        // content_id often comes wrapped in angle brackets like <image001.png@...>
+        const cleanCid = attachment.content_id.replace(/^<|>$/g, '')
+        cidMap.set(cleanCid, publicUrl)
+      }
 
       // Insert record into attachments table
       const { error: insertError } = await supabase
@@ -205,6 +249,8 @@ async function processAttachments(
       console.error('Failed to update message attachments:', updateError)
     }
   }
+
+  return cidMap
 }
 
 // Verify webhook signature from Resend (uses Svix)
@@ -295,30 +341,32 @@ export async function POST(request: NextRequest) {
     const { email: senderEmail, name: senderName } = parseEmailAddress(emailData.from)
     const subject = emailData.subject || '(No subject)'
 
-    // Get body from text, html, or check attachments for body content
+    // Get body from email — prefer HTML to preserve inline images, fall back to text
     let body = ''
+    let rawHtml = '' // Keep raw HTML for cid: resolution after attachment processing
 
     // Check if body is in the webhook payload first
-    if (emailData.text) {
+    if (emailData.html) {
+      rawHtml = emailData.html
+      body = cleanEmailHtml(emailData.html)
+    } else if (emailData.text) {
       body = cleanEmailBody(emailData.text)
-    } else if (emailData.html) {
-      body = emailData.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
     }
 
     // If no body in webhook, fetch full email using Resend SDK's receiving API
     if (!body && emailId && process.env.RESEND_API_KEY) {
       try {
         const resend = new Resend(process.env.RESEND_API_KEY)
-        // Use emails.receiving.get() for inbound emails
         const { data: fullEmail, error: fetchError } = await resend.emails.receiving.get(emailId)
 
         if (fetchError) {
           console.error('Error fetching inbound email:', fetchError)
         } else if (fullEmail) {
-          if (fullEmail.text) {
+          if (fullEmail.html) {
+            rawHtml = fullEmail.html
+            body = cleanEmailHtml(fullEmail.html)
+          } else if (fullEmail.text) {
             body = cleanEmailBody(fullEmail.text)
-          } else if (fullEmail.html) {
-            body = fullEmail.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
           }
         }
       } catch (error) {
@@ -392,10 +440,24 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Failed to add message' }, { status: 500 })
       }
 
-      // Process attachments via Resend API
+      // Process attachments via Resend API and resolve inline images
       if (emailId) {
         try {
-          await processAttachments(supabase, existingTicket.id, replyMessage.id, emailId)
+          const cidMap = await processAttachments(supabase, existingTicket.id, replyMessage.id, emailId)
+
+          // Replace cid: references in message content with actual Storage URLs
+          if (cidMap.size > 0) {
+            let resolvedBody = body
+            for (const [cid, url] of cidMap) {
+              resolvedBody = resolvedBody.replace(new RegExp(`cid:${cid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'gi'), url)
+            }
+            if (resolvedBody !== body) {
+              await supabase
+                .from('messages')
+                .update({ content: resolvedBody })
+                .eq('id', replyMessage.id)
+            }
+          }
         } catch (error) {
           console.error('Failed to process attachments for reply:', error)
         }
@@ -485,10 +547,24 @@ export async function POST(request: NextRequest) {
         // Don't fail the whole request, ticket was created
       }
 
-      // Process attachments via Resend API
+      // Process attachments via Resend API and resolve inline images
       if (newMessage && emailId) {
         try {
-          await processAttachments(supabase, ticket.id, newMessage.id, emailId)
+          const cidMap = await processAttachments(supabase, ticket.id, newMessage.id, emailId)
+
+          // Replace cid: references in message content with actual Storage URLs
+          if (cidMap.size > 0) {
+            let resolvedBody = body
+            for (const [cid, url] of cidMap) {
+              resolvedBody = resolvedBody.replace(new RegExp(`cid:${cid.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`, 'gi'), url)
+            }
+            if (resolvedBody !== body) {
+              await supabase
+                .from('messages')
+                .update({ content: resolvedBody })
+                .eq('id', newMessage.id)
+            }
+          }
         } catch (error) {
           console.error('Failed to process attachments for new ticket:', error)
         }

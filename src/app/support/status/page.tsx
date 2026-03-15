@@ -313,7 +313,17 @@ function TicketStatusContent() {
                       </div>
                     </div>
                     <div className="text-sm text-gray-700 whitespace-pre-wrap ml-10">
-                      {message.content}
+                      {message.content.includes('<img ') ? (
+                        <div
+                          dangerouslySetInnerHTML={{
+                            __html: message.content
+                              .replace(/<(?!img\s|\/img)[^>]+>/gi, '')
+                              .replace(/<img\s/gi, '<img style="max-width:100%;height:auto;border-radius:8px;margin:8px 0" ')
+                          }}
+                        />
+                      ) : (
+                        message.content
+                      )}
                     </div>
                     {message.attachments && message.attachments.length > 0 && (
                       <div className="mt-3 ml-10 space-y-2">
