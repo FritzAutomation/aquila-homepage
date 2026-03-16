@@ -16,7 +16,7 @@ export function generateSlug(title: string): string {
 export function renderMarkdown(content: string): string {
   // Extract HTML blocks (video, img tags, anchor tags) before escaping
   const htmlBlocks: string[] = []
-  let processed = content.replace(
+  const processed = content.replace(
     /<(video|img|a)\b[^>]*>(?:[\s\S]*?<\/\1>)?/gi,
     (match) => {
       htmlBlocks.push(match)
