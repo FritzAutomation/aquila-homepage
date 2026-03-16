@@ -11,7 +11,7 @@ interface PageHeaderProps {
 
 export default function PageHeader({ title, subtitle, breadcrumb }: PageHeaderProps) {
   return (
-    <section className="relative pt-24 md:pt-32 pb-12 md:pb-16 bg-gradient-to-br from-navy to-navy/90">
+    <section className="relative pt-24 md:pt-32 pb-16 md:pb-20 bg-gradient-to-br from-navy to-navy/90">
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald/10 rounded-full blur-3xl" />
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/5 rounded-full blur-3xl" />

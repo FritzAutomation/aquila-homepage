@@ -68,7 +68,7 @@ export default function TrainingPage() {
       />
 
       {/* Filter Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 relative z-10">
         <div className="bg-white rounded-xl shadow-sm border border-slate-light/20 p-2 flex gap-2 w-fit mx-auto">
           {[
             { value: "all", label: "All Modules" },
