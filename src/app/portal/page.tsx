@@ -125,10 +125,6 @@ export default function CustomerPortal() {
 
   if (!user) return null
 
-  const completedStepIds = new Set(
-    progress.filter((p) => p.completed).map((p) => p.step_id)
-  )
-
   // Separate assigned vs public modules
   const assignedModules = modules.filter((m) => m.is_assigned)
   const publicModules = modules.filter((m) => m.is_public && !m.is_assigned)
