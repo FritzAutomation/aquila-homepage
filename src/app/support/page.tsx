@@ -20,6 +20,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { Navigation, Footer } from "@/components/layout";
+import { PageHeader } from "@/components/ui";
 import {
   PRODUCT_LABELS,
   ISSUE_TYPE_LABELS,
@@ -218,18 +219,15 @@ export default function SupportPage() {
   return (
     <>
       <Navigation />
-      <main className="min-h-screen bg-gray-50 pt-24 pb-12 px-4">
-        <div className="max-w-2xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="w-12 h-12 bg-navy rounded-xl flex items-center justify-center mx-auto mb-4">
-              <HelpCircle className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900">Contact Support</h1>
-            <p className="text-gray-600 mt-2">
-              Submit a support request and we&apos;ll get back to you within 24 hours.
-            </p>
-          </div>
+      <PageHeader
+        title="Contact Support"
+        subtitle="Submit a support request and we'll get back to you within 24 hours."
+        breadcrumb={[
+          { label: "Support", href: "/support" },
+        ]}
+      />
+      <main className="min-h-screen bg-gray-50 pb-12 px-4">
+        <div className="max-w-2xl mx-auto pt-8">
 
           {/* KB Link Banner */}
           <div className="mb-6 bg-navy/5 border border-navy/10 rounded-xl p-4 flex items-center gap-4">

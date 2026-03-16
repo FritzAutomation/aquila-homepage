@@ -17,6 +17,7 @@ import {
   Download,
 } from "lucide-react";
 import { Navigation, Footer } from "@/components/layout";
+import { PageHeader } from "@/components/ui";
 import {
   PRODUCT_LABELS,
   ISSUE_TYPE_LABELS,
@@ -144,18 +145,16 @@ function TicketStatusContent() {
   return (
     <>
       <Navigation />
-      <main className="min-h-screen bg-gray-50 pt-24 pb-12 px-4">
-        <div className="max-w-2xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="w-12 h-12 bg-navy rounded-xl flex items-center justify-center mx-auto mb-4">
-              <Ticket className="w-6 h-6 text-white" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900">Check Ticket Status</h1>
-            <p className="text-gray-600 mt-2">
-              Enter your ticket ID and email to view your support request.
-            </p>
-          </div>
+      <PageHeader
+        title="Check Ticket Status"
+        subtitle="Enter your ticket ID and email to view your support request."
+        breadcrumb={[
+          { label: "Support", href: "/support" },
+          { label: "Ticket Status", href: "/support/status" },
+        ]}
+      />
+      <main className="min-h-screen bg-gray-50 pb-12 px-4">
+        <div className="max-w-2xl mx-auto pt-8">
 
         {/* Search Form */}
         <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-6">

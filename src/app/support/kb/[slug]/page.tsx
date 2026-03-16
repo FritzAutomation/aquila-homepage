@@ -91,14 +91,17 @@ export default function ArticlePage({
       <Navigation />
       <main className="min-h-screen bg-gray-50 pt-24 pb-12">
         <div className="max-w-3xl mx-auto px-4">
-          {/* Back link */}
-          <Link
-            href="/support/kb"
-            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 mb-6 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Knowledge Base
-          </Link>
+          {/* Breadcrumb */}
+          <nav className="mb-6">
+            <ol className="flex items-center gap-2 text-sm text-gray-500">
+              <li><Link href="/" className="hover:text-gray-700 transition-colors">Home</Link></li>
+              <li className="flex items-center gap-2"><span>/</span><Link href="/support" className="hover:text-gray-700 transition-colors">Support</Link></li>
+              <li className="flex items-center gap-2"><span>/</span><Link href="/support/kb" className="hover:text-gray-700 transition-colors">Knowledge Base</Link></li>
+              {article && (
+                <li className="flex items-center gap-2"><span>/</span><span className="text-gray-900 truncate max-w-[200px]">{article.title}</span></li>
+              )}
+            </ol>
+          </nav>
 
           {loading ? (
             <div className="flex items-center justify-center py-24">

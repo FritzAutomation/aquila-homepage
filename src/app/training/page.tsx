@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-import { BookOpen, Clock, ChevronRight, Layers, GraduationCap } from "lucide-react"
+import { BookOpen, Clock, ChevronRight, Layers } from "lucide-react"
 import { Navigation, Footer } from "@/components/layout"
+import { PageHeader } from "@/components/ui"
 
 interface TrainingModule {
   id: string
@@ -60,29 +61,11 @@ export default function TrainingPage() {
   return (
     <div className="min-h-screen bg-light-gray">
       <Navigation />
-      {/* Hero */}
-      <section className="bg-navy text-white pt-28 md:pt-32 pb-16 md:pb-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center max-w-3xl mx-auto"
-          >
-            <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 mb-6">
-              <GraduationCap className="w-5 h-5 text-emerald" />
-              <span className="text-sm font-medium">Training Platform</span>
-            </div>
-            <h1 className="text-3xl md:text-5xl font-bold mb-4">
-              Learn at Your Own Pace
-            </h1>
-            <p className="text-lg text-slate-light">
-              Interactive training modules for DMM and Green Light Monitoring.
-              Complete lessons, pass knowledge checks, and track your progress.
-            </p>
-          </motion.div>
-        </div>
-      </section>
+      <PageHeader
+        title="Training Platform"
+        subtitle="Interactive training modules for DMM and Green Light Monitoring. Complete lessons, pass knowledge checks, and track your progress."
+        breadcrumb={[{ label: "Training", href: "/training" }]}
+      />
 
       {/* Filter Bar */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6">

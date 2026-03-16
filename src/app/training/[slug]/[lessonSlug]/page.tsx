@@ -214,13 +214,13 @@ export default function LessonPage({
       <div className="bg-white border-b border-slate-light/20 sticky top-16 md:top-20 z-10 mt-16 md:mt-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 py-3">
           <div className="flex items-center justify-between">
-            <Link
-              href={`/training/${slug}`}
-              className="flex items-center gap-1 text-sm text-slate hover:text-navy transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              {module_.title}
-            </Link>
+            <nav className="flex items-center gap-1.5 text-sm text-slate">
+              <Link href="/training" className="hover:text-navy transition-colors">Training</Link>
+              <span className="text-gray-300">/</span>
+              <Link href={`/training/${slug}`} className="hover:text-navy transition-colors truncate max-w-[150px]">{module_.title}</Link>
+              <span className="text-gray-300">/</span>
+              <span className="text-navy font-medium truncate max-w-[150px]">{lesson.title}</span>
+            </nav>
             <span className="text-sm text-slate">
               Step {currentStep + 1} of {lesson.steps.length}
             </span>

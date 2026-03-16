@@ -128,13 +128,13 @@ export default function ModulePage({ params }: { params: Promise<{ slug: string 
       {/* Header */}
       <section className="bg-navy text-white pt-28 md:pt-32 pb-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Link
-            href="/training"
-            className="inline-flex items-center gap-1 text-slate-light hover:text-white text-sm mb-4 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            All Modules
-          </Link>
+          <nav className="mb-4">
+            <ol className="flex items-center gap-2 text-sm text-white/60">
+              <li><Link href="/" className="hover:text-white transition-colors">Home</Link></li>
+              <li className="flex items-center gap-2"><span>/</span><Link href="/training" className="hover:text-white transition-colors">Training</Link></li>
+              <li className="flex items-center gap-2"><span>/</span><span className="text-white">{module_.title}</span></li>
+            </ol>
+          </nav>
 
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
             <span className="text-sm text-emerald font-medium">

@@ -15,6 +15,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { Navigation, Footer } from "@/components/layout";
+import { PageHeader } from "@/components/ui";
 
 interface KBArticle {
   id: string;
@@ -101,31 +102,26 @@ export default function KnowledgeBasePage() {
   return (
     <>
       <Navigation />
+      <PageHeader
+        title="Knowledge Base"
+        subtitle="Find answers to common questions and learn how to get the most from our products."
+        breadcrumb={[
+          { label: "Support", href: "/support" },
+          { label: "Knowledge Base", href: "/support/kb" },
+        ]}
+      />
       <main className="min-h-screen bg-gray-50">
-        {/* Hero Section */}
-        <div className="bg-navy pt-24 pb-16">
-          <div className="max-w-4xl mx-auto px-4 text-center">
-            <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mx-auto mb-6">
-              <BookOpen className="w-8 h-8 text-white" />
-            </div>
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Knowledge Base
-            </h1>
-            <p className="text-white/80 text-lg mb-8">
-              Find answers to common questions and learn how to get the most from our products.
-            </p>
-
-            {/* Search */}
-            <div className="max-w-xl mx-auto relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search for answers..."
-                className="w-full pl-12 pr-4 py-3.5 rounded-xl border-0 focus:ring-2 focus:ring-emerald outline-none text-gray-900 placeholder:text-gray-500 shadow-lg"
-              />
-            </div>
+        {/* Search */}
+        <div className="max-w-6xl mx-auto px-4 -mt-6 relative z-10">
+          <div className="max-w-xl mx-auto relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search for answers..."
+              className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-gray-200 focus:ring-2 focus:ring-emerald outline-none text-gray-900 placeholder:text-gray-500 shadow-lg bg-white"
+            />
           </div>
         </div>
 
