@@ -208,6 +208,35 @@ function AdminUsersContent() {
     }
   };
 
+  const handleCompanyChange = async (userId: string, companyId: string) => {
+    try {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ company_id: companyId || null }),
+      });
+
+      if (res.ok) {
+        const matchedCompany = companies.find((c) => c.id === companyId);
+        setUsers((prev) =>
+          prev.map((u) =>
+            u.id === userId
+              ? {
+                  ...u,
+                  company_id: companyId || null,
+                  company: matchedCompany
+                    ? { id: matchedCompany.id, name: matchedCompany.name }
+                    : null,
+                }
+              : u
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Failed to update user company:", error);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       month: "short",
@@ -373,7 +402,22 @@ function AdminUsersContent() {
                       )}
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
-                      {user.company ? (
+                      {isAdmin ? (
+                        <select
+                          value={user.company_id || ""}
+                          onChange={(e) =>
+                            handleCompanyChange(user.id, e.target.value)
+                          }
+                          className="text-sm text-gray-700 border border-gray-200 rounded-lg px-2 py-1 focus:ring-2 focus:ring-emerald focus:border-emerald outline-none"
+                        >
+                          <option value="">No company</option>
+                          {companies.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : user.company ? (
                         <span className="inline-flex items-center gap-1 text-sm text-gray-700">
                           <Building2 className="w-3.5 h-3.5 text-gray-400" />
                           {user.company.name}
