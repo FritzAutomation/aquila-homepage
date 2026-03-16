@@ -280,7 +280,7 @@ export default function AdminDashboard() {
             </div>
           ) : (
             <div className="divide-y divide-gray-100">
-              {queueTickets.slice(0, 5).map((ticket) => (
+              {queueTickets.slice(0, 8).map((ticket) => (
                 <Link
                   key={ticket.id}
                   href={`/admin/tickets/${ticket.id}`}
@@ -315,13 +315,13 @@ export default function AdminDashboard() {
                   </span>
                 </Link>
               ))}
-              {queueTickets.length > 5 && (
+              {queueTickets.length > 8 && (
                 <div className="px-5 py-3 text-center">
                   <Link
                     href="/admin/tickets?status=open"
                     className="text-sm text-emerald hover:text-emerald/80 font-medium"
                   >
-                    +{queueTickets.length - 5} more in queue
+                    +{queueTickets.length - 8} more in queue
                   </Link>
                 </div>
               )}
