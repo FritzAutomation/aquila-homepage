@@ -4,7 +4,6 @@ import { useState, useEffect, use } from "react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import {
-  ArrowLeft,
   BookOpen,
   Clock,
   Layers,

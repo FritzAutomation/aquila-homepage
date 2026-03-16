@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, use } from "react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import {
-  ArrowLeft,
   ChevronLeft,
   ChevronRight,
   CheckCircle2,

@@ -11,7 +11,6 @@ import {
   Phone,
   Building2,
   MessageSquare,
-  HelpCircle,
   X,
   FileText,
   Image as ImageIcon,
