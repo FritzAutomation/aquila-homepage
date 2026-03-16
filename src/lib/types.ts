@@ -6,7 +6,7 @@ export type Database = {
         Row: {
           id: string
           name: string
-          domain: string | null
+          domains: string[]
           created_at: string
           notes: string | null
           status: 'active' | 'inactive'
@@ -14,7 +14,7 @@ export type Database = {
         Insert: {
           id?: string
           name: string
-          domain?: string | null
+          domains?: string[]
           created_at?: string
           notes?: string | null
           status?: 'active' | 'inactive'
@@ -22,7 +22,7 @@ export type Database = {
         Update: {
           id?: string
           name?: string
-          domain?: string | null
+          domains?: string[]
           created_at?: string
           notes?: string | null
           status?: 'active' | 'inactive'

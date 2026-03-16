@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
     .select(`
       id,
       name,
-      domain,
+      domains,
       created_at,
       notes,
       status,
@@ -30,7 +30,8 @@ export async function GET(request: NextRequest) {
     .order('name', { ascending: true })
 
   if (search) {
-    query = query.or(`name.ilike.%${search}%,domain.ilike.%${search}%`)
+    // Search by name only — domains is an array, handled client-side if needed
+    query = query.ilike('name', `%${search}%`)
   }
   if (status) {
     query = query.eq('status', status)
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
   const companiesWithCounts = companies.map(company => ({
     id: company.id,
     name: company.name,
-    domain: company.domain,
+    domains: company.domains || [],
     created_at: company.created_at,
     notes: company.notes,
     status: company.status,
@@ -68,7 +69,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json()
-  const { name, domain, notes } = body
+  const { name, domains, notes } = body
 
   if (!name || !name.trim()) {
     return NextResponse.json({ error: 'Company name is required' }, { status: 400 })
@@ -90,11 +91,16 @@ export async function POST(request: NextRequest) {
     )
   }
 
+  // Clean domains: filter empty strings, lowercase, deduplicate
+  const cleanDomains = Array.isArray(domains)
+    ? [...new Set(domains.map((d: string) => d.trim().toLowerCase()).filter(Boolean))]
+    : []
+
   const { data: company, error } = await supabase
     .from('companies')
     .insert({
       name: name.trim(),
-      domain: domain?.trim() || null,
+      domains: cleanDomains,
       notes: notes?.trim() || null,
     })
     .select()

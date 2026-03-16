@@ -12,7 +12,7 @@ export async function GET() {
       .select(`
         id,
         name,
-        domain,
+        domains,
         created_at,
         notes,
         tickets (
@@ -34,7 +34,7 @@ export async function GET() {
     const companiesWithCounts = companies.map(company => ({
       id: company.id,
       name: company.name,
-      domain: company.domain,
+      domains: company.domains,
       created_at: company.created_at,
       notes: company.notes,
       ticket_count: company.tickets?.length || 0,

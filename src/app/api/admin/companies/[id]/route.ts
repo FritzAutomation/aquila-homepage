@@ -51,13 +51,17 @@ export async function PATCH(
 
   const { id } = await params
   const body = await request.json()
-  const { name, domain, notes, status } = body
+  const { name, domains, notes, status } = body
 
   const supabase = createAdminClient()
 
   const updateData: Record<string, unknown> = {}
   if (name !== undefined) updateData.name = name.trim()
-  if (domain !== undefined) updateData.domain = domain?.trim() || null
+  if (domains !== undefined) {
+    updateData.domains = Array.isArray(domains)
+      ? [...new Set(domains.map((d: string) => d.trim().toLowerCase()).filter(Boolean))]
+      : []
+  }
   if (notes !== undefined) updateData.notes = notes?.trim() || null
   if (status !== undefined) updateData.status = status
 

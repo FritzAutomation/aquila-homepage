@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { getCurrentUser } from '@/lib/auth'
 import { sendTicketConfirmation, sendAdminNewTicketNotification } from '@/lib/resend'
 import { PRODUCT_LABELS, ISSUE_TYPE_LABELS, type Product, type IssueType } from '@/lib/types'
+import { resolveCompanyByEmail } from '@/lib/company-utils'
 
 // POST /api/tickets - Create a new ticket
 export async function POST(request: NextRequest) {
@@ -28,33 +29,8 @@ export async function POST(request: NextRequest) {
 
     const supabase = createAdminClient()
 
-    // Try to find or create company based on email domain
-    let companyId: string | null = null
-    const emailDomain = email.split('@')[1]?.toLowerCase()
-
-    if (emailDomain) {
-      // Check if company exists with this domain
-      const { data: existingCompany } = await supabase
-        .from('companies')
-        .select('id')
-        .eq('domain', emailDomain)
-        .single()
-
-      if (existingCompany) {
-        companyId = existingCompany.id
-      } else if (company) {
-        // Create new company if company name provided
-        const { data: newCompany } = await supabase
-          .from('companies')
-          .insert({ name: company, domain: emailDomain })
-          .select('id')
-          .single()
-
-        if (newCompany) {
-          companyId = newCompany.id
-        }
-      }
-    }
+    // Find or auto-create company based on email domain
+    const companyId = await resolveCompanyByEmail(supabase, email, company || undefined)
 
     // Create the ticket
     const ticketData = {
@@ -178,7 +154,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabase
       .from('tickets')
-      .select('*, company:companies(id, name, domain), assignee:profiles(id, name)', { count: 'exact' })
+      .select('*, company:companies(id, name, domains), assignee:profiles(id, name)', { count: 'exact' })
 
     // Customers can only see tickets matching their email
     if (isCustomer && profile?.email) {

@@ -18,7 +18,7 @@ import {
 interface Company {
   id: string;
   name: string;
-  domain: string | null;
+  domains: string[];
   created_at: string;
   notes: string | null;
   status: string;
@@ -149,10 +149,10 @@ export default function CompaniesPage() {
                   </div>
                   <div>
                     <h3 className="font-semibold text-gray-900">{company.name}</h3>
-                    {company.domain && (
+                    {company.domains.length > 0 && (
                       <div className="flex items-center gap-1 text-sm text-gray-600">
                         <Mail className="w-3 h-3" />
-                        <span>@{company.domain}</span>
+                        <span>{company.domains.map(d => `@${d}`).join(", ")}</span>
                       </div>
                     )}
                   </div>
@@ -264,11 +264,24 @@ function CompanyModal({
 }) {
   const isEditing = !!company;
   const [name, setName] = useState(company?.name || "");
-  const [domain, setDomain] = useState(company?.domain || "");
+  const [domains, setDomains] = useState<string[]>(company?.domains || []);
+  const [domainInput, setDomainInput] = useState("");
   const [notes, setNotes] = useState(company?.notes || "");
   const [status, setStatus] = useState(company?.status || "active");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const addDomain = () => {
+    const d = domainInput.trim().toLowerCase().replace(/^@/, "");
+    if (d && !domains.includes(d)) {
+      setDomains([...domains, d]);
+    }
+    setDomainInput("");
+  };
+
+  const removeDomain = (domain: string) => {
+    setDomains(domains.filter((d) => d !== domain));
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -284,7 +297,7 @@ function CompanyModal({
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, domain, notes, ...(isEditing && { status }) }),
+        body: JSON.stringify({ name, domains, notes, ...(isEditing && { status }) }),
       });
 
       if (!res.ok) {
@@ -339,17 +352,52 @@ function CompanyModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Email Domain
+              Email Domains
             </label>
-            <input
-              type="text"
-              value={domain}
-              onChange={(e) => setDomain(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald focus:border-emerald outline-none text-gray-900"
-              placeholder="acme.com"
-            />
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={domainInput}
+                onChange={(e) => setDomainInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    addDomain();
+                  }
+                }}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald focus:border-emerald outline-none text-gray-900"
+                placeholder="acme.com"
+              />
+              <button
+                type="button"
+                onClick={addDomain}
+                disabled={!domainInput.trim()}
+                className="px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium disabled:opacity-50"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+            {domains.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {domains.map((d) => (
+                  <span
+                    key={d}
+                    className="inline-flex items-center gap-1 px-2 py-1 bg-navy/10 text-navy text-xs font-medium rounded-full"
+                  >
+                    @{d}
+                    <button
+                      type="button"
+                      onClick={() => removeDomain(d)}
+                      className="text-navy/50 hover:text-navy"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
             <p className="text-xs text-gray-500 mt-1">
-              Used to auto-match users by email
+              Tickets from these domains auto-link to this company
             </p>
           </div>
 

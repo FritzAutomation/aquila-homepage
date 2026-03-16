@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendTicketConfirmation, sendAdminNewTicketNotification, sendAdminCustomerReplyNotification } from '@/lib/resend'
 import { parseEmailAddress, extractTicketNumber, cleanEmailBody, cleanEmailHtml } from '@/lib/email-utils'
+import { resolveCompanyByEmail } from '@/lib/company-utils'
 import { headers } from 'next/headers'
 import crypto from 'crypto'
 import { Resend } from 'resend'
@@ -465,21 +466,8 @@ export async function POST(request: NextRequest) {
     } else {
       // This is a new ticket
 
-      // Try to find company by email domain
-      let companyId: string | null = null
-      const emailDomain = senderEmail.split('@')[1]
-
-      if (emailDomain) {
-        const { data: existingCompany } = await supabase
-          .from('companies')
-          .select('id')
-          .eq('domain', emailDomain)
-          .single()
-
-        if (existingCompany) {
-          companyId = existingCompany.id
-        }
-      }
+      // Find or auto-create company based on email domain
+      const companyId = await resolveCompanyByEmail(supabase, senderEmail)
 
       // Create the ticket
       const { data: ticket, error: ticketError } = await supabase

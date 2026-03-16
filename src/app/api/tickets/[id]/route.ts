@@ -16,7 +16,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Get ticket with company info and assignee
     const { data: ticket, error: ticketError } = await supabase
       .from('tickets')
-      .select('*, company:companies(id, name, domain), assignee:profiles(id, name)')
+      .select('*, company:companies(id, name, domains), assignee:profiles(id, name)')
       .eq('id', id)
       .single()
 
@@ -109,7 +109,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       .from('tickets')
       .update(updateData)
       .eq('id', id)
-      .select('*, company:companies(id, name, domain), assignee:profiles(id, name)')
+      .select('*, company:companies(id, name, domains), assignee:profiles(id, name)')
       .single()
 
     if (error) {
