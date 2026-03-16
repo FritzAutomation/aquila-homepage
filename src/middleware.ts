@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
 // Use Node.js runtime to avoid Edge Runtime compatibility warnings with Supabase
@@ -67,8 +68,13 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
 
-    // Check role-based access for admin routes
-    const { data: profile } = await supabase
+    // Check role-based access using admin client (bypasses RLS)
+    const adminClient = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { autoRefreshToken: false, persistSession: false } }
+    );
+    const { data: profile } = await adminClient
       .from("profiles")
       .select("user_type")
       .eq("id", user.id)
