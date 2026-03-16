@@ -1,59 +1,63 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Calendar, ArrowRight } from "lucide-react";
+import { Calendar, ArrowRight, Loader2, Newspaper } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 import { Navigation, Footer } from "@/components/layout";
 import { PageHeader, Card, Button, SectionWrapper } from "@/components/ui";
 
-const newsArticles = [
-  {
-    title: "Focus on CAD/CAM: Packing a Punch",
-    date: "February 2021",
-    category: "Case Study",
-    excerpt:
-      "ASCO Power Technologies, a U.S. power management manufacturer, achieved significant gains through new nesting software implementation, reducing programming time by 75% and increasing efficiency.",
-    featured: true,
-    href: "/news/focus-on-cad-cam-packing-a-punch",
-  },
-  {
-    title: "Automation News: Real-Time For Sheet Metal Machines!",
-    date: "August 2017",
-    category: "Partnership",
-    excerpt:
-      "The Aquila Group partnered with Opto 22 to help manufacturing customers integrate OEE measurements into their Enterprise systems, enabling real-time data visibility for sheet metal machinery operations.",
-    featured: false,
-    href: "/news/real-time-for-sheet-metal-machines",
-  },
-  {
-    title: "Manufacturing Information, Instructions, and Performance Metrics in Real Time",
-    date: "August 2017",
-    category: "Industry News",
-    excerpt:
-      "How The Aquila Group bridges IT and operational technology gaps for major manufacturers including Eaton Electrical, Kohler, Fiat, and Siemens.",
-    featured: false,
-    href: "/news/manufacturing-information-real-time",
-  },
-  {
-    title: "Case Study: Hillphoenix Inc. Increases Profits!",
-    date: "July 2016",
-    category: "Case Study",
-    excerpt:
-      "Hillphoenix Inc. integrated JETCAM nesting solutions across multiple punch and laser work centers, partnering with NestONE Solutions to achieve measurable profitability improvements.",
-    featured: false,
-    href: "/news/hillphoenix-case-study",
-  },
-];
+interface NewsArticle {
+  id: string;
+  title: string;
+  slug: string;
+  excerpt: string | null;
+  category: string;
+  is_featured: boolean;
+  published_at: string | null;
+  cover_image_url: string | null;
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  "case-study": "Case Study",
+  partnership: "Partnership",
+  "industry-news": "Industry News",
+  news: "News",
+  announcement: "Announcement",
+};
 
 const certifications = [
   {
     name: "Opto 22 IoT Certified Partner",
-    description: "Certified expertise in Industrial Internet of Things solutions",
+    description:
+      "Certified expertise in Industrial Internet of Things solutions",
     logo: "/images/OptoPartner_IoT_Certified_192x163.png",
   },
 ];
 
 export default function NewsPage() {
+  const [articles, setArticles] = useState<NewsArticle[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/news")
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data) => setArticles(data))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  const featured = articles.find((a) => a.is_featured);
+  const rest = articles.filter((a) => !a.is_featured);
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "long",
+      year: "numeric",
+    });
+  };
+
   return (
     <>
       <Navigation />
@@ -64,99 +68,119 @@ export default function NewsPage() {
           breadcrumb={[{ label: "News", href: "/news" }]}
         />
 
-        {/* Featured Article */}
-        <SectionWrapper>
-          {newsArticles
-            .filter((article) => article.featured)
-            .map((article) => (
-              <motion.div
-                key={article.title}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5 }}
-              >
-                <Card className="p-8 md:p-12 bg-gradient-to-br from-navy to-navy/90 text-white">
-                  <div className="flex items-center gap-4 mb-4">
-                    <span className="px-3 py-1 bg-emerald/20 text-emerald rounded-full text-sm font-medium">
-                      Featured
-                    </span>
-                    <span className="px-3 py-1 bg-white/10 rounded-full text-sm">
-                      {article.category}
-                    </span>
-                  </div>
-                  <h2 className="text-2xl md:text-3xl font-bold mb-4">
-                    {article.title}
-                  </h2>
-                  <p className="text-white/80 text-lg mb-6 max-w-3xl">
-                    {article.excerpt}
-                  </p>
-                  <div className="flex items-center justify-between flex-wrap gap-4">
-                    <div className="flex items-center gap-2 text-white/60">
-                      <Calendar className="w-4 h-4" />
-                      {article.date}
-                    </div>
-                    <Button href={article.href} variant="secondary">
-                      Read Full Article
-                      <ArrowRight className="w-4 h-4 ml-2" />
-                    </Button>
-                  </div>
-                </Card>
-              </motion.div>
-            ))}
-        </SectionWrapper>
-
-        {/* All Articles */}
-        <SectionWrapper background="light">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5 }}
-            className="mb-12"
-          >
-            <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
-              All Articles
-            </h2>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 gap-8">
-            {newsArticles
-              .filter((article) => !article.featured)
-              .map((article, index) => (
+        {loading ? (
+          <div className="flex items-center justify-center py-24">
+            <Loader2 className="w-8 h-8 animate-spin text-emerald" />
+          </div>
+        ) : articles.length === 0 ? (
+          <SectionWrapper>
+            <div className="text-center py-12">
+              <Newspaper className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-navy mb-2">No articles yet</h2>
+              <p className="text-slate">Check back soon for news and updates.</p>
+            </div>
+          </SectionWrapper>
+        ) : (
+          <>
+            {/* Featured Article */}
+            {featured && (
+              <SectionWrapper>
                 <motion.div
-                  key={article.title}
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                  transition={{ duration: 0.5 }}
                 >
-                  <Card className="h-full p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <span className="px-3 py-1 bg-emerald/10 text-emerald rounded-full text-sm font-medium">
-                        {article.category}
+                  <Card className="p-8 md:p-12 bg-gradient-to-br from-navy to-navy/90 text-white">
+                    <div className="flex items-center gap-4 mb-4">
+                      <span className="px-3 py-1 bg-emerald/20 text-emerald rounded-full text-sm font-medium">
+                        Featured
                       </span>
-                      <span className="text-sm text-slate-light flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {article.date}
+                      <span className="px-3 py-1 bg-white/10 rounded-full text-sm">
+                        {CATEGORY_LABELS[featured.category] || featured.category}
                       </span>
                     </div>
-                    <h3 className="text-xl font-bold text-navy mb-3">
-                      {article.title}
-                    </h3>
-                    <p className="text-slate mb-4">{article.excerpt}</p>
-                    <a
-                      href={article.href}
-                      className="inline-flex items-center gap-2 text-navy font-medium hover:text-emerald transition-colors"
-                    >
-                      Read More
-                      <ArrowRight className="w-4 h-4" />
-                    </a>
+                    <h2 className="text-2xl md:text-3xl font-bold mb-4">
+                      {featured.title}
+                    </h2>
+                    {featured.excerpt && (
+                      <p className="text-white/80 text-lg mb-6 max-w-3xl">
+                        {featured.excerpt}
+                      </p>
+                    )}
+                    <div className="flex items-center justify-between flex-wrap gap-4">
+                      {featured.published_at && (
+                        <div className="flex items-center gap-2 text-white/60">
+                          <Calendar className="w-4 h-4" />
+                          {formatDate(featured.published_at)}
+                        </div>
+                      )}
+                      <Button href={`/news/${featured.slug}`} variant="secondary">
+                        Read Full Article
+                        <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
                   </Card>
                 </motion.div>
-              ))}
-          </div>
-        </SectionWrapper>
+              </SectionWrapper>
+            )}
+
+            {/* All Articles */}
+            {rest.length > 0 && (
+              <SectionWrapper background="light">
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5 }}
+                  className="mb-12"
+                >
+                  <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
+                    All Articles
+                  </h2>
+                </motion.div>
+
+                <div className="grid md:grid-cols-2 gap-8">
+                  {rest.map((article, index) => (
+                    <motion.div
+                      key={article.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: index * 0.1 }}
+                    >
+                      <Link href={`/news/${article.slug}`} className="block h-full">
+                        <Card className="h-full p-6 hover:shadow-md transition-shadow">
+                          <div className="flex items-center gap-3 mb-4">
+                            <span className="px-3 py-1 bg-emerald/10 text-emerald rounded-full text-sm font-medium">
+                              {CATEGORY_LABELS[article.category] || article.category}
+                            </span>
+                            {article.published_at && (
+                              <span className="text-sm text-slate-light flex items-center gap-1">
+                                <Calendar className="w-3 h-3" />
+                                {formatDate(article.published_at)}
+                              </span>
+                            )}
+                          </div>
+                          <h3 className="text-xl font-bold text-navy mb-3">
+                            {article.title}
+                          </h3>
+                          {article.excerpt && (
+                            <p className="text-slate mb-4">{article.excerpt}</p>
+                          )}
+                          <span className="inline-flex items-center gap-2 text-navy font-medium hover:text-emerald transition-colors">
+                            Read More
+                            <ArrowRight className="w-4 h-4" />
+                          </span>
+                        </Card>
+                      </Link>
+                    </motion.div>
+                  ))}
+                </div>
+              </SectionWrapper>
+            )}
+          </>
+        )}
 
         {/* Certifications */}
         <SectionWrapper>
@@ -192,7 +216,9 @@ export default function NewsPage() {
                     />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-navy mb-1">{cert.name}</h3>
+                    <h3 className="text-xl font-bold text-navy mb-1">
+                      {cert.name}
+                    </h3>
                     <p className="text-slate">{cert.description}</p>
                   </div>
                 </Card>
@@ -214,7 +240,8 @@ export default function NewsPage() {
                 Want to Be Our Next Success Story?
               </h2>
               <p className="text-lg text-white/80 mb-8">
-                See how our solutions can transform your manufacturing operations.
+                See how our solutions can transform your manufacturing
+                operations.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button href="/contact" size="lg">

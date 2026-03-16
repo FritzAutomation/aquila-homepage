@@ -19,6 +19,7 @@ import {
   ExternalLink,
   Users,
   GraduationCap,
+  Newspaper,
 } from "lucide-react";
 
 interface NavItem {
@@ -35,6 +36,7 @@ const navigation: NavItem[] = [
   { name: "Users", href: "/admin/users", icon: Users },
   { name: "Companies", href: "/admin/companies", icon: Building2 },
   { name: "Training", href: "/admin/training", icon: GraduationCap },
+  { name: "News", href: "/admin/news", icon: Newspaper, adminOnly: true },
   { name: "Analytics", href: "/admin/analytics", icon: BarChart3, adminOnly: true },
   { name: "Reports", href: "/admin/reports", icon: FileText, adminOnly: true },
   { name: "Settings", href: "/admin/settings", icon: Settings, adminOnly: true },
