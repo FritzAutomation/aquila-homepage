@@ -155,7 +155,7 @@ export default function ArticlePage({
               </div>
 
               {/* Article Content */}
-              <div className="p-6 md:p-8 prose prose-gray max-w-none prose-headings:text-gray-900 prose-a:text-emerald prose-a:no-underline hover:prose-a:underline prose-img:rounded-lg prose-pre:bg-gray-100 prose-code:text-gray-800 prose-code:bg-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-blockquote:border-emerald prose-blockquote:text-gray-600 prose-video:rounded-lg prose-video:w-full">
+              <div className="p-6 md:p-8 prose prose-gray max-w-none prose-headings:text-gray-900 prose-a:text-emerald prose-a:no-underline hover:prose-a:underline prose-img:rounded-lg prose-img:max-h-[500px] prose-img:w-auto prose-img:mx-auto prose-pre:bg-gray-100 prose-code:text-gray-800 prose-code:bg-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-blockquote:border-emerald prose-blockquote:text-gray-600 [&_video]:rounded-lg [&_video]:max-h-[500px] [&_video]:w-auto [&_video]:max-w-full [&_video]:mx-auto">
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   rehypePlugins={[rehypeRaw]}
