@@ -111,7 +111,10 @@ export default function AdminLayout({
                 height={32}
                 className="rounded-lg"
               />
-              <span className="text-white font-semibold">Aquila Admin</span>
+              <div>
+                <span className="text-white font-semibold block leading-tight">Aquila Admin</span>
+                <span className="text-[10px] text-white/40 leading-tight">Manufacturing solutions since 1996</span>
+              </div>
             </Link>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -149,16 +152,6 @@ export default function AdminLayout({
               );
             })}
           </nav>
-
-          {/* Branding */}
-          <div className="px-4 py-3 border-t border-white/10">
-            <p className="text-[11px] text-white/30 leading-tight">
-              The Aquila Group
-            </p>
-            <p className="text-[10px] text-white/20 leading-tight">
-              Manufacturing solutions since 1996
-            </p>
-          </div>
 
           {/* User section */}
           <div className="p-4 border-t border-white/10">
