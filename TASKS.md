@@ -58,7 +58,7 @@
 - [x] Public vs gated training (is_public flag, access control on module detail)
 - [x] Portal shows assigned vs public modules separately
 - [ ] Interactive demo training — replace text/quiz steps with simulated UI walkthroughs
-- [ ] Admin ability to manage which modules are public vs assigned-only
+- [x] Admin ability to manage which modules are public vs assigned-only
 
 ---
 

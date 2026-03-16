@@ -7,6 +7,9 @@ const ALLOWED_TYPES = [
   'image/png',
   'image/gif',
   'image/webp',
+  'video/mp4',
+  'video/webm',
+  'video/quicktime',
   'application/pdf',
   'text/plain',
   'application/msword',
@@ -22,6 +25,7 @@ export async function POST(request: NextRequest) {
     const file = formData.get('file') as File | null
     const ticketId = formData.get('ticket_id') as string | null
     const messageId = formData.get('message_id') as string | null
+    const context = formData.get('context') as string | null
 
     if (!file) {
       return NextResponse.json(
@@ -56,10 +60,11 @@ export async function POST(request: NextRequest) {
 
     // Create path based on context
     let path = 'general'
-    if (ticketId) {
+    if (context === 'kb') {
+      path = 'kb'
+    } else if (ticketId) {
       path = `tickets/${ticketId}`
-    }
-    if (messageId) {
+    } else if (messageId) {
       path = `messages/${messageId}`
     }
 

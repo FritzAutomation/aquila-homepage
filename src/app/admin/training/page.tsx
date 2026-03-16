@@ -14,6 +14,10 @@ import {
   Plus,
   X,
   ClipboardList,
+  Globe,
+  Lock,
+  Eye,
+  EyeOff,
 } from "lucide-react"
 
 // --- Types ---
@@ -65,6 +69,8 @@ interface AvailableModule {
   title: string
   product: string
   slug: string
+  is_public: boolean
+  is_published: boolean
 }
 
 const productLabels: Record<string, string> = {
@@ -90,9 +96,17 @@ export default function AdminTrainingPage() {
     users: { id: string; name: string; email: string }[]
   } | null>(null)
   const [availableModules, setAvailableModules] = useState<AvailableModule[]>([])
+  const [allModules, setAllModules] = useState<AvailableModule[]>([])
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set())
   const [selectedModules, setSelectedModules] = useState<Set<string>>(new Set())
   const [assigning, setAssigning] = useState(false)
+
+  const fetchModules = useCallback(() => {
+    fetch("/api/training?admin=true")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((mods) => { if (mods) setAllModules(mods) })
+      .catch(() => {})
+  }, [])
 
   const fetchData = useCallback(() => {
     setLoading(true)
@@ -105,7 +119,25 @@ export default function AdminTrainingPage() {
 
   useEffect(() => {
     fetchData()
-  }, [fetchData])
+    fetchModules()
+  }, [fetchData, fetchModules])
+
+  const handleModuleToggle = async (slug: string, field: "is_public" | "is_published", value: boolean) => {
+    try {
+      const res = await fetch(`/api/training/${slug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [field]: value }),
+      })
+      if (res.ok) {
+        setAllModules((prev) =>
+          prev.map((m) => (m.slug === slug ? { ...m, [field]: value } : m))
+        )
+      }
+    } catch {
+      // ignore
+    }
+  }
 
   const toggleOrg = (id: string) => {
     setExpandedOrgs((prev) => {
@@ -222,6 +254,79 @@ export default function AdminTrainingPage() {
           iconColor="text-amber-500"
         />
       </div>
+
+      {/* Manage Modules */}
+      {allModules.length > 0 && (
+        <div className="bg-white rounded-xl border border-gray-200">
+          <div className="flex items-center gap-2 p-5 border-b border-gray-200">
+            <BookOpen className="w-5 h-5 text-purple-500" />
+            <h2 className="text-lg font-semibold text-gray-900">
+              Manage Modules
+            </h2>
+          </div>
+          <div className="divide-y divide-gray-100">
+            {allModules.map((mod) => (
+              <div
+                key={mod.id}
+                className="flex items-center gap-4 px-5 py-3 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-xs font-medium px-1.5 py-0.5 rounded ${
+                        productColors[mod.product] || "bg-gray-100 text-gray-700"
+                      }`}
+                    >
+                      {productLabels[mod.product] || mod.product}
+                    </span>
+                    <span className="text-sm font-medium text-gray-900 truncate">
+                      {mod.title}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <button
+                    onClick={() =>
+                      handleModuleToggle(mod.slug, "is_public", !mod.is_public)
+                    }
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                      mod.is_public
+                        ? "bg-blue-50 text-blue-700 hover:bg-blue-100"
+                        : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                    }`}
+                    title={mod.is_public ? "Public — anyone can view" : "Private — requires assignment"}
+                  >
+                    {mod.is_public ? (
+                      <Globe className="w-3.5 h-3.5" />
+                    ) : (
+                      <Lock className="w-3.5 h-3.5" />
+                    )}
+                    {mod.is_public ? "Public" : "Assigned Only"}
+                  </button>
+                  <button
+                    onClick={() =>
+                      handleModuleToggle(mod.slug, "is_published", !mod.is_published)
+                    }
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors ${
+                      mod.is_published
+                        ? "bg-green-50 text-green-700 hover:bg-green-100"
+                        : "bg-yellow-50 text-yellow-700 hover:bg-yellow-100"
+                    }`}
+                    title={mod.is_published ? "Published — visible to users" : "Draft — hidden from users"}
+                  >
+                    {mod.is_published ? (
+                      <Eye className="w-3.5 h-3.5" />
+                    ) : (
+                      <EyeOff className="w-3.5 h-3.5" />
+                    )}
+                    {mod.is_published ? "Published" : "Draft"}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Org Progress Table */}
       <div className="bg-white rounded-xl border border-gray-200">

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, use } from "react";
+import { useState, useEffect, useCallback, useRef, use } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -10,6 +10,8 @@ import {
   Eye,
   EyeOff,
   ExternalLink,
+  ImagePlus,
+  Video,
 } from "lucide-react";
 
 const CATEGORIES = [
@@ -50,6 +52,67 @@ export default function ArticleEditorPage({
   const [sortOrder, setSortOrder] = useState(0);
   const [slug, setSlug] = useState("");
   const [publishedAt, setPublishedAt] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const contentRef = useRef<HTMLTextAreaElement>(null);
+
+  const handleMediaUpload = async (type: "image" | "video") => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = type === "image" ? "image/*" : "video/mp4,video/webm,video/quicktime";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+
+      setUploading(true);
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("context", "kb");
+
+        const res = await fetch("/api/upload", { method: "POST", body: formData });
+        const data = await res.json();
+
+        if (!res.ok) {
+          setError(data.error || "Upload failed");
+          return;
+        }
+
+        const url = data.attachment?.url;
+        if (!url) return;
+
+        // Insert markdown at cursor position
+        const textarea = contentRef.current;
+        let markdown: string;
+        if (type === "image") {
+          markdown = `![${file.name}](${url})`;
+        } else {
+          markdown = `<video src="${url}" controls width="100%"></video>`;
+        }
+
+        if (textarea) {
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          const before = content.substring(0, start);
+          const after = content.substring(end);
+          const newContent = before + (before.endsWith("\n") || before === "" ? "" : "\n\n") + markdown + "\n\n" + after;
+          setContent(newContent);
+          // Restore focus
+          setTimeout(() => {
+            textarea.focus();
+            const pos = newContent.length - after.length;
+            textarea.setSelectionRange(pos, pos);
+          }, 0);
+        } else {
+          setContent((prev) => prev + "\n\n" + markdown + "\n");
+        }
+      } catch {
+        setError("Upload failed");
+      } finally {
+        setUploading(false);
+      }
+    };
+    input.click();
+  };
 
   const fetchArticle = useCallback(async () => {
     try {
@@ -278,16 +341,44 @@ export default function ArticleEditorPage({
 
           {/* Content */}
           <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <label
-              htmlFor="content"
-              className="block text-sm font-medium text-gray-700 mb-1"
-            >
-              Content
-              <span className="font-normal text-gray-500 ml-1">
-                (supports Markdown)
-              </span>
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label
+                htmlFor="content"
+                className="block text-sm font-medium text-gray-700"
+              >
+                Content
+                <span className="font-normal text-gray-500 ml-1">
+                  (supports Markdown)
+                </span>
+              </label>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => handleMediaUpload("image")}
+                  disabled={uploading}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+                  title="Insert image"
+                >
+                  <ImagePlus className="w-4 h-4" />
+                  Image
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleMediaUpload("video")}
+                  disabled={uploading}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+                  title="Insert video"
+                >
+                  <Video className="w-4 h-4" />
+                  Video
+                </button>
+                {uploading && (
+                  <Loader2 className="w-4 h-4 animate-spin text-emerald ml-1" />
+                )}
+              </div>
+            </div>
             <textarea
+              ref={contentRef}
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
