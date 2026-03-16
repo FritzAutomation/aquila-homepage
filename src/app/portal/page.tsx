@@ -36,6 +36,8 @@ interface TrainingModule {
   product: string
   lesson_count: number
   step_count: number
+  is_public: boolean
+  is_assigned: boolean
   lessons?: { id: string; steps: { id: string }[] }[]
 }
 
@@ -126,10 +128,16 @@ export default function CustomerPortal() {
   const completedStepIds = new Set(
     progress.filter((p) => p.completed).map((p) => p.step_id)
   )
-  const totalSteps = modules.reduce((sum, m) => sum + m.step_count, 0)
+
+  // Separate assigned vs public modules
+  const assignedModules = modules.filter((m) => m.is_assigned)
+  const publicModules = modules.filter((m) => m.is_public && !m.is_assigned)
+
+  // Progress calculated only against assigned modules
+  const assignedTotalSteps = assignedModules.reduce((sum, m) => sum + m.step_count, 0)
   const completedSteps = progress.filter((p) => p.completed).length
   const overallPercent =
-    totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0
+    assignedTotalSteps > 0 ? Math.round((completedSteps / assignedTotalSteps) * 100) : 0
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString)
@@ -188,65 +196,90 @@ export default function CustomerPortal() {
           </div>
 
           <div className="p-5">
-            {/* Overall progress */}
-            <div className="flex items-center gap-4 mb-5">
-              <div className="flex-1">
-                <div className="flex items-center justify-between text-sm mb-1.5">
-                  <span className="text-gray-600">Overall completion</span>
-                  <span className="font-medium text-[#1E3A5F]">{overallPercent}%</span>
-                </div>
-                <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-[#10B981] rounded-full transition-all"
-                    style={{ width: `${overallPercent}%` }}
-                  />
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-[#1E3A5F]">
-                  {completedSteps}
-                  <span className="text-sm font-normal text-gray-400">
-                    /{totalSteps}
-                  </span>
-                </p>
-                <p className="text-xs text-gray-500">steps completed</p>
-              </div>
-            </div>
-
-            {/* Module cards */}
-            <div className="grid gap-3 sm:grid-cols-2">
-              {modules.slice(0, 4).map((mod) => {
-                // We don't have per-module step IDs from the list API,
-                // so show module card with link
-                return (
-                  <Link
-                    key={mod.id}
-                    href={`/training/${mod.slug}`}
-                    className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:border-[#10B981]/30 hover:bg-[#10B981]/5 transition-all group"
-                  >
-                    <BookOpen className="w-5 h-5 text-gray-400 group-hover:text-[#10B981] transition-colors flex-shrink-0" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-[#1E3A5F] truncate">
-                        {mod.title}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {mod.lesson_count} lessons &bull; {mod.step_count} steps
-                      </p>
+            {/* Overall progress (assigned training only) */}
+            {assignedModules.length > 0 ? (
+              <>
+                <div className="flex items-center gap-4 mb-5">
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between text-sm mb-1.5">
+                      <span className="text-gray-600">Assigned training completion</span>
+                      <span className="font-medium text-[#1E3A5F]">{overallPercent}%</span>
                     </div>
-                    <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#10B981] transition-colors flex-shrink-0" />
-                  </Link>
-                )
-              })}
-            </div>
+                    <div className="h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-[#10B981] rounded-full transition-all"
+                        style={{ width: `${overallPercent}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-[#1E3A5F]">
+                      {completedSteps}
+                      <span className="text-sm font-normal text-gray-400">
+                        /{assignedTotalSteps}
+                      </span>
+                    </p>
+                    <p className="text-xs text-gray-500">steps completed</p>
+                  </div>
+                </div>
 
-            {modules.length > 4 && (
-              <div className="mt-3 text-center">
-                <Link
-                  href="/training"
-                  className="text-sm text-[#10B981] hover:text-[#10B981]/80 font-medium"
-                >
-                  View all {modules.length} modules
-                </Link>
+                {/* Assigned module cards */}
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                  Your Assigned Training
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {assignedModules.map((mod) => (
+                    <Link
+                      key={mod.id}
+                      href={`/training/${mod.slug}`}
+                      className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:border-[#10B981]/30 hover:bg-[#10B981]/5 transition-all group"
+                    >
+                      <BookOpen className="w-5 h-5 text-[#10B981] flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-[#1E3A5F] truncate">
+                          {mod.title}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {mod.lesson_count} lessons &bull; {mod.step_count} steps
+                        </p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-[#10B981] transition-colors flex-shrink-0" />
+                    </Link>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-2">
+                No training has been assigned to you yet
+              </p>
+            )}
+
+            {/* Public modules (explore on your own) */}
+            {publicModules.length > 0 && (
+              <div className="mt-4">
+                <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">
+                  Explore
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {publicModules.slice(0, 2).map((mod) => (
+                    <Link
+                      key={mod.id}
+                      href={`/training/${mod.slug}`}
+                      className="flex items-center gap-3 p-3 rounded-lg border border-gray-100 hover:border-gray-200 transition-all group"
+                    >
+                      <BookOpen className="w-5 h-5 text-gray-400 group-hover:text-[#64748B] transition-colors flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-[#1E3A5F] truncate">
+                          {mod.title}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {mod.lesson_count} lessons &bull; {mod.step_count} steps
+                        </p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                    </Link>
+                  ))}
+                </div>
               </div>
             )}
           </div>

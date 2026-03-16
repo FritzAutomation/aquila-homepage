@@ -57,15 +57,16 @@ interface OrgSummary {
 
 interface TrainingSummary {
   total_modules: number;
-  total_learners: number;
+  total_assignments: number;
+  users_with_assignments: number;
   total_completions: number;
-  orgs_with_progress: number;
+  orgs_with_assignments: number;
 }
 
 interface TrainingOrgProgress {
   company_id: string;
   company_name: string;
-  active_learners: number;
+  users_with_assignments: number;
   overall_percent: number;
 }
 
@@ -412,15 +413,15 @@ export default function AdminDashboard() {
               <div className="p-5">
                 <div className="grid grid-cols-2 gap-3 mb-4">
                   <div className="bg-purple-50 rounded-lg p-3 text-center">
-                    <p className="text-xl font-bold text-purple-700">{trainingSummary.total_learners}</p>
-                    <p className="text-xs text-purple-500">Active Learners</p>
+                    <p className="text-xl font-bold text-purple-700">{trainingSummary.users_with_assignments}</p>
+                    <p className="text-xs text-purple-500">Assigned Users</p>
                   </div>
                   <div className="bg-emerald-50 rounded-lg p-3 text-center">
                     <p className="text-xl font-bold text-emerald-700">{trainingSummary.total_completions}</p>
                     <p className="text-xs text-emerald-500">Steps Completed</p>
                   </div>
                 </div>
-                {trainingOrgs.filter(o => o.active_learners > 0).slice(0, 3).map((org) => (
+                {trainingOrgs.filter(o => o.users_with_assignments > 0).slice(0, 3).map((org) => (
                   <div key={org.company_id} className="flex items-center gap-2 py-1.5">
                     <span className="text-sm text-gray-700 flex-1 truncate">{org.company_name}</span>
                     <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
@@ -432,8 +433,8 @@ export default function AdminDashboard() {
                     <span className="text-xs text-gray-500 w-8 text-right">{org.overall_percent}%</span>
                   </div>
                 ))}
-                {trainingOrgs.filter(o => o.active_learners > 0).length === 0 && (
-                  <p className="text-sm text-gray-500 text-center">No learner activity yet</p>
+                {trainingOrgs.filter(o => o.users_with_assignments > 0).length === 0 && (
+                  <p className="text-sm text-gray-500 text-center">No training assigned yet</p>
                 )}
               </div>
             ) : (

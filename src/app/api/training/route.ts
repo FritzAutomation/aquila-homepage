@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
 
 // GET /api/training - List training modules
+// - Admin/agent: all modules (or all published if not ?admin=true)
+// - Customer: assigned modules + public modules
+// - Unauthenticated: public modules only
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
@@ -20,6 +24,21 @@ export async function GET(request: NextRequest) {
 
     const supabase = createAdminClient()
 
+    // Check current user for role-based filtering
+    const profile = await getCurrentUser()
+    const isCustomer = profile?.user_type === 'customer'
+    const isStaff = profile?.user_type === 'admin' || profile?.user_type === 'agent'
+
+    // Get assigned module IDs for customers
+    let assignedModuleIds: string[] = []
+    if (isCustomer && profile) {
+      const { data: assignments } = await supabase
+        .from('training_assignments')
+        .select('module_id')
+        .eq('user_id', profile.id)
+      assignedModuleIds = (assignments || []).map((a) => a.module_id)
+    }
+
     let query = supabase
       .from('training_modules')
       .select(`
@@ -31,8 +50,18 @@ export async function GET(request: NextRequest) {
       `)
       .order('sort_order', { ascending: true })
 
-    if (!admin) {
+    if (admin && isStaff) {
+      // Staff in admin mode: show all modules (published and unpublished)
+    } else if (isStaff) {
+      // Staff not in admin mode: show published only
       query = query.eq('is_published', true)
+    } else if (isCustomer && assignedModuleIds.length > 0) {
+      // Customer: show public OR assigned, but only published
+      query = query.eq('is_published', true)
+        .or(`is_public.eq.true,id.in.(${assignedModuleIds.join(',')})`)
+    } else {
+      // Unauthenticated or customer with no assignments: public only
+      query = query.eq('is_published', true).eq('is_public', true)
     }
 
     if (product) {
@@ -46,7 +75,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch modules' }, { status: 500 })
     }
 
-    // Compute lesson/step counts
+    // Compute lesson/step counts and tag assigned status
     const result = (modules || []).map((m) => {
       const lessons = (m.lessons || []) as { id: string; steps: { id: string }[] }[]
       const totalSteps = lessons.reduce((sum, l) => sum + (l.steps?.length || 0), 0)
@@ -54,6 +83,7 @@ export async function GET(request: NextRequest) {
         ...m,
         lesson_count: lessons.length,
         step_count: totalSteps,
+        is_assigned: assignedModuleIds.includes(m.id),
         lessons: undefined,
       }
     })

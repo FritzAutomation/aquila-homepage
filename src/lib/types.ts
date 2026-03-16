@@ -190,6 +190,7 @@ export type Database = {
           cover_image: string | null
           sort_order: number
           is_published: boolean
+          is_public: boolean
           estimated_minutes: number | null
           created_at: string
           updated_at: string
@@ -203,6 +204,7 @@ export type Database = {
           cover_image?: string | null
           sort_order?: number
           is_published?: boolean
+          is_public?: boolean
           estimated_minutes?: number | null
           created_at?: string
           updated_at?: string
@@ -216,6 +218,7 @@ export type Database = {
           cover_image?: string | null
           sort_order?: number
           is_published?: boolean
+          is_public?: boolean
           estimated_minutes?: number | null
           created_at?: string
           updated_at?: string
@@ -301,6 +304,35 @@ export type Database = {
           quiz_explanation?: string | null
           created_at?: string
           updated_at?: string
+        }
+      }
+      training_assignments: {
+        Row: {
+          id: string
+          user_id: string
+          module_id: string
+          assigned_by: string | null
+          assigned_at: string
+          due_date: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          module_id: string
+          assigned_by?: string | null
+          assigned_at?: string
+          due_date?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          module_id?: string
+          assigned_by?: string | null
+          assigned_at?: string
+          due_date?: string | null
+          created_at?: string
         }
       }
       training_progress: {
@@ -425,6 +457,8 @@ export type TrainingLessonInsert = Database['public']['Tables']['training_lesson
 export type TrainingStep = Database['public']['Tables']['training_steps']['Row']
 export type TrainingStepInsert = Database['public']['Tables']['training_steps']['Insert']
 export type TrainingProgress = Database['public']['Tables']['training_progress']['Row']
+export type TrainingAssignment = Database['public']['Tables']['training_assignments']['Row']
+export type TrainingAssignmentInsert = Database['public']['Tables']['training_assignments']['Insert']
 
 // Training module with nested lessons and steps
 export type TrainingModuleWithLessons = TrainingModule & {
