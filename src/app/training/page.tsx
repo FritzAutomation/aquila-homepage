@@ -14,6 +14,8 @@ interface TrainingModule {
   product: string
   sort_order: number
   is_published: boolean
+  is_public: boolean
+  is_assigned: boolean
   estimated_minutes: number | null
   lesson_count: number
   step_count: number
@@ -165,14 +167,21 @@ function ModuleSection({
               href={`/training/${mod.slug}`}
               className="block bg-white rounded-xl shadow-sm border border-slate-light/20 p-6 hover:shadow-md hover:border-emerald/30 transition-all group"
             >
-              {/* Product Badge */}
-              <span
-                className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full mb-3 ${
-                  productColors[mod.product]?.bg || "bg-gray-50"
-                } ${productColors[mod.product]?.text || "text-gray-700"}`}
-              >
-                {productLabels[mod.product] || mod.product}
-              </span>
+              {/* Badges */}
+              <div className="flex items-center gap-2 mb-3">
+                <span
+                  className={`inline-block text-xs font-medium px-2.5 py-1 rounded-full ${
+                    productColors[mod.product]?.bg || "bg-gray-50"
+                  } ${productColors[mod.product]?.text || "text-gray-700"}`}
+                >
+                  {productLabels[mod.product] || mod.product}
+                </span>
+                {mod.is_assigned && (
+                  <span className="inline-block text-xs font-medium px-2.5 py-1 rounded-full bg-amber-50 text-amber-700">
+                    Assigned
+                  </span>
+                )}
+              </div>
 
               <h3 className="text-lg font-semibold text-navy mb-2 group-hover:text-emerald transition-colors">
                 {mod.title}

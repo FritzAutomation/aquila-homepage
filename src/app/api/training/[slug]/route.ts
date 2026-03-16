@@ -1,12 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient as createServerClient } from '@/lib/supabase/server'
+import { getCurrentUser } from '@/lib/auth'
 
 interface RouteParams {
   params: Promise<{ slug: string }>
 }
 
 // GET /api/training/[slug] - Get module with all lessons and steps
+// Public modules: anyone can view
+// Non-public modules: staff or assigned users only
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { slug } = await params
@@ -28,11 +31,28 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: 'Module not found' }, { status: 404 })
     }
 
-    // If not published, require authentication
-    if (!module.is_published) {
-      const authClient = await createServerClient()
-      const { data: { user } } = await authClient.auth.getUser()
-      if (!user) {
+    // Access control
+    const profile = await getCurrentUser()
+    const isStaff = profile?.user_type === 'admin' || profile?.user_type === 'agent'
+
+    if (!module.is_published && !isStaff) {
+      return NextResponse.json({ error: 'Module not found' }, { status: 404 })
+    }
+
+    // Non-public modules require staff access or assignment
+    if (!module.is_public && !isStaff) {
+      if (!profile) {
+        return NextResponse.json({ error: 'Login required' }, { status: 401 })
+      }
+      // Check if user has this module assigned
+      const { data: assignment } = await supabase
+        .from('training_assignments')
+        .select('id')
+        .eq('user_id', profile.id)
+        .eq('module_id', module.id)
+        .single()
+
+      if (!assignment) {
         return NextResponse.json({ error: 'Module not found' }, { status: 404 })
       }
     }
@@ -66,7 +86,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
     const { slug } = await params
     const body = await request.json()
-    const allowedFields = ['title', 'slug', 'description', 'product', 'cover_image', 'sort_order', 'is_published', 'estimated_minutes']
+    const allowedFields = ['title', 'slug', 'description', 'product', 'cover_image', 'sort_order', 'is_published', 'is_public', 'estimated_minutes']
     const updateData: Record<string, unknown> = {}
     for (const field of allowedFields) {
       if (body[field] !== undefined) updateData[field] = body[field]
