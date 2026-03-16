@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdmin, isSuperAdmin } from '@/lib/auth'
 
 // PATCH /api/admin/users/[id] - Update user
 export async function PATCH(
@@ -25,6 +25,20 @@ export async function PATCH(
   }
 
   const supabase = createAdminClient()
+
+  // Prevent modification of super admin accounts
+  const { data: targetProfile } = await supabase
+    .from('profiles')
+    .select('email')
+    .eq('id', id)
+    .single()
+
+  if (targetProfile && isSuperAdmin(targetProfile.email)) {
+    return NextResponse.json(
+      { error: 'This account cannot be modified' },
+      { status: 403 }
+    )
+  }
 
   const updateData: Record<string, unknown> = {}
   if (name !== undefined) updateData.name = name

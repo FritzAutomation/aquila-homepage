@@ -21,16 +21,23 @@ import {
   GraduationCap,
 } from "lucide-react";
 
-const navigation = [
-  { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  adminOnly?: boolean;
+}
+
+const navigation: NavItem[] = [
+  { name: "Dashboard", href: "/admin", icon: LayoutDashboard, adminOnly: true },
   { name: "Tickets", href: "/admin/tickets", icon: Ticket },
   { name: "Knowledge Base", href: "/admin/kb", icon: BookOpen },
-  { name: "Users", href: "/admin/users", icon: Users },
-  { name: "Companies", href: "/admin/companies", icon: Building2 },
-  { name: "Training", href: "/admin/training", icon: GraduationCap },
-  { name: "Analytics", href: "/admin/analytics", icon: BarChart3 },
-  { name: "Reports", href: "/admin/reports", icon: FileText },
-  { name: "Settings", href: "/admin/settings", icon: Settings },
+  { name: "Users", href: "/admin/users", icon: Users, adminOnly: true },
+  { name: "Companies", href: "/admin/companies", icon: Building2, adminOnly: true },
+  { name: "Training", href: "/admin/training", icon: GraduationCap, adminOnly: true },
+  { name: "Analytics", href: "/admin/analytics", icon: BarChart3, adminOnly: true },
+  { name: "Reports", href: "/admin/reports", icon: FileText, adminOnly: true },
+  { name: "Settings", href: "/admin/settings", icon: Settings, adminOnly: true },
 ];
 
 export default function AdminLayout({
@@ -109,7 +116,9 @@ export default function AdminLayout({
 
           {/* Navigation */}
           <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-            {navigation.map((item) => {
+            {navigation
+              .filter((item) => !item.adminOnly || userProfile?.user_type === "admin")
+              .map((item) => {
               const isActive =
                 pathname === item.href ||
                 (item.href !== "/admin" && pathname.startsWith(item.href));
@@ -180,14 +189,14 @@ export default function AdminLayout({
             <Menu className="w-5 h-5" />
           </button>
 
-          {/* Breadcrumb - can be enhanced later */}
+          {/* Breadcrumb */}
           <div className="ml-2 lg:ml-0">
             <h1 className="text-lg font-semibold text-gray-900">
               {navigation.find(
                 (item) =>
                   pathname === item.href ||
                   (item.href !== "/admin" && pathname.startsWith(item.href))
-              )?.name || "Dashboard"}
+              )?.name || (userProfile?.user_type === "agent" ? "Tickets" : "Dashboard")}
             </h1>
           </div>
         </header>

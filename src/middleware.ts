@@ -4,6 +4,16 @@ import { NextResponse, type NextRequest } from "next/server";
 // Use Node.js runtime to avoid Edge Runtime compatibility warnings with Supabase
 export const runtime = "nodejs";
 
+// Admin-only routes that agents cannot access
+const ADMIN_ONLY_PATHS = [
+  "/admin/users",
+  "/admin/companies",
+  "/admin/training",
+  "/admin/analytics",
+  "/admin/reports",
+  "/admin/settings",
+];
+
 export async function middleware(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -55,6 +65,34 @@ export async function middleware(request: NextRequest) {
   if (request.nextUrl.pathname.startsWith("/admin")) {
     if (!user) {
       return NextResponse.redirect(new URL("/login", request.url));
+    }
+
+    // Check role-based access for admin routes
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("user_type")
+      .eq("id", user.id)
+      .single();
+
+    const userType = profile?.user_type;
+
+    // Only admin and agent can access /admin at all
+    if (userType !== "admin" && userType !== "agent") {
+      return NextResponse.redirect(new URL("/portal", request.url));
+    }
+
+    // Agents: redirect from dashboard to tickets, block admin-only paths
+    if (userType === "agent") {
+      if (request.nextUrl.pathname === "/admin") {
+        return NextResponse.redirect(new URL("/admin/tickets", request.url));
+      }
+
+      const isAdminOnly = ADMIN_ONLY_PATHS.some(
+        (path) => request.nextUrl.pathname === path || request.nextUrl.pathname.startsWith(path + "/")
+      );
+      if (isAdminOnly) {
+        return NextResponse.redirect(new URL("/admin/tickets", request.url));
+      }
     }
   }
 

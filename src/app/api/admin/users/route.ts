@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdmin, isSuperAdmin } from '@/lib/auth'
 
-// GET /api/admin/users - List all users
+// GET /api/admin/users - List all users (excludes super admins)
 export async function GET(request: NextRequest) {
   const admin = await requireAdmin()
   if (!admin) {
@@ -42,7 +42,10 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 })
   }
 
-  return NextResponse.json(users)
+  // Hide super admins from the user list — they cannot be managed by regular admins
+  const filteredUsers = (users || []).filter(u => !isSuperAdmin(u.email))
+
+  return NextResponse.json(filteredUsers)
 }
 
 // POST /api/admin/users - Invite a new user

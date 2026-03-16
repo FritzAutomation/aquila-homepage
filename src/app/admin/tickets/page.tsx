@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Search,
   Filter,
@@ -15,6 +16,7 @@ import {
   Minus,
   AlertTriangle,
   Clock,
+  Building2,
 } from "lucide-react";
 import {
   PRODUCT_LABELS,
@@ -81,6 +83,9 @@ const PRIORITY_DOTS: Record<string, string> = {
 };
 
 export default function TicketsPage() {
+  const searchParams = useSearchParams();
+  const companyIdFromUrl = searchParams.get("company") || "";
+
   const [tickets, setTickets] = useState<TicketRow[]>([]);
   const [pagination, setPagination] = useState<Pagination>({
     page: 1,
@@ -94,6 +99,8 @@ export default function TicketsPage() {
   const [selectedTickets, setSelectedTickets] = useState<Set<string>>(new Set());
   const [bulkUpdating, setBulkUpdating] = useState(false);
   const [slaConfigs, setSlaConfigs] = useState<SLAConfig[]>(DEFAULT_SLA_CONFIGS);
+  const [companyFilter, setCompanyFilter] = useState(companyIdFromUrl);
+  const [companyName, setCompanyName] = useState("");
 
   // Filters
   const [search, setSearch] = useState("");
@@ -102,6 +109,26 @@ export default function TicketsPage() {
   const [issueType, setIssueType] = useState("");
   const [priority, setPriority] = useState("");
   const [assignedTo, setAssignedTo] = useState("");
+
+  // Fetch company name when filtering by company
+  useEffect(() => {
+    if (!companyFilter) {
+      setCompanyName("");
+      return;
+    }
+    async function fetchCompanyName() {
+      try {
+        const res = await fetch(`/api/admin/companies/${companyFilter}`);
+        if (res.ok) {
+          const data = await res.json();
+          setCompanyName(data.name || "");
+        }
+      } catch {
+        // ignore
+      }
+    }
+    fetchCompanyName();
+  }, [companyFilter]);
 
   const fetchTickets = useCallback(async (page = 1) => {
     setLoading(true);
@@ -117,6 +144,7 @@ export default function TicketsPage() {
       if (issueType) params.set("issue_type", issueType);
       if (priority) params.set("priority", priority);
       if (assignedTo) params.set("assigned_to", assignedTo);
+      if (companyFilter) params.set("company_id", companyFilter);
 
       const res = await fetch(`/api/tickets?${params}`);
       if (res.ok) {
@@ -129,7 +157,7 @@ export default function TicketsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, status, product, issueType, priority, assignedTo]);
+  }, [search, status, product, issueType, priority, assignedTo, companyFilter]);
 
   useEffect(() => {
     fetchTickets(1);
@@ -173,9 +201,10 @@ export default function TicketsPage() {
     setIssueType("");
     setPriority("");
     setAssignedTo("");
+    setCompanyFilter("");
   };
 
-  const hasActiveFilters = search || status || product || issueType || priority || assignedTo;
+  const hasActiveFilters = search || status || product || issueType || priority || assignedTo || companyFilter;
 
   // Selection helpers
   const toggleTicketSelection = (ticketId: string) => {
@@ -316,6 +345,25 @@ export default function TicketsPage() {
               )}
             </p>
           </div>
+        </div>
+      )}
+
+      {/* Company Filter Banner */}
+      {companyFilter && companyName && (
+        <div className="bg-navy/5 border border-navy/20 rounded-lg p-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Building2 className="w-4 h-4 text-navy" />
+            <span className="text-sm font-medium text-navy">
+              Showing tickets for <span className="font-semibold">{companyName}</span>
+            </span>
+          </div>
+          <button
+            onClick={() => setCompanyFilter("")}
+            className="text-sm text-gray-500 hover:text-gray-700 flex items-center gap-1"
+          >
+            <X className="w-3 h-3" />
+            Show all tickets
+          </button>
         </div>
       )}
 

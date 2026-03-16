@@ -3,6 +3,19 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import type { Profile } from '@/lib/types'
 
 /**
+ * Check if an email belongs to a super admin (developer/platform owner).
+ * Super admins are hidden from regular admin user management and cannot be modified.
+ * Configured via SUPER_ADMIN_EMAILS env var (comma-separated).
+ */
+export function isSuperAdmin(email: string): boolean {
+  const superAdminEmails = (process.env.SUPER_ADMIN_EMAILS || '')
+    .split(',')
+    .map(e => e.trim().toLowerCase())
+    .filter(Boolean)
+  return superAdminEmails.includes(email.toLowerCase())
+}
+
+/**
  * Get the current authenticated user's profile.
  * Returns null if not authenticated or no profile exists.
  */
