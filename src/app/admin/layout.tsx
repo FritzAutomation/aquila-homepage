@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { createBrowserClient } from "@supabase/ssr";
 import {
@@ -103,9 +104,13 @@ export default function AdminLayout({
           {/* Logo */}
           <div className="flex items-center justify-between h-16 px-4 border-b border-white/10">
             <Link href="/admin" className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-emerald rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">A</span>
-              </div>
+              <Image
+                src="/images/DMM_Logo.png"
+                alt="Aquila"
+                width={32}
+                height={32}
+                className="rounded-lg"
+              />
               <span className="text-white font-semibold">Aquila Admin</span>
             </Link>
             <button
