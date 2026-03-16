@@ -20,6 +20,11 @@ vi.mock('@/lib/resend', () => ({
   sendAdminNewTicketNotification: vi.fn().mockResolvedValue({ success: true }),
 }))
 
+// Mock company utils — resolveCompanyByEmail returns null (no company match)
+vi.mock('@/lib/company-utils', () => ({
+  resolveCompanyByEmail: vi.fn().mockResolvedValue(null),
+}))
+
 import { GET, POST } from './route'
 
 function createRequest(url: string, init?: { method?: string; body?: string }) {
@@ -71,16 +76,14 @@ describe('POST /api/tickets', () => {
       subject: 'Need help', status: 'open', priority: 'normal',
     }
 
-    // Company lookup (no match), ticket insert, message insert
-    const companyChain = chainMock({ data: null, error: { code: 'PGRST116' } })
+    // Ticket insert, message insert (company lookup handled by mocked resolveCompanyByEmail)
     const ticketChain = chainMock({ data: ticket, error: null })
     const messageChain = chainMock({ data: null, error: null })
 
     let callCount = 0
     mockSupabase.from.mockImplementation(() => {
       callCount++
-      if (callCount === 1) return companyChain // company lookup
-      if (callCount === 2) return ticketChain // ticket insert
+      if (callCount === 1) return ticketChain // ticket insert
       return messageChain // message insert
     })
 
@@ -101,14 +104,8 @@ describe('POST /api/tickets', () => {
   })
 
   it('returns 500 when ticket creation fails', async () => {
-    const companyChain = chainMock({ data: null, error: { code: 'PGRST116' } })
     const ticketChain = chainMock({ data: null, error: { message: 'Insert failed' } })
-
-    let callCount = 0
-    mockSupabase.from.mockImplementation(() => {
-      callCount++
-      return callCount === 1 ? companyChain : ticketChain
-    })
+    mockSupabase.from.mockReturnValue(ticketChain)
 
     const req = createRequest('http://localhost:3000/api/tickets', {
       method: 'POST',
