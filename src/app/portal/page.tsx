@@ -317,7 +317,7 @@ export default function CustomerPortal() {
                 return (
                   <Link
                     key={ticket.id}
-                    href={`/support/status`}
+                    href={`/support/status?ticket=TKT-${String(ticket.ticket_number).padStart(4, "0")}&email=${encodeURIComponent(user.email)}`}
                     className="flex items-center gap-3 p-4 px-5 hover:bg-gray-50 transition-colors"
                   >
                     <StatusIcon
