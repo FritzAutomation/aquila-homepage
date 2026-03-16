@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -83,6 +83,14 @@ const PRIORITY_DOTS: Record<string, string> = {
 };
 
 export default function TicketsPage() {
+  return (
+    <Suspense>
+      <TicketsContent />
+    </Suspense>
+  );
+}
+
+function TicketsContent() {
   const searchParams = useSearchParams();
   const companyIdFromUrl = searchParams.get("company") || "";
 
