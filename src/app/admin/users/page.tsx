@@ -13,6 +13,7 @@ import {
   X,
   Building2,
 } from "lucide-react";
+import { AdminUsersSkeleton } from "@/components/ui/Skeleton";
 
 interface Profile {
   id: string;
@@ -316,9 +317,7 @@ function AdminUsersContent() {
 
       {/* Users List */}
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin text-emerald" />
-        </div>
+        <AdminUsersSkeleton />
       ) : users.length === 0 ? (
         <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
           <User className="w-12 h-12 text-gray-300 mx-auto mb-3" />

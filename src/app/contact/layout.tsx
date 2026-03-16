@@ -15,6 +15,13 @@ export const metadata: Metadata = {
     title: "Contact Us | The Aquila Group",
     description:
       "Request a demo, contact sales, or reach our 24/7 technical support team.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Contact The Aquila Group" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Contact Us | The Aquila Group",
+    description: "Request a demo, contact sales, or reach our 24/7 technical support team.",
+    images: ["/og-image.png"],
   },
 };
 

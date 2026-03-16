@@ -260,7 +260,7 @@ export default function AboutPage() {
               transition={{ duration: 0.5 }}
             >
               <div className="text-5xl font-bold text-emerald mb-2">
-                <AnimatedCounter value={29} />
+                <AnimatedCounter value={new Date().getFullYear() - 1996} />
               </div>
               <p className="text-white/80">Years in Business</p>
             </motion.div>

@@ -71,7 +71,7 @@ const services = [
 
 const stats = [
   { icon: Clock, value: "24/7", label: "Support Availability" },
-  { icon: Users, value: "29+", label: "Years Experience" },
+  { icon: Users, value: `${new Date().getFullYear() - 1996}+`, label: "Years Experience" },
   { icon: Award, value: "100+", label: "Facilities Served" },
 ];
 

@@ -460,7 +460,7 @@ export default function DMMDemo() {
 
                   {/* Copyright */}
                   <p className="text-white/70 text-sm mt-8">
-                    Copyright - The Aquila Group, Inc. 1996 - 2025
+                    Copyright - The Aquila Group, Inc. 1996 - {new Date().getFullYear()}
                   </p>
                   <p className="text-white/60 text-xs">Version: 9.0.713</p>
                 </div>
@@ -604,7 +604,7 @@ export default function DMMDemo() {
                       <DashboardPreviews tablet />
 
                       <p className="text-white/70 text-sm mt-6">
-                        Copyright - The Aquila Group, Inc. 1996 - 2025
+                        Copyright - The Aquila Group, Inc. 1996 - {new Date().getFullYear()}
                       </p>
                       <p className="text-white/60 text-xs">Version: 9.0.713</p>
                     </div>
@@ -751,7 +751,7 @@ export default function DMMDemo() {
                       <DashboardPreviews small />
 
                       <p className="text-white/70 text-[10px] mt-3">
-                        Copyright - The Aquila Group, Inc. 1996 - 2025
+                        Copyright - The Aquila Group, Inc. 1996 - {new Date().getFullYear()}
                       </p>
                       <p className="text-white/60 text-[8px]">Version: 9.0.713</p>
                     </div>

@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { getYearsInBusiness } from "@/lib/company-info";
 
 const clients = [
   { name: "Eaton", logo: "/images/Eaton_idQDslYR77_1.png", className: "h-6 md:h-8" },
@@ -62,7 +63,7 @@ export default function SocialProof() {
           className="text-center mt-8"
         >
           <p className="text-sm text-slate">
-            29+ years serving manufacturers
+            {getYearsInBusiness()}+ years serving manufacturers
           </p>
         </motion.div>
       </div>

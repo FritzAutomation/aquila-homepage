@@ -9,11 +9,11 @@ import {
   AlertCircle,
   TrendingUp,
   ArrowRight,
-  Loader2,
   Building2,
   GraduationCap,
   Users,
 } from "lucide-react";
+import { AdminDashboardSkeleton } from "@/components/ui/Skeleton";
 
 interface TicketStats {
   total_tickets: number;
@@ -157,11 +157,7 @@ export default function AdminDashboard() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald" />
-      </div>
-    );
+    return <AdminDashboardSkeleton />;
   }
 
   const statCards = [

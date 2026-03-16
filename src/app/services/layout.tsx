@@ -16,6 +16,13 @@ export const metadata: Metadata = {
     title: "Services | The Aquila Group",
     description:
       "Training, system integration, consulting, and 24/7 support for manufacturing technology.",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "The Aquila Group Services" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Services | The Aquila Group",
+    description: "Training, system integration, consulting, and 24/7 support for manufacturing technology.",
+    images: ["/og-image.png"],
   },
 };
 

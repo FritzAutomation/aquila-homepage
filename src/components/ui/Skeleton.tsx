@@ -150,3 +150,164 @@ export function PageHeaderSkeleton() {
     </div>
   );
 }
+
+// Admin skeleton loaders
+export function AdminStatCardsSkeleton({ count = 4 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="bg-white border border-gray-200 rounded-xl p-5">
+          <div className="flex items-center justify-between">
+            <div className="space-y-2 flex-1">
+              <Skeleton variant="text" className="w-24 h-3" />
+              <Skeleton variant="text" className="w-12 h-8" />
+            </div>
+            <Skeleton variant="circular" className="w-10 h-10" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function AdminDashboardSkeleton() {
+  return (
+    <div className="space-y-6">
+      <AdminStatCardsSkeleton count={4} />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {[0, 1].map((i) => (
+          <div key={i} className="bg-white border border-gray-200 rounded-xl p-6">
+            <Skeleton variant="text" className="w-36 h-4 mb-4" />
+            <Skeleton variant="text" className="w-16 h-10 mb-2" />
+            <Skeleton variant="text" className="w-40 h-3" />
+          </div>
+        ))}
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-1">
+          <div className="flex items-center justify-between mb-4">
+            <Skeleton variant="text" className="w-28 h-4" />
+            <Skeleton variant="text" className="w-20 h-4" />
+          </div>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between py-3 border-b border-gray-50">
+              <div className="space-y-1.5">
+                <Skeleton variant="text" className="w-48 h-3" />
+                <Skeleton variant="text" className="w-24 h-2.5" />
+              </div>
+              <Skeleton variant="rounded" className="w-14 h-5" />
+            </div>
+          ))}
+        </div>
+        <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-1">
+          <div className="flex items-center justify-between mb-4">
+            <Skeleton variant="text" className="w-28 h-4" />
+            <Skeleton variant="text" className="w-20 h-4" />
+          </div>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between py-3 border-b border-gray-50">
+              <div className="space-y-1.5">
+                <Skeleton variant="text" className="w-36 h-3" />
+                <Skeleton variant="text" className="w-28 h-2.5" />
+              </div>
+              <Skeleton variant="rounded" className="w-16 h-5" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function AdminTicketsSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-3">
+        <Skeleton variant="rounded" className="flex-1 h-10" />
+        <Skeleton variant="rounded" className="w-24 h-10" />
+      </div>
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="px-6 py-3 border-b border-gray-200 flex gap-6">
+          {["w-8", "w-32", "w-40", "w-24", "w-16", "w-24", "w-24"].map((w, i) => (
+            <Skeleton key={i} variant="text" className={`${w} h-3`} />
+          ))}
+        </div>
+        {Array.from({ length: 8 }).map((_, row) => (
+          <div key={row} className="px-6 py-4 flex gap-6 items-center border-b border-gray-50">
+            <Skeleton variant="rounded" className="w-4 h-4" />
+            <div className="space-y-1.5 w-32">
+              <Skeleton variant="text" className="w-20 h-3" />
+              <Skeleton variant="text" className="w-full h-2.5" />
+            </div>
+            <div className="space-y-1.5 w-40">
+              <Skeleton variant="text" className="w-28 h-3" />
+              <Skeleton variant="text" className="w-36 h-2.5" />
+            </div>
+            <Skeleton variant="text" className="w-20 h-3" />
+            <Skeleton variant="rounded" className="w-16 h-5" />
+            <Skeleton variant="text" className="w-24 h-3" />
+            <Skeleton variant="text" className="w-20 h-3" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function AdminCompaniesSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-3 items-center justify-between">
+        <Skeleton variant="text" className="w-48 h-4" />
+        <Skeleton variant="rounded" className="w-36 h-10" />
+      </div>
+      <div className="flex gap-3">
+        <Skeleton variant="rounded" className="flex-1 h-10 max-w-md" />
+        <Skeleton variant="rounded" className="w-32 h-10" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="bg-white border border-gray-200 rounded-xl p-5 space-y-3">
+            <div className="flex items-start justify-between">
+              <div className="space-y-1.5">
+                <Skeleton variant="text" className="w-36 h-4" />
+                <Skeleton variant="text" className="w-28 h-3" />
+              </div>
+              <Skeleton variant="rounded" className="w-14 h-5" />
+            </div>
+            <Skeleton variant="text" className="w-32 h-3" />
+            <div className="flex justify-between pt-2">
+              <Skeleton variant="text" className="w-20 h-3" />
+              <Skeleton variant="text" className="w-20 h-3" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+export function AdminUsersSkeleton() {
+  return (
+    <div className="space-y-4">
+      <div className="flex gap-3 items-center justify-between">
+        <Skeleton variant="rounded" className="flex-1 h-10 max-w-md" />
+        <Skeleton variant="rounded" className="w-32 h-10" />
+      </div>
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="px-6 py-4 flex items-center gap-4 border-b border-gray-50">
+            <Skeleton variant="circular" className="w-9 h-9" />
+            <div className="flex-1 space-y-1.5">
+              <Skeleton variant="text" className="w-32 h-3" />
+              <Skeleton variant="text" className="w-48 h-2.5" />
+            </div>
+            <Skeleton variant="rounded" className="w-16 h-5" />
+            <Skeleton variant="text" className="w-28 h-3" />
+            <Skeleton variant="rounded" className="w-16 h-5" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}

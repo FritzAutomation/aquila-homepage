@@ -14,6 +14,7 @@ import {
   X,
   Pencil,
 } from "lucide-react";
+import { AdminCompaniesSkeleton } from "@/components/ui/Skeleton";
 
 interface Company {
   id: string;
@@ -122,9 +123,7 @@ export default function CompaniesPage() {
 
       {/* Companies Grid */}
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="w-8 h-8 animate-spin text-emerald" />
-        </div>
+        <AdminCompaniesSkeleton />
       ) : companies.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
           <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-3" />

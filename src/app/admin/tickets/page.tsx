@@ -18,6 +18,7 @@ import {
   Clock,
   Building2,
 } from "lucide-react";
+import { AdminTicketsSkeleton } from "@/components/ui/Skeleton";
 import {
   PRODUCT_LABELS,
   ISSUE_TYPE_LABELS,
@@ -557,9 +558,7 @@ function TicketsContent() {
       {/* Tickets Table */}
       <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
         {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <Loader2 className="w-8 h-8 animate-spin text-emerald" />
-          </div>
+          <AdminTicketsSkeleton />
         ) : tickets.length === 0 ? (
           <div className="p-12 text-center">
             <Ticket className="w-12 h-12 text-gray-300 mx-auto mb-3" />

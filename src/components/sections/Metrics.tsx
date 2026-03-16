@@ -3,6 +3,7 @@
 import { motion, useInView } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { SectionWrapper } from "../ui";
+import { getYearsInBusiness } from "@/lib/company-info";
 
 const metrics = [
   {
@@ -12,7 +13,7 @@ const metrics = [
     source: "ASCO Power Technologies",
   },
   {
-    value: 29,
+    value: getYearsInBusiness(),
     suffix: "",
     label: "Years Serving Manufacturers",
     subtext: "Since 1996",

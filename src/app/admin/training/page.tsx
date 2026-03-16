@@ -19,6 +19,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react"
+import { AdminStatCardsSkeleton } from "@/components/ui/Skeleton"
 
 // --- Types ---
 
@@ -205,8 +206,23 @@ export default function AdminTrainingPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="w-8 h-8 animate-spin text-emerald" />
+      <div className="space-y-6">
+        <AdminStatCardsSkeleton count={4} />
+        <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-3">
+          <div className="h-4 w-32 bg-gray-200 rounded animate-pulse" />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between py-3 border-b border-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="h-5 w-16 bg-gray-200 rounded animate-pulse" />
+                <div className="h-3 w-48 bg-gray-200 rounded animate-pulse" />
+              </div>
+              <div className="flex gap-2">
+                <div className="h-5 w-16 bg-gray-100 rounded animate-pulse" />
+                <div className="h-5 w-16 bg-gray-100 rounded animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     )
   }
