@@ -61,7 +61,7 @@ export async function PATCH(
 
     const { id } = await params
     const body = await request.json()
-    const { title, content, excerpt, category, product, is_published, sort_order } = body
+    const { title, content, excerpt, category, product, is_published, sort_order, attachments } = body
 
     const supabase = createAdminClient()
 
@@ -77,6 +77,7 @@ export async function PATCH(
     if (product !== undefined) updateData.product = product
     if (is_published !== undefined) updateData.is_published = is_published
     if (sort_order !== undefined) updateData.sort_order = sort_order
+    if (attachments !== undefined) updateData.attachments = attachments
 
     const { data: article, error } = await supabase
       .from('kb_articles')

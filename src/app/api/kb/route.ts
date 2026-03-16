@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { title, content, excerpt, category, product, is_published, sort_order } = body
+    const { title, content, excerpt, category, product, is_published, sort_order, attachments } = body
 
     if (!title) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 })
@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
         product: product || [],
         is_published: is_published || false,
         sort_order: sort_order || 0,
+        attachments: attachments || [],
         author_id: user.id,
         published_at: is_published ? new Date().toISOString() : null,
       })

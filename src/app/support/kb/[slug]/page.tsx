@@ -8,9 +8,20 @@ import {
   Clock,
   Loader2,
   Tag,
+  Download,
+  FileText,
 } from "lucide-react";
 import { Navigation, Footer } from "@/components/layout";
-import { renderMarkdown } from "@/lib/kb-utils";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeRaw from "rehype-raw";
+
+interface ArticleAttachment {
+  filename: string;
+  url: string;
+  mime_type: string;
+  size: number;
+}
 
 interface Article {
   id: string;
@@ -22,6 +33,13 @@ interface Article {
   product: string[];
   published_at: string | null;
   updated_at: string;
+  attachments?: ArticleAttachment[];
+}
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -137,12 +155,46 @@ export default function ArticlePage({
               </div>
 
               {/* Article Content */}
-              <div
-                className="p-6 md:p-8 prose-custom"
-                dangerouslySetInnerHTML={{
-                  __html: renderMarkdown(article.content),
-                }}
-              />
+              <div className="p-6 md:p-8 prose prose-gray max-w-none prose-headings:text-gray-900 prose-a:text-emerald prose-a:no-underline hover:prose-a:underline prose-img:rounded-lg prose-pre:bg-gray-100 prose-code:text-gray-800 prose-code:bg-gray-100 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:before:content-none prose-code:after:content-none prose-blockquote:border-emerald prose-blockquote:text-gray-600 prose-video:rounded-lg prose-video:w-full">
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[rehypeRaw]}
+                >
+                  {article.content}
+                </ReactMarkdown>
+              </div>
+
+              {/* Downloadable Attachments */}
+              {article.attachments && article.attachments.length > 0 && (
+                <div className="p-6 md:p-8 border-t border-gray-100">
+                  <h3 className="text-sm font-semibold text-gray-900 uppercase tracking-wide mb-3 flex items-center gap-2">
+                    <Download className="w-4 h-4 text-gray-500" />
+                    Downloads
+                  </h3>
+                  <div className="space-y-2">
+                    {article.attachments.map((att, index) => (
+                      <a
+                        key={index}
+                        href={att.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-emerald/5 hover:border-emerald/20 border border-transparent transition-all group no-underline"
+                      >
+                        <FileText className="w-5 h-5 text-gray-400 group-hover:text-emerald flex-shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {att.filename}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {formatFileSize(att.size)}
+                          </p>
+                        </div>
+                        <Download className="w-4 h-4 text-gray-300 group-hover:text-emerald flex-shrink-0" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </article>
           )}
         </div>

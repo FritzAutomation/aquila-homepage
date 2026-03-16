@@ -11,9 +11,20 @@ export function generateSlug(title: string): string {
 /**
  * Simple Markdown renderer for KB article content.
  * Converts common Markdown patterns to styled HTML.
+ * Preserves embedded HTML for images, videos, and links.
  */
 export function renderMarkdown(content: string): string {
-  let html = content
+  // Extract HTML blocks (video, img tags, anchor tags) before escaping
+  const htmlBlocks: string[] = []
+  let processed = content.replace(
+    /<(video|img|a)\b[^>]*>(?:[\s\S]*?<\/\1>)?/gi,
+    (match) => {
+      htmlBlocks.push(match)
+      return `%%HTML_BLOCK_${htmlBlocks.length - 1}%%`
+    }
+  )
+
+  let html = processed
     // Escape HTML
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -22,6 +33,10 @@ export function renderMarkdown(content: string): string {
     .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold text-gray-900 mt-6 mb-2">$1</h3>')
     .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold text-gray-900 mt-8 mb-3">$1</h2>')
     .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold text-gray-900 mt-8 mb-4">$1</h1>')
+    // Images (markdown syntax)
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" class="rounded-lg my-4 max-w-full" />')
+    // Links (markdown syntax)
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-emerald hover:underline" target="_blank" rel="noopener noreferrer">$1</a>')
     // Bold and italic
     .replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>')
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
@@ -52,6 +67,11 @@ export function renderMarkdown(content: string): string {
       return `<${tag} class="my-3 space-y-1">${cleaned}</${tag}>`
     }
   )
+
+  // Restore HTML blocks
+  htmlBlocks.forEach((block, i) => {
+    html = html.replace(`%%HTML_BLOCK_${i}%%`, block)
+  })
 
   return `<p class="text-gray-700 leading-relaxed mb-4">${html}</p>`
 }

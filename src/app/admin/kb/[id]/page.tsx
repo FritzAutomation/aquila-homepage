@@ -12,7 +12,18 @@ import {
   ExternalLink,
   ImagePlus,
   Video,
+  Paperclip,
+  Trash2,
+  Download,
+  FileText,
 } from "lucide-react";
+
+interface Attachment {
+  filename: string;
+  url: string;
+  mime_type: string;
+  size: number;
+}
 
 const CATEGORIES = [
   { value: "getting-started", label: "Getting Started" },
@@ -28,6 +39,12 @@ const PRODUCTS = [
   { value: "green-light", label: "Green Light Monitoring" },
   { value: "custom", label: "Custom Solutions" },
 ];
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
 
 export default function ArticleEditorPage({
   params,
@@ -53,7 +70,46 @@ export default function ArticleEditorPage({
   const [slug, setSlug] = useState("");
   const [publishedAt, setPublishedAt] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
   const contentRef = useRef<HTMLTextAreaElement>(null);
+
+  const uploadFile = async (file: File, context: string = "kb"): Promise<{ url: string; filename: string; mime_type: string; size: number } | null> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("context", context);
+
+    const res = await fetch("/api/upload", { method: "POST", body: formData });
+    const data = await res.json();
+
+    if (!res.ok) {
+      setError(data.error || "Upload failed");
+      return null;
+    }
+
+    const url = data.attachment?.url;
+    if (!url) return null;
+
+    return { url, filename: file.name, mime_type: file.type, size: file.size };
+  };
+
+  const insertAtCursor = (markdown: string) => {
+    const textarea = contentRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const before = content.substring(0, start);
+      const after = content.substring(end);
+      const newContent = before + (before.endsWith("\n") || before === "" ? "" : "\n\n") + markdown + "\n\n" + after;
+      setContent(newContent);
+      setTimeout(() => {
+        textarea.focus();
+        const pos = newContent.length - after.length;
+        textarea.setSelectionRange(pos, pos);
+      }, 0);
+    } else {
+      setContent((prev) => prev + "\n\n" + markdown + "\n");
+    }
+  };
 
   const handleMediaUpload = async (type: "image" | "video") => {
     const input = document.createElement("input");
@@ -65,46 +121,13 @@ export default function ArticleEditorPage({
 
       setUploading(true);
       try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("context", "kb");
+        const result = await uploadFile(file);
+        if (!result) return;
 
-        const res = await fetch("/api/upload", { method: "POST", body: formData });
-        const data = await res.json();
-
-        if (!res.ok) {
-          setError(data.error || "Upload failed");
-          return;
-        }
-
-        const url = data.attachment?.url;
-        if (!url) return;
-
-        // Insert markdown at cursor position
-        const textarea = contentRef.current;
-        let markdown: string;
-        if (type === "image") {
-          markdown = `![${file.name}](${url})`;
-        } else {
-          markdown = `<video src="${url}" controls width="100%"></video>`;
-        }
-
-        if (textarea) {
-          const start = textarea.selectionStart;
-          const end = textarea.selectionEnd;
-          const before = content.substring(0, start);
-          const after = content.substring(end);
-          const newContent = before + (before.endsWith("\n") || before === "" ? "" : "\n\n") + markdown + "\n\n" + after;
-          setContent(newContent);
-          // Restore focus
-          setTimeout(() => {
-            textarea.focus();
-            const pos = newContent.length - after.length;
-            textarea.setSelectionRange(pos, pos);
-          }, 0);
-        } else {
-          setContent((prev) => prev + "\n\n" + markdown + "\n");
-        }
+        const markdown = type === "image"
+          ? `![${file.name}](${result.url})`
+          : `<video src="${result.url}" controls width="100%"></video>`;
+        insertAtCursor(markdown);
       } catch {
         setError("Upload failed");
       } finally {
@@ -112,6 +135,68 @@ export default function ArticleEditorPage({
       }
     };
     input.click();
+  };
+
+  const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (const item of Array.from(items)) {
+      if (item.type.startsWith("image/")) {
+        e.preventDefault();
+        const file = item.getAsFile();
+        if (!file) return;
+
+        setUploading(true);
+        try {
+          const name = `screenshot-${Date.now()}.png`;
+          const renamedFile = new File([file], name, { type: file.type });
+          const result = await uploadFile(renamedFile);
+          if (!result) return;
+
+          insertAtCursor(`![${name}](${result.url})`);
+        } catch {
+          setError("Failed to upload pasted image");
+        } finally {
+          setUploading(false);
+        }
+        return;
+      }
+    }
+  };
+
+  const handleAttachmentUpload = async () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.multiple = true;
+    input.onchange = async () => {
+      const files = input.files;
+      if (!files || files.length === 0) return;
+
+      setUploading(true);
+      try {
+        for (const file of Array.from(files)) {
+          const result = await uploadFile(file);
+          if (result) {
+            setAttachments((prev) => [...prev, {
+              filename: result.filename,
+              url: result.url,
+              mime_type: result.mime_type,
+              size: result.size,
+            }]);
+          }
+        }
+      } catch {
+        setError("Failed to upload attachment");
+      } finally {
+        setUploading(false);
+      }
+    };
+    input.click();
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachments((prev) => prev.filter((_, i) => i !== index));
   };
 
   const fetchArticle = useCallback(async () => {
@@ -131,6 +216,7 @@ export default function ArticleEditorPage({
       setSortOrder(data.sort_order);
       setSlug(data.slug);
       setPublishedAt(data.published_at);
+      setAttachments(data.attachments || []);
     } catch {
       setError("Failed to load article");
     } finally {
@@ -164,6 +250,7 @@ export default function ArticleEditorPage({
       product: selectedProducts,
       is_published: publishState,
       sort_order: sortOrder,
+      attachments,
     };
 
     try {
@@ -348,7 +435,7 @@ export default function ArticleEditorPage({
               >
                 Content
                 <span className="font-normal text-gray-500 ml-1">
-                  (supports Markdown)
+                  (supports Markdown — paste screenshots directly)
                 </span>
               </label>
               <div className="flex items-center gap-1">
@@ -382,6 +469,7 @@ export default function ArticleEditorPage({
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
+              onPaste={handlePaste}
               placeholder="Write your article content here using Markdown...
 
 # Section Heading
@@ -394,10 +482,76 @@ Regular paragraph text with **bold** and *italic* formatting.
 2. Second step
 3. Third step
 
-> Tip: You can use blockquotes for tips and notes."
+> Tip: You can paste screenshots directly into this editor."
               rows={20}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-gray-900 font-mono text-sm focus:ring-2 focus:ring-emerald focus:border-emerald outline-none resize-y"
             />
+          </div>
+
+          {/* Downloadable Attachments */}
+          <div className="bg-white rounded-xl border border-gray-200 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-sm font-medium text-gray-700">
+                Downloadable Attachments
+                <span className="font-normal text-gray-500 ml-1">
+                  (templates, documents for customers)
+                </span>
+              </label>
+              <button
+                type="button"
+                onClick={handleAttachmentUpload}
+                disabled={uploading}
+                className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50"
+              >
+                <Paperclip className="w-4 h-4" />
+                Add File
+              </button>
+            </div>
+
+            {attachments.length === 0 ? (
+              <div className="text-center py-6 border-2 border-dashed border-gray-200 rounded-lg">
+                <Paperclip className="w-6 h-6 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">
+                  No attachments yet. Add templates, PDFs, or other files for customers to download.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {attachments.map((att, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center gap-3 p-2.5 bg-gray-50 rounded-lg group"
+                  >
+                    <FileText className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {att.filename}
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {formatFileSize(att.size)}
+                      </p>
+                    </div>
+                    <a
+                      href={att.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
+                      title="Download"
+                    >
+                      <Download className="w-4 h-4" />
+                    </a>
+                    <button
+                      type="button"
+                      onClick={() => removeAttachment(index)}
+                      className="p-1.5 text-gray-400 hover:text-red-500 transition-colors"
+                      title="Remove"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
