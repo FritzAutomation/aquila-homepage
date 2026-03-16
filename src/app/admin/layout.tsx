@@ -150,6 +150,16 @@ export default function AdminLayout({
             })}
           </nav>
 
+          {/* Branding */}
+          <div className="px-4 py-3 border-t border-white/10">
+            <p className="text-[11px] text-white/30 leading-tight">
+              The Aquila Group
+            </p>
+            <p className="text-[10px] text-white/20 leading-tight">
+              Manufacturing solutions since 1996
+            </p>
+          </div>
+
           {/* User section */}
           <div className="p-4 border-t border-white/10">
             <div className="flex items-center gap-3 mb-3">
