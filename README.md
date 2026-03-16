@@ -1,5 +1,7 @@
 # The Aquila Group - Homepage
 
+![CI](https://github.com/FritzAutomation/aquila-homepage/actions/workflows/ci.yml/badge.svg)
+
 Modern, responsive website for The Aquila Group, a B2B company providing Manufacturing Execution System (MES) solutions since 1996.
 
 ## Overview

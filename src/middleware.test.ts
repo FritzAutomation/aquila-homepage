@@ -40,9 +40,10 @@ vi.mock('@supabase/supabase-js', () => ({
   }),
 }))
 
+import type { NextRequest } from 'next/server'
 import { middleware } from './middleware'
 
-function createRequest(pathname: string) {
+function createRequest(pathname: string): NextRequest {
   const url = new URL(pathname, 'http://localhost:3000')
   return {
     cookies: {
@@ -51,7 +52,7 @@ function createRequest(pathname: string) {
     },
     nextUrl: url,
     url: url.toString(),
-  }
+  } as unknown as NextRequest
 }
 
 describe('middleware', () => {
@@ -67,7 +68,7 @@ describe('middleware', () => {
     mockGetUser.mockResolvedValue({ data: { user: null } })
     const req = createRequest('/')
 
-    await middleware(req as any)
+    await middleware(req)
 
     expect(mockRedirect).not.toHaveBeenCalled()
   })
@@ -76,7 +77,7 @@ describe('middleware', () => {
     mockGetUser.mockResolvedValue({ data: { user: { id: 'user-1' } } })
     const req = createRequest('/login')
 
-    await middleware(req as any)
+    await middleware(req)
 
     expect(mockRedirect).toHaveBeenCalledWith(
       expect.objectContaining({ pathname: '/auth/redirect' })
@@ -87,7 +88,7 @@ describe('middleware', () => {
     mockGetUser.mockResolvedValue({ data: { user: null } })
     const req = createRequest('/login')
 
-    await middleware(req as any)
+    await middleware(req)
 
     expect(mockRedirect).not.toHaveBeenCalled()
   })
@@ -96,7 +97,7 @@ describe('middleware', () => {
     mockGetUser.mockResolvedValue({ data: { user: null } })
     const req = createRequest('/portal')
 
-    await middleware(req as any)
+    await middleware(req)
 
     expect(mockRedirect).toHaveBeenCalledWith(
       expect.objectContaining({ pathname: '/login' })
@@ -107,7 +108,7 @@ describe('middleware', () => {
     mockGetUser.mockResolvedValue({ data: { user: null } })
     const req = createRequest('/admin')
 
-    await middleware(req as any)
+    await middleware(req)
 
     expect(mockRedirect).toHaveBeenCalledWith(
       expect.objectContaining({ pathname: '/login' })
@@ -119,7 +120,7 @@ describe('middleware', () => {
     mockProfileSelect.mockResolvedValue({ data: { user_type: 'customer' } })
     const req = createRequest('/admin')
 
-    await middleware(req as any)
+    await middleware(req)
 
     expect(mockRedirect).toHaveBeenCalledWith(
       expect.objectContaining({ pathname: '/portal' })
@@ -131,7 +132,7 @@ describe('middleware', () => {
     mockProfileSelect.mockResolvedValue({ data: { user_type: 'agent' } })
     const req = createRequest('/admin')
 
-    await middleware(req as any)
+    await middleware(req)
 
     expect(mockRedirect).toHaveBeenCalledWith(
       expect.objectContaining({ pathname: '/admin/tickets' })
@@ -143,7 +144,7 @@ describe('middleware', () => {
     mockProfileSelect.mockResolvedValue({ data: { user_type: 'agent' } })
     const req = createRequest('/admin/tickets')
 
-    const result = await middleware(req as any)
+    const result = await middleware(req)
 
     expect(mockRedirect).not.toHaveBeenCalled()
     expect(result).toHaveProperty('type', 'next')
@@ -154,7 +155,7 @@ describe('middleware', () => {
     mockProfileSelect.mockResolvedValue({ data: { user_type: 'agent' } })
     const req = createRequest('/admin/analytics')
 
-    await middleware(req as any)
+    await middleware(req)
 
     expect(mockRedirect).toHaveBeenCalledWith(
       expect.objectContaining({ pathname: '/admin/tickets' })
@@ -166,7 +167,7 @@ describe('middleware', () => {
     mockProfileSelect.mockResolvedValue({ data: { user_type: 'agent' } })
     const req = createRequest('/admin/news')
 
-    await middleware(req as any)
+    await middleware(req)
 
     expect(mockRedirect).toHaveBeenCalledWith(
       expect.objectContaining({ pathname: '/admin/tickets' })
@@ -178,7 +179,7 @@ describe('middleware', () => {
     mockProfileSelect.mockResolvedValue({ data: { user_type: 'admin' } })
     const req = createRequest('/admin')
 
-    const result = await middleware(req as any)
+    const result = await middleware(req)
 
     expect(mockRedirect).not.toHaveBeenCalled()
     expect(result).toHaveProperty('type', 'next')
