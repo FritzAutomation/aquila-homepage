@@ -47,6 +47,26 @@ export async function GET(
   }
 }
 
+/**
+ * Extract storage paths from content and attachments that point to our Supabase Storage bucket.
+ * URL format: https://<project>.supabase.co/storage/v1/object/public/attachments/<path>
+ */
+function extractStoragePaths(content: string, articleAttachments?: { url: string }[]): Set<string> {
+  const paths = new Set<string>()
+  const bucketPattern = /\/storage\/v1\/object\/public\/attachments\/([^\s"')]+)/g
+  let match
+  while ((match = bucketPattern.exec(content)) !== null) {
+    paths.add(match[1])
+  }
+  if (articleAttachments) {
+    for (const att of articleAttachments) {
+      const attMatch = att.url.match(/\/storage\/v1\/object\/public\/attachments\/(.+)/)
+      if (attMatch) paths.add(attMatch[1])
+    }
+  }
+  return paths
+}
+
 // PATCH /api/kb/[id] - Update article (admin only)
 export async function PATCH(
   request: NextRequest,
@@ -64,6 +84,13 @@ export async function PATCH(
     const { title, content, excerpt, category, product, is_published, sort_order, attachments } = body
 
     const supabase = createAdminClient()
+
+    // Fetch the current article to diff storage references
+    const { data: existing } = await supabase
+      .from('kb_articles')
+      .select('content, attachments')
+      .eq('id', id)
+      .single()
 
     // Build update object with only provided fields
     const updateData: Record<string, unknown> = {}
@@ -94,6 +121,24 @@ export async function PATCH(
       return NextResponse.json({ error: 'Failed to update article' }, { status: 500 })
     }
 
+    // Clean up removed files from Supabase Storage
+    if (existing) {
+      const oldPaths = extractStoragePaths(existing.content || '', existing.attachments || [])
+      const newPaths = extractStoragePaths(
+        content !== undefined ? content : existing.content || '',
+        attachments !== undefined ? attachments : existing.attachments || []
+      )
+      const removedPaths = [...oldPaths].filter(p => !newPaths.has(p))
+      if (removedPaths.length > 0) {
+        const { error: storageError } = await supabase.storage
+          .from('attachments')
+          .remove(removedPaths)
+        if (storageError) {
+          console.error('Storage cleanup error:', storageError)
+        }
+      }
+    }
+
     return NextResponse.json(article)
   } catch (error) {
     console.error('KB update error:', error)
@@ -116,6 +161,13 @@ export async function DELETE(
     const { id } = await params
     const supabase = createAdminClient()
 
+    // Fetch article content before deleting so we can clean up storage
+    const { data: existing } = await supabase
+      .from('kb_articles')
+      .select('content, attachments')
+      .eq('id', id)
+      .single()
+
     const { error } = await supabase
       .from('kb_articles')
       .delete()
@@ -124,6 +176,19 @@ export async function DELETE(
     if (error) {
       console.error('Error deleting article:', error)
       return NextResponse.json({ error: 'Failed to delete article' }, { status: 500 })
+    }
+
+    // Clean up all storage files referenced by the deleted article
+    if (existing) {
+      const paths = extractStoragePaths(existing.content || '', existing.attachments || [])
+      if (paths.size > 0) {
+        const { error: storageError } = await supabase.storage
+          .from('attachments')
+          .remove([...paths])
+        if (storageError) {
+          console.error('Storage cleanup error:', storageError)
+        }
+      }
     }
 
     return NextResponse.json({ success: true })
