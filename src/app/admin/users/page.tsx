@@ -64,6 +64,7 @@ function AdminUsersContent() {
   const [users, setUsers] = useState<Profile[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUserType, setCurrentUserType] = useState<string>("");
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -110,6 +111,12 @@ function AdminUsersContent() {
   useEffect(() => {
     fetchUsers();
     fetchCompanies();
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && !data.error) setCurrentUserType(data.user_type);
+      })
+      .catch(() => {});
   }, [fetchUsers]);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -209,6 +216,8 @@ function AdminUsersContent() {
     });
   };
 
+  const isAdmin = currentUserType === "admin";
+
   const counts = {
     total: users.length,
     admin: users.filter((u) => u.user_type === "admin").length,
@@ -227,13 +236,15 @@ function AdminUsersContent() {
             customers
           </p>
         </div>
-        <button
-          onClick={() => setShowInviteModal(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald text-white font-medium rounded-lg hover:bg-emerald/90 transition-colors"
-        >
-          <UserPlus className="w-4 h-4" />
-          Invite User
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => setShowInviteModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald text-white font-medium rounded-lg hover:bg-emerald/90 transition-colors"
+          >
+            <UserPlus className="w-4 h-4" />
+            Invite User
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -343,17 +354,23 @@ function AdminUsersContent() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <select
-                        value={user.user_type}
-                        onChange={(e) =>
-                          handleTypeChange(user.id, e.target.value)
-                        }
-                        className={`text-xs font-medium px-2 py-1 rounded-full border-0 ${USER_TYPE_COLORS[user.user_type]}`}
-                      >
-                        <option value="admin">Admin</option>
-                        <option value="agent">Agent</option>
-                        <option value="customer">Customer</option>
-                      </select>
+                      {isAdmin ? (
+                        <select
+                          value={user.user_type}
+                          onChange={(e) =>
+                            handleTypeChange(user.id, e.target.value)
+                          }
+                          className={`text-xs font-medium px-2 py-1 rounded-full border-0 ${USER_TYPE_COLORS[user.user_type]}`}
+                        >
+                          <option value="admin">Admin</option>
+                          <option value="agent">Agent</option>
+                          <option value="customer">Customer</option>
+                        </select>
+                      ) : (
+                        <span className={`text-xs font-medium px-2 py-1 rounded-full ${USER_TYPE_COLORS[user.user_type]}`}>
+                          {user.user_type.charAt(0).toUpperCase() + user.user_type.slice(1)}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       {user.company ? (
@@ -379,24 +396,28 @@ function AdminUsersContent() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
-                      {user.status === "deactivated" ? (
-                        <button
-                          onClick={() =>
-                            handleStatusChange(user.id, "active")
-                          }
-                          className="text-xs text-green-600 bg-green-50 hover:bg-green-100 px-2.5 py-1 rounded-lg transition-colors"
-                        >
-                          Reactivate
-                        </button>
+                      {isAdmin || user.user_type === "customer" ? (
+                        user.status === "deactivated" ? (
+                          <button
+                            onClick={() =>
+                              handleStatusChange(user.id, "active")
+                            }
+                            className="text-xs text-green-600 bg-green-50 hover:bg-green-100 px-2.5 py-1 rounded-lg transition-colors"
+                          >
+                            Reactivate
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() =>
+                              handleStatusChange(user.id, "deactivated")
+                            }
+                            className="text-xs text-red-600 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg transition-colors"
+                          >
+                            Deactivate
+                          </button>
+                        )
                       ) : (
-                        <button
-                          onClick={() =>
-                            handleStatusChange(user.id, "deactivated")
-                          }
-                          className="text-xs text-red-600 bg-red-50 hover:bg-red-100 px-2.5 py-1 rounded-lg transition-colors"
-                        >
-                          Deactivate
-                        </button>
+                        <span className="text-xs text-gray-400">—</span>
                       )}
                     </td>
                   </tr>

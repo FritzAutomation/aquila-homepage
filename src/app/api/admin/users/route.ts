@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireAdmin, isSuperAdmin } from '@/lib/auth'
+import { requireAdmin, requireStaff, isSuperAdmin } from '@/lib/auth'
 
 // GET /api/admin/users - List all users (excludes super admins)
 export async function GET(request: NextRequest) {
-  const admin = await requireAdmin()
-  if (!admin) {
+  const staff = await requireStaff()
+  if (!staff) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

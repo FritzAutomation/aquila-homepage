@@ -7,9 +7,6 @@ export const runtime = "nodejs";
 
 // Admin-only routes that agents cannot access
 const ADMIN_ONLY_PATHS = [
-  "/admin/users",
-  "/admin/companies",
-  "/admin/training",
   "/admin/analytics",
   "/admin/reports",
   "/admin/settings",

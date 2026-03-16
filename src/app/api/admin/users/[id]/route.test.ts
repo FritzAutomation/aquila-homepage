@@ -5,6 +5,7 @@ import { NextRequest } from 'next/server'
 const mockRequireAdmin = vi.fn()
 vi.mock('@/lib/auth', () => ({
   requireAdmin: () => mockRequireAdmin(),
+  requireStaff: () => mockRequireAdmin(),
   isSuperAdmin: () => false,
 }))
 

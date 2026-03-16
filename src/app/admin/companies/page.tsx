@@ -34,6 +34,18 @@ export default function CompaniesPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [editingCompany, setEditingCompany] = useState<Company | null>(null);
+  const [currentUserType, setCurrentUserType] = useState<string>("");
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && !data.error) setCurrentUserType(data.user_type);
+      })
+      .catch(() => {});
+  }, []);
+
+  const isAdmin = currentUserType === "admin";
 
   const fetchCompanies = useCallback(async () => {
     try {
@@ -74,13 +86,15 @@ export default function CompaniesPage() {
         <div className="text-sm text-gray-500">
           {companies.length} companies — {activeCount} active, {inactiveCount} inactive
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-emerald text-white rounded-lg hover:bg-emerald/90 transition-colors text-sm font-medium"
-        >
-          <Plus className="w-4 h-4" />
-          Add Company
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald text-white rounded-lg hover:bg-emerald/90 transition-colors text-sm font-medium"
+          >
+            <Plus className="w-4 h-4" />
+            Add Company
+          </button>
+        )}
       </div>
 
       {/* Filters */}
@@ -153,13 +167,15 @@ export default function CompaniesPage() {
                   >
                     {company.status}
                   </span>
-                  <button
-                    onClick={() => setEditingCompany(company)}
-                    className="p-1 text-gray-400 hover:text-gray-600 rounded"
-                    title="Edit company"
-                  >
-                    <Pencil className="w-3.5 h-3.5" />
-                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => setEditingCompany(company)}
+                      className="p-1 text-gray-400 hover:text-gray-600 rounded"
+                      title="Edit company"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                  )}
                 </div>
               </div>
 

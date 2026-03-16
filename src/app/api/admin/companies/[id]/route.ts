@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdmin, requireStaff } from '@/lib/auth'
 
 // GET /api/admin/companies/[id] - Get company detail with members
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const admin = await requireAdmin()
-  if (!admin) {
+  const staff = await requireStaff()
+  if (!staff) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
