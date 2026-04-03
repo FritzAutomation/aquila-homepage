@@ -40,7 +40,9 @@ const socialLinks = [
 
 export default function Footer() {
   return (
-    <footer className="bg-navy text-white">
+    <footer className="bg-navy text-white relative">
+      {/* Emerald accent line */}
+      <div className="h-1 bg-gradient-to-r from-emerald via-emerald/60 to-transparent" />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
         {/* Top Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 mb-12">
@@ -109,7 +111,7 @@ export default function Footer() {
           {/* Link Columns */}
           {Object.entries(footerLinks).map(([title, links]) => (
             <div key={title}>
-              <h3 className="font-semibold text-lg mb-4">{title}</h3>
+              <h3 className="font-semibold font-display text-lg mb-4">{title}</h3>
               <ul className="space-y-3">
                 {links.map((link) => (
                   <li key={link.label}>
@@ -128,7 +130,7 @@ export default function Footer() {
 
         {/* Team Contacts */}
         <div className="border-t border-white/10 pt-8 mb-8">
-          <h3 className="font-semibold text-lg mb-4">Contact Our Team</h3>
+          <h3 className="font-semibold font-display text-lg mb-4">Contact Our Team</h3>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {teamContacts.map((person) => (
               <div key={person.email} className="text-sm">

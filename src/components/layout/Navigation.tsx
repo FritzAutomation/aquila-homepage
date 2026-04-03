@@ -59,6 +59,7 @@ export default function Navigation() {
   const [userType, setUserType] = useState<string | null>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const dropdownTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -167,38 +168,56 @@ export default function Navigation() {
               <div
                 key={item.label}
                 className="relative"
-                onMouseEnter={() => item.children && setOpenDropdown(item.label)}
-                onMouseLeave={() => setOpenDropdown(null)}
+                onMouseEnter={() => {
+                  if (dropdownTimeout.current) {
+                    clearTimeout(dropdownTimeout.current);
+                    dropdownTimeout.current = null;
+                  }
+                  if (item.children) setOpenDropdown(item.label);
+                }}
+                onMouseLeave={() => {
+                  dropdownTimeout.current = setTimeout(() => {
+                    setOpenDropdown(null);
+                  }, 150);
+                }}
               >
                 <a
                   href={item.href}
                   className="flex items-center gap-1 px-4 py-2 text-slate hover:text-navy transition-colors font-medium"
                 >
                   {item.label}
-                  {item.children && <ChevronDown className="w-4 h-4" />}
+                  {item.children && <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${openDropdown === item.label ? "rotate-180" : ""}`} />}
                 </a>
 
                 {/* Dropdown Menu */}
-                {item.children && openDropdown === item.label && (
-                  <div className="absolute top-full left-0 w-72 pt-2">
-                    <div className="bg-white rounded-xl shadow-xl border border-slate-light/20 py-3">
-                      {item.children.map((child) => (
-                        <a
-                          key={child.label}
-                          href={child.href}
-                          className="block px-4 py-3 hover:bg-light-gray transition-colors"
-                        >
-                          <span className="block text-navy font-medium">
-                            {child.label}
-                          </span>
-                          <span className="block text-sm text-slate">
-                            {child.description}
-                          </span>
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                <AnimatePresence>
+                  {item.children && openDropdown === item.label && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                      transition={{ duration: 0.15, ease: "easeOut" }}
+                      className="absolute top-full left-0 w-72 pt-2"
+                    >
+                      <div className="bg-white rounded-xl shadow-xl border border-slate-light/20 py-3">
+                        {item.children.map((child) => (
+                          <a
+                            key={child.label}
+                            href={child.href}
+                            className="block px-4 py-3 hover:bg-light-gray transition-colors"
+                          >
+                            <span className="block text-navy font-medium">
+                              {child.label}
+                            </span>
+                            <span className="block text-sm text-slate">
+                              {child.description}
+                            </span>
+                          </a>
+                        ))}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             ))}
           </div>

@@ -17,7 +17,7 @@ const caseStudies = [
     company: "Hillphoenix Inc.",
     result: "Integrated JETCAM nesting across multiple work centers",
     description: "Unified production visibility across facilities",
-    image: "/images/hillpheonix.jpg",
+    image: "/images/hillphoenix.jpg",
     href: "/case-studies/hillphoenix",
   },
 ];

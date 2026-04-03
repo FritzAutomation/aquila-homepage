@@ -92,7 +92,7 @@ export default function HillphoenixCaseStudyPage() {
               transition={{ duration: 0.5, delay: 0.2 }}
             >
               <Image
-                src="/images/hillpheonix.jpg"
+                src="/images/hillphoenix.jpg"
                 alt="Hillphoenix Manufacturing Facility"
                 width={600}
                 height={400}

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
-import { BackToTop, CookieConsent, ScrollProgress } from "@/components/ui";
+import { BackToTop, CookieConsent, MobileCTA, ScrollProgress } from "@/components/ui";
 import FloatingHelpButton from "@/components/FloatingHelpButton";
 
 const inter = Inter({
@@ -153,6 +153,7 @@ export default function RootLayout({
         <ScrollProgress />
         {children}
         <FloatingHelpButton />
+        <MobileCTA />
         <BackToTop />
         <CookieConsent />
       </body>

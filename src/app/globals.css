@@ -43,10 +43,9 @@ body {
   font-family: var(--font-inter), Arial, Helvetica, sans-serif;
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
-}
+/* Smooth scrolling disabled — it conflicts with framer-motion whileInView
+   animations, causing sections to remain invisible when navigating via
+   hash links. Use instant scroll; framer-motion handles animation. */
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {

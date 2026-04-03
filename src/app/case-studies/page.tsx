@@ -28,7 +28,7 @@ const caseStudies = [
     result: "Multi-Center Integration",
     description:
       "Hillphoenix, a leading manufacturer of commercial refrigeration systems, integrated JETCAM nesting across multiple punch and laser work centers to increase profits and unify production visibility.",
-    image: "/images/hillpheonix.jpg",
+    image: "/images/hillphoenix.jpg",
     href: "/case-studies/hillphoenix",
     highlights: [
       { icon: Layers, label: "Multiple work centers" },

@@ -38,7 +38,7 @@ export default function SocialProof() {
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: 0.1 + index * 0.08, ease: "easeOut" }}
-              className="opacity-80 hover:opacity-100 transition-all duration-300 hover:scale-105"
+              className="grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all duration-300 hover:scale-105"
             >
               <Image
                 src={client.logo}

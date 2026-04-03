@@ -13,3 +13,4 @@ export { default as BlurImage } from "./BlurImage";
 export { generateBlurPlaceholder } from "./BlurImage";
 export { default as DMMDemo } from "./DMMDemo";
 export { default as GreenLightDemo } from "./GreenLightDemo";
+export { default as MobileCTA } from "./MobileCTA";

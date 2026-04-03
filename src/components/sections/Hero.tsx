@@ -132,15 +132,22 @@ export default function Hero() {
         <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-navy/8 rounded-full blur-3xl" />
         <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-emerald/5 rounded-full blur-[80px]" />
       </div>
-      {/* Dot pattern */}
+      {/* Geometric grid pattern — industrial feel */}
       <div
-        className="absolute inset-0 opacity-[0.02] pointer-events-none"
+        className="absolute inset-0 opacity-[0.035] pointer-events-none"
         style={{
           backgroundImage:
-            "radial-gradient(circle, #1E3A5F 1px, transparent 1px)",
-          backgroundSize: "32px 32px",
+            "linear-gradient(#1E3A5F 1px, transparent 1px), linear-gradient(90deg, #1E3A5F 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
         }}
       />
+      {/* Diagonal accent lines — top right corner */}
+      <svg className="absolute top-0 right-0 w-[500px] h-[500px] opacity-[0.04] pointer-events-none" viewBox="0 0 500 500" fill="none">
+        <line x1="100" y1="0" x2="500" y2="400" stroke="#1E3A5F" strokeWidth="1" />
+        <line x1="200" y1="0" x2="500" y2="300" stroke="#1E3A5F" strokeWidth="1" />
+        <line x1="300" y1="0" x2="500" y2="200" stroke="#1E3A5F" strokeWidth="1" />
+        <line x1="400" y1="0" x2="500" y2="100" stroke="#10B981" strokeWidth="1" />
+      </svg>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
