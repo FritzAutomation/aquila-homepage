@@ -173,9 +173,12 @@ export async function GET(request: NextRequest) {
       query = query.eq('assigned_to', assigned_to)
     }
 
-    // Search in subject or email
+    // Search in subject or email (sanitize to prevent PostgREST filter injection)
     if (search) {
-      query = query.or(`subject.ilike.%${search}%,email.ilike.%${search}%`)
+      const sanitized = search.replace(/[%_,.()"\\]/g, '')
+      if (sanitized) {
+        query = query.or(`subject.ilike.%${sanitized}%,email.ilike.%${sanitized}%`)
+      }
     }
 
     // Order and paginate

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireStaff } from '@/lib/auth'
 import { sendStatusChangeNotification } from '@/lib/resend'
 import { STATUS_LABELS, type TicketStatus } from '@/lib/types'
 
@@ -10,6 +11,11 @@ interface RouteParams {
 // GET /api/tickets/[id] - Get a single ticket with messages
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
+    const staff = await requireStaff()
+    if (!staff) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { id } = await params
     const supabase = createAdminClient()
 
@@ -56,6 +62,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // PATCH /api/tickets/[id] - Update a ticket
 export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
+    const staff = await requireStaff()
+    if (!staff) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { id } = await params
     const body = await request.json()
     const supabase = createAdminClient()

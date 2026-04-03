@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireStaff } from '@/lib/auth'
 import { sendAgentReply } from '@/lib/resend'
 
 interface RouteParams {
@@ -9,6 +10,11 @@ interface RouteParams {
 // GET /api/tickets/[id]/messages - Get all messages for a ticket
 export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
+    const staff = await requireStaff()
+    if (!staff) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { id } = await params
     const supabase = createAdminClient()
 
@@ -40,6 +46,11 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 // POST /api/tickets/[id]/messages - Add a reply to a ticket
 export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
+    const staff = await requireStaff()
+    if (!staff) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const { id } = await params
     const body = await request.json()
 

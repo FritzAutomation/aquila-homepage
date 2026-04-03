@@ -230,13 +230,17 @@ async function verifyWebhookSignature(
   webhookSecret: string | null | undefined
 ): Promise<boolean> {
   if (!webhookSecret) {
-    console.warn('Webhook signature verification skipped - no secret configured')
+    if (process.env.NODE_ENV === 'production') {
+      console.error('Webhook rejected - RESEND_WEBHOOK_SECRET is not configured')
+      return false
+    }
+    console.warn('Webhook signature verification skipped - no secret configured (dev only)')
     return true
   }
 
   if (!svixId || !svixTimestamp || !svixSignature) {
-    console.warn('Missing Svix headers, skipping verification')
-    return true
+    console.error('Webhook rejected - missing Svix headers')
+    return false
   }
 
   try {

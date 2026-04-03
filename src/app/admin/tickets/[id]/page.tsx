@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { sanitizeMessageHtml } from "@/lib/sanitize-html";
 import {
   ArrowLeft,
   Send,
@@ -390,9 +391,7 @@ export default function TicketDetailPage({
                         {message.content.includes('<img ') ? (
                           <div
                             dangerouslySetInnerHTML={{
-                              __html: message.content
-                                .replace(/<(?!img\s|\/img)[^>]+>/gi, '')
-                                .replace(/<img\s/gi, '<img style="max-width:100%;height:auto;border-radius:8px;margin:8px 0" ')
+                              __html: sanitizeMessageHtml(message.content)
                             }}
                           />
                         ) : (

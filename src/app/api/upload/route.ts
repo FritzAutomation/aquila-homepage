@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireStaff } from '@/lib/auth'
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024 // 10MB
 const ALLOWED_TYPES = [
@@ -21,6 +22,11 @@ const ALLOWED_TYPES = [
 // POST /api/upload - Upload a file to Supabase Storage
 export async function POST(request: NextRequest) {
   try {
+    const staff = await requireStaff()
+    if (!staff) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const formData = await request.formData()
     const file = formData.get('file') as File | null
     const ticketId = formData.get('ticket_id') as string | null

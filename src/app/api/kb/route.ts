@@ -38,7 +38,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (search) {
-      query = query.or(`title.ilike.%${search}%,content.ilike.%${search}%,excerpt.ilike.%${search}%`)
+      const sanitized = search.replace(/[%_,.()"\\]/g, '')
+      if (sanitized) {
+        query = query.or(`title.ilike.%${sanitized}%,content.ilike.%${sanitized}%,excerpt.ilike.%${sanitized}%`)
+      }
     }
 
     const { data: articles, error } = await query

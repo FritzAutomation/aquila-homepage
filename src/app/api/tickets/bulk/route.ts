@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { requireStaff } from '@/lib/auth'
 
 // POST /api/tickets/bulk - Perform bulk actions on tickets
 export async function POST(request: NextRequest) {
   try {
+    const staff = await requireStaff()
+    if (!staff) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
     const body = await request.json()
     const { ticket_ids, action, value } = body
 

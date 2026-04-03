@@ -9,6 +9,11 @@ vi.mock('@/lib/supabase/admin', () => ({
   createAdminClient: () => mockSupabase,
 }))
 
+// Mock auth
+vi.mock('@/lib/auth', () => ({
+  requireStaff: vi.fn().mockResolvedValue({ id: 'staff-1', user_type: 'admin', email: 'admin@test.com' }),
+}))
+
 // Mock resend
 vi.mock('@/lib/resend', () => ({
   sendStatusChangeNotification: vi.fn().mockResolvedValue({ success: true }),

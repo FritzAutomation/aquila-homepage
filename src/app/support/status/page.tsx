@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { Navigation, Footer } from "@/components/layout";
 import { PageHeader } from "@/components/ui";
+import { sanitizeMessageHtml } from "@/lib/sanitize-html";
 import {
   PRODUCT_LABELS,
   ISSUE_TYPE_LABELS,
@@ -315,9 +316,7 @@ function TicketStatusContent() {
                       {message.content.includes('<img ') ? (
                         <div
                           dangerouslySetInnerHTML={{
-                            __html: message.content
-                              .replace(/<(?!img\s|\/img)[^>]+>/gi, '')
-                              .replace(/<img\s/gi, '<img style="max-width:100%;height:auto;border-radius:8px;margin:8px 0" ')
+                            __html: sanitizeMessageHtml(message.content)
                           }}
                         />
                       ) : (
