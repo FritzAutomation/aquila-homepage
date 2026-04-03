@@ -128,9 +128,19 @@ export default function Hero() {
     <section className="relative pt-20 md:pt-24 pb-16 md:pb-24 bg-gradient-to-br from-white to-light-gray overflow-hidden">
       {/* Background decoration */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-emerald/5 rounded-full blur-3xl" />
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-navy/5 rounded-full blur-3xl" />
+        <div className="absolute -top-40 -right-40 w-96 h-96 bg-emerald/8 rounded-full blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-96 h-96 bg-navy/8 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-emerald/5 rounded-full blur-[80px]" />
       </div>
+      {/* Dot pattern */}
+      <div
+        className="absolute inset-0 opacity-[0.02] pointer-events-none"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle, #1E3A5F 1px, transparent 1px)",
+          backgroundSize: "32px 32px",
+        }}
+      />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -147,7 +157,7 @@ export default function Hero() {
                 transition={{ duration: 0.5, ease: "easeInOut" }}
               >
                 <motion.h1
-                  className="text-4xl md:text-5xl lg:text-6xl font-bold text-navy leading-tight mb-4"
+                  className="text-4xl md:text-5xl lg:text-6xl font-bold font-display text-navy leading-tight mb-4"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.1 }}

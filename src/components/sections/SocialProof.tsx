@@ -17,10 +17,10 @@ export default function SocialProof() {
     <section className="py-12 md:py-16 bg-light-gray border-y border-slate-light/20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.6 }}
           className="text-center mb-8"
         >
           <p className="text-slate font-medium">
@@ -28,21 +28,17 @@ export default function SocialProof() {
           </p>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.2 }}
+        <div
           className="flex flex-wrap justify-center items-center gap-8 md:gap-12 lg:gap-16"
         >
           {clients.map((client, index) => (
             <motion.div
               key={client.name}
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-              className="opacity-80 hover:opacity-100 transition-all duration-300"
+              transition={{ duration: 0.4, delay: 0.1 + index * 0.08, ease: "easeOut" }}
+              className="opacity-80 hover:opacity-100 transition-all duration-300 hover:scale-105"
             >
               <Image
                 src={client.logo}
@@ -53,13 +49,13 @@ export default function SocialProof() {
               />
             </motion.div>
           ))}
-        </motion.div>
+        </div>
 
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.4 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
           className="text-center mt-8"
         >
           <p className="text-sm text-slate">

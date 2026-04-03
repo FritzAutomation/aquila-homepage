@@ -134,15 +134,18 @@ export default function Testimonial() {
   };
 
   return (
-    <SectionWrapper background="light">
+    <SectionWrapper background="light" pattern="dots">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
         className="text-center mb-12"
       >
-        <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald/10 text-emerald text-sm font-medium rounded-full mb-4">
+          Testimonials
+        </div>
+        <h2 className="text-3xl md:text-4xl font-bold font-display text-navy mb-4">
           What Our Clients Say
         </h2>
         <p className="text-lg text-slate">

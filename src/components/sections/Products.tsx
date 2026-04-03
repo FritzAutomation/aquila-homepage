@@ -34,15 +34,18 @@ const products = [
 
 export default function Products() {
   return (
-    <SectionWrapper id="products" background="light">
+    <SectionWrapper id="products" background="light" divider="wave">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.6 }}
         className="text-center mb-12"
       >
-        <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald/10 text-emerald text-sm font-medium rounded-full mb-4">
+          Products
+        </div>
+        <h2 className="text-3xl md:text-4xl font-bold font-display text-navy mb-4">
           Our Solutions
         </h2>
         <p className="text-lg text-slate max-w-2xl mx-auto">
@@ -54,12 +57,12 @@ export default function Products() {
         {products.map((product, index) => (
           <motion.div
             key={product.title}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, x: index === 0 ? -30 : 30 }}
+            whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
+            transition={{ duration: 0.6, delay: index * 0.15, ease: "easeOut" }}
           >
-            <Card className="h-full">
+            <Card className="h-full" accent="emerald">
               <div className="mb-6">
                 <Image
                   src={product.image}
@@ -95,10 +98,10 @@ export default function Products() {
 
       {/* Custom Solutions */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, scale: 0.97 }}
+        whileInView={{ opacity: 1, scale: 1 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.5, delay: 0.2 }}
+        transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
       >
         <div className="bg-navy text-white rounded-2xl p-6 md:p-8">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">

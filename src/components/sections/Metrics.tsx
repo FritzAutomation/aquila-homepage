@@ -69,28 +69,29 @@ export default function Metrics() {
   return (
     <SectionWrapper background="white">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
-        className="text-center mb-12"
+        transition={{ duration: 0.6 }}
+        className="text-center mb-16"
       >
-        <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
+        <h2 className="text-3xl md:text-4xl font-bold font-display text-navy mb-4">
           Proven Results
         </h2>
       </motion.div>
 
-      <div className="grid md:grid-cols-3 gap-8">
+      <div className="grid md:grid-cols-3 gap-8 md:gap-0 md:divide-x md:divide-slate-light/20">
         {metrics.map((metric, index) => (
           <motion.div
             key={metric.label}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            className="text-center"
+            transition={{ duration: 0.6, delay: index * 0.2, type: "spring", stiffness: 80 }}
+            className="text-center px-8"
           >
-            <div className="text-5xl md:text-6xl font-bold text-navy mb-3">
+            <div className="w-12 h-1 bg-emerald rounded-full mx-auto mb-6" />
+            <div className="text-5xl md:text-6xl lg:text-7xl font-extrabold font-display text-navy mb-3">
               <AnimatedCounter value={metric.value} suffix={metric.suffix} />
             </div>
             <p className="text-lg text-slate font-medium">{metric.label}</p>
@@ -105,8 +106,8 @@ export default function Metrics() {
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.5, delay: 0.4 }}
-        className="text-center text-sm text-slate-light mt-8"
+        transition={{ duration: 0.5, delay: 0.6 }}
+        className="text-center text-sm text-slate-light mt-12"
       >
         * Results from ASCO Power Technologies case study
       </motion.p>

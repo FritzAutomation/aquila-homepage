@@ -24,15 +24,18 @@ const caseStudies = [
 
 export default function CaseStudies() {
   return (
-    <SectionWrapper background="light">
+    <SectionWrapper background="light" divider="angle">
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.6 }}
         className="text-center mb-12"
       >
-        <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
+        <div className="inline-flex items-center gap-2 px-3 py-1 bg-navy/10 text-navy text-sm font-medium rounded-full mb-4">
+          Case Studies
+        </div>
+        <h2 className="text-3xl md:text-4xl font-bold font-display text-navy mb-4">
           Success Stories
         </h2>
         <p className="text-lg text-slate max-w-2xl mx-auto">
@@ -44,12 +47,12 @@ export default function CaseStudies() {
         {caseStudies.map((study, index) => (
           <motion.div
             key={study.company}
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 30, rotateX: 5 }}
+            whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
+            transition={{ duration: 0.6, delay: index * 0.15, ease: "easeOut" }}
           >
-            <Card className="h-full">
+            <Card className="h-full" accent="navy">
               {/* Case Study Image */}
               <div className="rounded-xl aspect-video overflow-hidden mb-6">
                 <Image

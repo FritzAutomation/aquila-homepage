@@ -63,10 +63,10 @@ function FAQItem({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, x: -20 }}
+      whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.3, delay: index * 0.05 }}
+      transition={{ duration: 0.4, delay: index * 0.04, ease: "easeOut" }}
       className="border-b border-gray-200 last:border-b-0"
     >
       <button
@@ -110,13 +110,13 @@ export default function FAQ() {
   return (
     <SectionWrapper>
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
         viewport={{ once: true }}
-        transition={{ duration: 0.5 }}
+        transition={{ duration: 0.6 }}
         className="text-center mb-12"
       >
-        <h2 className="text-3xl md:text-4xl font-bold text-navy mb-4">
+        <h2 className="text-3xl md:text-4xl font-bold font-display text-navy mb-4">
           Frequently Asked Questions
         </h2>
         <p className="text-lg text-slate max-w-2xl mx-auto">
